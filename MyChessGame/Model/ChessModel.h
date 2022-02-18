@@ -16,37 +16,42 @@ public:
                                        bool newTable = false);
 
   void stepPiece(int from_x, int from_y, int to_x, int to_y);
+  void newGame();
+  ChessField getField(int x, int y);
 
 signals:
   void gameOver(int player);
   void stepped(bool pieceKnockedDown);
   void check();
+  void pawnHasReachedEnemysBase(int pos);
+  void refreshTable();
 
 private:
+  void switchToQueen(int pos, PieceTypes switchTo);
   bool checkGameOver();
   bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y);
   bool isValidStep(int from_x, int from_y, int to_x, int to_y);
   QPair<int, int> getSingleChecker();
   QList<QPair<int, int>>
   possibleStepsForKing(int x, int y, PieceColor color,
-                       bool includeDefendedPieces = false,
+                       bool includeDefendedPieces = false, bool attack = false,
                        bool newTable = false);
   QList<QPair<int, int>>
   possibleStepsForQueen(int x, int y, PieceColor color,
-                        bool includeDefendedPieces = false,
+                        bool includeDefendedPieces = false, bool attack = false,
                         bool newTable = false);
   QList<QPair<int, int>>
   possibleStepsForRook(int x, int y, PieceColor color,
-                       bool includeDefendedPieces = false,
+                       bool includeDefendedPieces = false, bool attack = false,
                        bool newTable = false);
   QList<QPair<int, int>>
   possibleStepsForBishup(int x, int y, PieceColor color,
                          bool includeDefendedPieces = false,
-                         bool newTable = false);
+                         bool attack = false, bool newTable = false);
   QList<QPair<int, int>>
   possibleStepsForKnight(int x, int y, PieceColor color,
                          bool includeDefendedPieces = false,
-                         bool newTable = false);
+                         bool attack = false, bool newTable = false);
   QList<QPair<int, int>>
   possibleStepsForPawn(int x, int y, PieceColor color,
                        bool includeDefendedPieces = false, bool attack = false,

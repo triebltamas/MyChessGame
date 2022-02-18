@@ -18,8 +18,19 @@ public:
   ChessView(QWidget *parent = nullptr);
   ~ChessView();
 
+public slots:
+  void onGameOver(int Player);
+  void onStepped(bool PieceKnockedDown);
+  void onCheck();
+  void onPawnHasReachedEnemysBase(int Pos);
+  void onRefreshTable();
+  void onCellClicked(int x, int y);
+
 private:
   void initUI();
+  void newGame();
+  void generateTable();
+  void updateCell(int x, int y, ChessField field, bool initField = false);
 
   Ui::ChessView *ui;
 

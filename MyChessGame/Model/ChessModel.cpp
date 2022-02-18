@@ -8,6 +8,14 @@ ChessModel::ChessModel() : _N(8), _currentPlayer(1) {
   _newTable = new ChessField *[8];
   for (int i = 0; i < _N; i++)
     _newTable[i] = new ChessField[8];
+}
+
+void ChessModel::newGame() {
+  // TODO: make this into an exception
+  if (_chessTable == nullptr) {
+    // QDebug() << "CHESSTABLE IS NULLPOINTER EXCEPTION";
+    return;
+  }
 
   // Setting up the table's piecetypes
   _chessTable[0][4]._pieceType = PieceTypes::King;
@@ -76,15 +84,20 @@ QList<QPair<int, int>> ChessModel::possibleSteps(int x, int y,
   case PieceTypes::VoidType:
     return fields;
   case PieceTypes::King:
-    return possibleStepsForKing(x, y, color, includeDefendedPieces, newTable);
+    return possibleStepsForKing(x, y, color, includeDefendedPieces, attack,
+                                newTable);
   case PieceTypes::Queen:
-    return possibleStepsForQueen(x, y, color, includeDefendedPieces, newTable);
+    return possibleStepsForQueen(x, y, color, includeDefendedPieces, attack,
+                                 newTable);
   case PieceTypes::Rook:
-    return possibleStepsForRook(x, y, color, includeDefendedPieces, newTable);
+    return possibleStepsForRook(x, y, color, includeDefendedPieces, attack,
+                                newTable);
   case PieceTypes::Bishup:
-    return possibleStepsForBishup(x, y, color, includeDefendedPieces, newTable);
+    return possibleStepsForBishup(x, y, color, includeDefendedPieces, attack,
+                                  newTable);
   case PieceTypes::Knight:
-    return possibleStepsForKnight(x, y, color, includeDefendedPieces, newTable);
+    return possibleStepsForKnight(x, y, color, includeDefendedPieces, attack,
+                                  newTable);
   case PieceTypes::Pawn:
     return possibleStepsForPawn(x, y, color, includeDefendedPieces, attack,
                                 newTable);
@@ -110,9 +123,10 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
     return;
 
   PieceColor pc = _chessTable[to_x][to_y]._pieceColor;
+  PieceTypes from_pt = _chessTable[from_x][from_y]._pieceType;
 
   _chessTable[to_x][to_y]._pieceColor = _chessTable[from_x][from_y]._pieceColor;
-  _chessTable[to_x][to_y]._pieceType = _chessTable[from_x][from_y]._pieceType;
+  _chessTable[to_x][to_y]._pieceType = from_pt;
   _chessTable[from_x][from_y]._pieceColor = PieceColor::VoidColor;
   _chessTable[from_x][from_y]._pieceType = PieceTypes::VoidType;
 
@@ -124,7 +138,21 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   if (checkGameOver())
     emit gameOver(_currentPlayer);
 
+  if (from_pt == PieceTypes::Pawn && (to_x == 0 || to_x == _N - 1))
+    emit pawnHasReachedEnemysBase(to_x * _N + to_y);
+
   _currentPlayer = _currentPlayer % 2 + 1;
+}
+
+void ChessModel::switchToQueen(int pos, PieceTypes switchTo) {
+  int x = pos / _N;
+  int y = pos % _N;
+  if (_chessTable[x][y]._pieceType != PieceTypes::Pawn)
+    return;
+
+  _chessTable[x][y]._pieceType = switchTo;
+
+  emit refreshTable();
 }
 
 bool ChessModel::checkGameOver() {
@@ -236,6 +264,8 @@ bool ChessModel::checkGameOver() {
     return false;
   }
 }
+
+// TODO Fix this infinite black hole
 bool ChessModel::stepCausesSelfCheck(int from_x, int from_y, int to_x,
                                      int to_y) {
   // _currentplayer's currently attacked fields
@@ -324,7 +354,8 @@ QPair<int, int> ChessModel::getSingleChecker() {
 
 QList<QPair<int, int>>
 ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
-                                 bool includeDefendedPieces, bool newTable) {
+                                 bool includeDefendedPieces, bool attack,
+                                 bool newTable) {
   int i_min = (x - 1 >= 0) ? x : 0;
   int i_max = (x + 1 < _N) ? x : _N - 1;
   int j_min = (y - 1 >= 0) ? y : 0;
@@ -349,7 +380,8 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
 
 QList<QPair<int, int>>
 ChessModel::possibleStepsForQueen(int x, int y, PieceColor color,
-                                  bool includeDefendedPieces, bool newTable) {
+                                  bool includeDefendedPieces, bool attack,
+                                  bool newTable) {
   QList<QPair<int, int>> fields;
 
   for (int i = 0; i < _N; i++) {
@@ -361,11 +393,12 @@ ChessModel::possibleStepsForQueen(int x, int y, PieceColor color,
            (_newTable[i][j]._pieceColor == color && !includeDefendedPieces)))
         continue;
 
-      bool sameRow = i % _N == x % _N;
-      bool sameColumn = j % _N == y % _N;
-      bool sameDiagonal = i % _N - x % _N == j % _N - y % _N;
+      bool sameRow = i == x;
+      bool sameColumn = j == y;
+      bool sameDiagonal = (std::abs(i - x) == std::abs(j - y));
+      //      bool sameDiagonal = i % _N - x % _N == j % _N - y % _N;
       if ((sameRow || sameColumn || sameDiagonal) &&
-          !stepCausesSelfCheck(x, y, i, j))
+          ((attack && !stepCausesSelfCheck(x, y, i, j)) || (!attack)))
         fields.append(QPair<int, int>(i, j));
     }
   }
@@ -374,22 +407,27 @@ ChessModel::possibleStepsForQueen(int x, int y, PieceColor color,
 
 QList<QPair<int, int>>
 ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
-                                 bool includeDefendedPieces, bool newTable) {
+                                 bool includeDefendedPieces, bool attack,
+                                 bool newTable) {
   QList<QPair<int, int>> fields;
 
   for (int i = 0; i < _N; i++) {
     for (int j = 0; j < _N; j++) {
-      if ((i == x && j == y) ||
+      bool sameRow = i == x;
+      bool sameColumn = j == y;
+      if ((sameRow && sameColumn) ||
           (!newTable && _chessTable[i][j]._pieceColor == color &&
            !includeDefendedPieces) ||
           (newTable &&
            (_newTable[i][j]._pieceColor == color && !includeDefendedPieces)))
         continue;
 
-      bool sameRow = i % _N == x % _N;
-      bool sameColumn = j % _N == y % _N;
-      if ((sameRow || sameColumn) && !stepCausesSelfCheck(x, y, i, j))
+      //      bool sameRow = i % _N == x % _N;
+      //      bool sameColumn = j % _N == y % _N;
+      if ((sameRow || sameColumn) &&
+          (attack && !stepCausesSelfCheck(x, y, i, j) || !attack)) {
         fields.append(QPair<int, int>(i, j));
+      }
     }
   }
   return fields;
@@ -397,21 +435,90 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
 
 QList<QPair<int, int>>
 ChessModel::possibleStepsForBishup(int x, int y, PieceColor color,
-                                   bool includeDefendedPieces, bool newTable) {
+                                   bool includeDefendedPieces, bool attack,
+                                   bool newTable) {
   QList<QPair<int, int>> fields;
+
+  // these are the still available directions, meaning no friendly or enemy
+  // pieces has been seen this direction yet
+  bool upperLeftAvailable, upperRightAvailable, bottomLeftAvailable,
+      bottomRightAvailable = true;
 
   for (int i = 0; i < _N; i++) {
     for (int j = 0; j < _N; j++) {
-      if ((i == x && j == y) ||
-          (!newTable && _chessTable[i][j]._pieceColor == color &&
-           !includeDefendedPieces) ||
-          (newTable &&
-           (_newTable[i][j]._pieceColor == color && !includeDefendedPieces)))
+      if (i == x && j == y)
         continue;
 
-      bool sameDiagonal = i % _N - x % _N == j % _N - y % _N;
-      if (sameDiagonal && !stepCausesSelfCheck(x, y, i, j))
-        fields.append(QPair<int, int>(i, j));
+      if (!upperLeftAvailable && !upperRightAvailable && !bottomLeftAvailable &&
+          !bottomRightAvailable) {
+        i = _N;
+        break;
+      }
+
+      int x_diff = x - i;
+      int y_diff = y - j;
+      // 2 endpoints are UL and BR
+      bool sameDiagonal_UL_BR = x_diff == y_diff;
+
+      // 2 endpoints are UR and BL
+      bool sameDiagonal_UR_BL =
+          !sameDiagonal_UL_BR && (std::abs(x_diff) == std::abs(y_diff));
+
+      if (sameDiagonal_UL_BR) {
+        // az i,j edik mezőt ebből az irányból közelítenenk meg
+        bool bottomRightDirection = x_diff < 0;
+        bool upperLeftDirection = x_diff > 0;
+        // only activates, if friendly pieces are asked
+        if ((!newTable && _chessTable[i][j]._pieceColor == color &&
+             !includeDefendedPieces) ||
+            (newTable && (_newTable[i][j]._pieceColor == color &&
+                          !includeDefendedPieces))) {
+          if (bottomRightDirection)
+            bottomRightAvailable = false;
+          else
+            upperLeftAvailable = false;
+        }
+        // upperLeft
+        else if (upperLeftAvailable && upperLeftDirection &&
+                 (attack && !stepCausesSelfCheck(x, y, i, j) || !attack)) {
+          fields.append(QPair<int, int>(i, j));
+          upperLeftAvailable = false;
+        }
+        // bottomRight
+        else if (bottomRightAvailable && bottomRightDirection &&
+                 (attack && !stepCausesSelfCheck(x, y, i, j) || !attack)) {
+          fields.append(QPair<int, int>(i, j));
+          bottomRightAvailable = false;
+        }
+      } else if (sameDiagonal_UR_BL) {
+
+        // az i,j edik mezőt ebből az irányból közelítenenk meg
+        bool upperRightDirection = y_diff < 0;
+        bool bottomLeftDirection = x_diff < 0;
+        // only activates, if friendly pieces are asked
+        if ((!newTable && _chessTable[i][j]._pieceColor == color &&
+             !includeDefendedPieces) ||
+            (newTable && (_newTable[i][j]._pieceColor == color &&
+                          !includeDefendedPieces))) {
+          if (bottomLeftDirection)
+            bottomLeftAvailable = false;
+          else
+            upperRightAvailable = false;
+        }
+
+        // upperRight
+        else if (upperRightAvailable && upperRightDirection &&
+                 (attack && !stepCausesSelfCheck(x, y, i, j) || !attack)) {
+          fields.append(QPair<int, int>(i, j));
+          upperRightAvailable = false;
+        }
+        // bottomLeft
+        else if (bottomLeftAvailable && bottomLeftDirection &&
+                 (attack && !stepCausesSelfCheck(x, y, i, j) || !attack)) {
+          fields.append(QPair<int, int>(i, j));
+          bottomLeftAvailable = false;
+        }
+      }
     }
   }
   return fields;
@@ -419,7 +526,8 @@ ChessModel::possibleStepsForBishup(int x, int y, PieceColor color,
 
 QList<QPair<int, int>>
 ChessModel::possibleStepsForKnight(int x, int y, PieceColor color,
-                                   bool includeDefendedPieces, bool newTable) {
+                                   bool includeDefendedPieces, bool attack,
+                                   bool newTable) {
   int i_min = (x - 2 >= 0) ? x : 0;
   int i_max = (x + 2 < _N) ? x : _N - 1;
   int j_min = (y - 2 >= 0) ? y : 0;
@@ -439,12 +547,19 @@ ChessModel::possibleStepsForKnight(int x, int y, PieceColor color,
       int x_mod = i % _N - x % _N;
       int y_mod = j % _N - y % _N;
 
+      int x_mod_urstupid = i - x;
+      int y_mod_urstupid = j - y;
+
+      if (x_mod != x_mod_urstupid || y_mod != y_mod_urstupid) {
+        //        qDebug() << "Your are not that stupid\n";
+      }
+
       if ((std::abs(x_mod) == 1 && std::abs(y_mod) == 2) &&
-          !stepCausesSelfCheck(x, y, i, j))
+          (attack && !stepCausesSelfCheck(x, y, i, j) || !attack))
         fields.append(QPair<int, int>(i, j));
 
       else if ((std::abs(x_mod) == 2 && std::abs(y_mod) == 1) &&
-               !stepCausesSelfCheck(x, y, i, j))
+               (attack && !stepCausesSelfCheck(x, y, i, j) || !attack))
         fields.append(QPair<int, int>(i, j));
     }
   }
@@ -459,38 +574,38 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
   if (color == PieceColor::White && x < 0) {
     if (newTable) {
       if (!attack && _newTable[x - 1][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x - 1, y))
+          (attack && !stepCausesSelfCheck(x, y, x - 1, y) || !attack))
         fields.append(QPair<int, int>(x - 1, y));
 
       if ((y > 0 && (_newTable[x - 1][y - 1]._pieceColor == PieceColor::Black ||
                      (_newTable[x - 1][y - 1]._pieceColor == color &&
                       includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x - 1, y - 1))
+          (attack && !stepCausesSelfCheck(x, y, x - 1, y - 1) || !attack))
         fields.append(QPair<int, int>(x - 1, y - 1));
 
       if ((y < _N - 1 &&
            (_newTable[x - 1][y + 1]._pieceColor == PieceColor::Black ||
             (_newTable[x - 1][y + 1]._pieceColor == color &&
              includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x - 1, y + 1))
+          (attack && !stepCausesSelfCheck(x, y, x - 1, y + 1) || !attack))
         fields.append(QPair<int, int>(x - 1, y + 1));
     } else {
       if (!attack && _chessTable[x - 1][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x - 1, y))
+          (attack && !stepCausesSelfCheck(x, y, x - 1, y) || !attack))
         fields.append(QPair<int, int>(x - 1, y));
 
       if ((y > 0 &&
            (_chessTable[x - 1][y - 1]._pieceColor == PieceColor::Black ||
             (_chessTable[x - 1][y - 1]._pieceColor == color &&
              includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x - 1, y - 1))
+          (attack && !stepCausesSelfCheck(x, y, x - 1, y - 1) || !attack))
         fields.append(QPair<int, int>(x - 1, y - 1));
 
       if ((y < _N - 1 &&
            (_chessTable[x - 1][y + 1]._pieceColor == PieceColor::Black ||
             (_chessTable[x - 1][y + 1]._pieceColor == color &&
              includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x - 1, y + 1))
+          (attack && !stepCausesSelfCheck(x, y, x - 1, y + 1) || !attack))
         fields.append(QPair<int, int>(x - 1, y + 1));
     }
   }
@@ -498,40 +613,42 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
   if (color == PieceColor::Black && x > _N - 1) {
     if (newTable) {
       if (!attack && _newTable[x + 1][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x + 1, y))
+          (attack && !stepCausesSelfCheck(x, y, x + 1, y) || !attack))
         fields.append(QPair<int, int>(x + 1, y));
 
       if ((y > 0 && (_newTable[x + 1][y - 1]._pieceColor == PieceColor::White ||
                      (_newTable[x + 1][y - 1]._pieceColor == color &&
                       includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x + 1, y - 1))
+          (attack && !stepCausesSelfCheck(x, y, x + 1, y - 1) || !attack))
         fields.append(QPair<int, int>(x + 1, y - 1));
 
       if (((y < _N - 1 &&
                 _newTable[x + 1][y + 1]._pieceColor == PieceColor::White ||
             (_newTable[x + 1][y + 1]._pieceColor == color &&
              includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x + 1, y + 1))
+          (attack && !stepCausesSelfCheck(x, y, x + 1, y + 1) || !attack))
         fields.append(QPair<int, int>(x + 1, y + 1));
     } else {
       if (!attack && _chessTable[x + 1][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x + 1, y))
+          (attack && !stepCausesSelfCheck(x, y, x + 1, y) || !attack))
         fields.append(QPair<int, int>(x + 1, y));
 
       if ((y > 0 &&
            (_chessTable[x + 1][y - 1]._pieceColor == PieceColor::White ||
             (_chessTable[x + 1][y - 1]._pieceColor == color &&
              includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x + 1, y - 1))
+          (attack && !stepCausesSelfCheck(x, y, x + 1, y - 1) || !attack))
         fields.append(QPair<int, int>(x + 1, y - 1));
 
       if (((y < _N - 1 &&
                 _chessTable[x + 1][y + 1]._pieceColor == PieceColor::White ||
             (_chessTable[x + 1][y + 1]._pieceColor == color &&
              includeDefendedPieces))) &&
-          !stepCausesSelfCheck(x, y, x + 1, y + 1))
+          (attack && !stepCausesSelfCheck(x, y, x + 1, y + 1) || !attack))
         fields.append(QPair<int, int>(x + 1, y + 1));
     }
   }
   return fields;
 }
+
+ChessField ChessModel::getField(int x, int y) { return _chessTable[x][y]; }
