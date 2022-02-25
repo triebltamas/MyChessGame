@@ -18,6 +18,7 @@ public:
   void stepPiece(int from_x, int from_y, int to_x, int to_y);
   void newGame();
   ChessField getField(int x, int y);
+  void setHighlighted(int x, int y, bool highlight);
 
 signals:
   void gameOver(int player);
@@ -29,9 +30,13 @@ signals:
 private:
   void switchToQueen(int pos, PieceTypes switchTo);
   bool checkGameOver();
-  bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y);
+  bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
+                           bool attack);
   bool isValidStep(int from_x, int from_y, int to_x, int to_y);
+  bool isSamePieceColor(int x, int y, PieceColor color, bool newTable,
+                        bool includeDefendedPieces);
   QPair<int, int> getSingleChecker();
+
   QList<QPair<int, int>>
   possibleStepsForKing(int x, int y, PieceColor color,
                        bool includeDefendedPieces = false, bool attack = false,

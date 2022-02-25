@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/Application">
+        <file>MyChessGame/Resources/GameIcon.ico</file>
+    </qresource>
+</RCC>

@@ -36,5 +36,7 @@ private:
 
   QMap<int, QPushButton *> _tableView;
   ChessModel *_model;
+  QPair<int, int> clickedCell_;
+  bool green = false;
 };
 #endif // CHESSVIEW_H
