@@ -113,30 +113,74 @@ void ChessView::onGameOver(int Player) {
 }
 
 void ChessView::onCellClicked(int x, int y) {
-  if (_model->getField(x, y)._pieceColor == PieceColor::VoidColor)
+  if (_model->getField(x, y)._pieceColor == PieceColor::VoidColor &&
+      !_model->getField(x, y).highlighted)
     return;
 
   if (green) {
     if (x == clickedCell_.first && y == clickedCell_.second) {
-      for (int i = 0; i < 8; i++)
-        for (int j = 0; j < 8; j++)
+      for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
           updateCell(i, j, _model->getField(i, j), true);
+
+          //          _tableView[i * 8 + y]->setDisabled(false);
+        }
+      }
 
       green = false;
     } else {
-      if (_model->getField(x, y).highlighted)
+      if (_model->getField(x, y).highlighted) {
         _model->stepPiece(clickedCell_.first, clickedCell_.second, x, y);
+
+        for (int i = 0; i < 8; i++) {
+          for (int j = 0; j < 8; j++) {
+            updateCell(i, j, _model->getField(i, j), true);
+
+            //            _tableView[i * 8 + y]->setDisabled(false);
+          }
+        }
+        green = false;
+      } else {
+        for (int i = 0; i < 8; i++) {
+          for (int j = 0; j < 8; j++) {
+            updateCell(i, j, _model->getField(i, j), true);
+          }
+        }
+
+        auto cells = _model->possibleSteps(x, y);
+        if (!cells.empty())
+          cells.append(QPair<int, int>(x, y));
+
+        for (auto cell : cells) {
+          _tableView[cell.first * 8 + cell.second]->setStyleSheet(
+              "background-color: green");
+          //      _tableView[cell.first * 8 + cell.second]->setDisabled(false);
+
+          _model->setHighlighted(cell.first, cell.second, true);
+        }
+
+        green = true;
+      }
     }
 
   } else {
-    for (int i = 0; i < 8; i++)
-      for (int j = 0; j < 8; j++)
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
         updateCell(i, j, _model->getField(i, j), true);
 
+        //        _tableView[i * 8 + y]->setDisabled(true);
+      }
+    }
+
     auto cells = _model->possibleSteps(x, y);
+    if (!cells.empty())
+      cells.append(QPair<int, int>(x, y));
+
     for (auto cell : cells) {
       _tableView[cell.first * 8 + cell.second]->setStyleSheet(
           "background-color: green");
+      //      _tableView[cell.first * 8 + cell.second]->setDisabled(false);
+
       _model->setHighlighted(cell.first, cell.second, true);
     }
 

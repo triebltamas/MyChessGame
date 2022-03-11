@@ -2,6 +2,7 @@
 #define CHESSVIEW_H
 
 #include "MyChessGame/Model/ChessModel.h"
+#include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
 
@@ -35,6 +36,7 @@ private:
   Ui::ChessView *ui;
 
   QMap<int, QPushButton *> _tableView;
+  QLabel *currentPlayerLabel;
   ChessModel *_model;
   QPair<int, int> clickedCell_;
   bool green = false;
