@@ -1,5 +1,6 @@
 #include "ChessView.h"
 #include "ui_ChessView.h"
+#include <QDebug>
 #include <QMessageBox>
 #include <iostream>
 
@@ -199,9 +200,11 @@ void ChessView::onCellClicked(int x, int y) {
 }
 void ChessView::onStepped(bool PieceKnockedDown) {}
 
-void ChessView::onPawnHasReachedEnemysBase(int Pos) {}
+void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
+  _model->switchToQueen(x, y, PieceTypes::Queen);
+}
 void ChessView::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
-  std::cout << "CHECK!!\n";
+  qDebug() << "CHECK!!\n";
 }
 void ChessView::onRefreshTable() {}

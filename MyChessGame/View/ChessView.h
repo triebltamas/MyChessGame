@@ -23,7 +23,7 @@ public slots:
   void onGameOver(int Player);
   void onStepped(bool PieceKnockedDown);
   void onCheck();
-  void onPawnHasReachedEnemysBase(int Pos);
+  void onPawnHasReachedEnemysBase(int x, int y);
   void onRefreshTable();
   void onCellClicked(int x, int y);
 

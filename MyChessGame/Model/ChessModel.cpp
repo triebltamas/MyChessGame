@@ -124,6 +124,9 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
            static_cast<int>(chessTable_[from_x][from_y]._pieceColor))
     return;
 
+  if (chessTable_[to_x][to_y]._pieceType == PieceTypes::King)
+    return;
+
   PieceColor pc = chessTable_[to_x][to_y]._pieceColor;
   PieceTypes from_pt = chessTable_[from_x][from_y]._pieceType;
 
@@ -141,14 +144,12 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
     emit gameOver(currentPlayer_);
 
   if (from_pt == PieceTypes::Pawn && (to_x == 0 || to_x == N_ - 1))
-    emit pawnHasReachedEnemysBase(to_x * N_ + to_y);
+    emit pawnHasReachedEnemysBase(to_x, to_y);
 
   currentPlayer_ = currentPlayer_ % 2 + 1;
 }
 
-void ChessModel::switchToQueen(int pos, PieceTypes switchTo) {
-  int x = pos / N_;
-  int y = pos % N_;
+void ChessModel::switchToQueen(int x, int y, PieceTypes switchTo) {
   if (chessTable_[x][y]._pieceType != PieceTypes::Pawn)
     return;
 
@@ -211,25 +212,38 @@ bool ChessModel::checkGameOver() {
     emit check();
     isChecked = true;
 
-    int i_min = (king_x - 1 >= 0) ? king_x - 1 : 0;
-    int i_max = (king_x + 1 < N_) ? king_x + 1 : N_ - 1;
-    int j_min = (king_y - 1 >= 0) ? king_y - 1 : 0;
-    int j_max = (king_y + 1 < N_) ? king_y + 1 : N_ - 1;
+    //    int i_min = (king_x - 1 >= 0) ? king_x - 1 : 0;
+    //    int i_max = (king_x + 1 < N_) ? king_x + 1 : N_ - 1;
+    //    int j_min = (king_y - 1 >= 0) ? king_y - 1 : 0;
+    //    int j_max = (king_y + 1 < N_) ? king_y + 1 : N_ - 1;
 
-    bool kingCanMove = false;
-    for (int i = i_min; i < i_max; i++) {
-      for (int j = j_min; j < j_max; j++) {
-        if (!fields.contains(i * N_ + j) &&
-            !isSamePieceColor(i, j, chessTable_[king_x][king_y]._pieceColor,
-                              false, false)) {
-          kingCanMove = true;
-          // break
-          i = N_;
-          j = N_;
-        }
-      }
-    }
-    if (kingCanMove)
+    //    bool kingCanMove = false;
+    //    for (int i = i_min; i <= i_max; i++) {
+    //      for (int j = j_min; j <= j_max; j++) {
+    //        if (!fields.contains(i * N_ + j) &&
+    //            !isSamePieceColor(i, j,
+    //            chessTable_[king_x][king_y]._pieceColor,
+    //                              false, false)) {
+    //          kingCanMove = true;
+    //          // break
+    //          i = N_;
+    //          j = N_;
+    //        }
+    //      }
+    //    }
+    //    if (kingCanMove)
+    //      return false;
+
+    currentPlayer_ = currentPlayer_ % 2 + 1;
+    auto kingsteps = possibleStepsForKing(
+        king_x, king_y, chessTable_[king_x][king_y]._pieceColor, false, true,
+        false);
+    currentPlayer_ = currentPlayer_ % 2 + 1;
+    QMap<int, QString> ayyo;
+    for (auto s : kingsteps)
+      ayyo.insert(s.first * N_ + s.second, "ass");
+
+    if (!kingsteps.isEmpty())
       return false;
 
     if (numberOfChecks > 1)

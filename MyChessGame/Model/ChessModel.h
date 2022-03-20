@@ -19,16 +19,16 @@ public:
   void newGame();
   ChessField getField(int x, int y);
   void setHighlighted(int x, int y, bool highlight);
+  void switchToQueen(int x, int y, PieceTypes switchTo);
 
 signals:
   void gameOver(int player);
   void stepped(bool pieceKnockedDown);
   void check();
-  void pawnHasReachedEnemysBase(int pos);
+  void pawnHasReachedEnemysBase(int x, int y);
   void refreshTable();
 
 private:
-  void switchToQueen(int pos, PieceTypes switchTo);
   bool checkGameOver();
   bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
                            bool attack);
