@@ -26,11 +26,10 @@ void ChessView::newGame() {
 }
 
 void ChessView::generateTable() {
-  for (int i = 0; i < _tableView.size(); ++i) {
-    for (int j = 0; j < _tableView.size(); ++j) {
-      if (_tableView[i * 8 + j])
-        delete _tableView[i * 8 + j];
-    }
+  int i = 0;
+  for (int j = 0; j < 8 && i < 8; ++j && ++i) {
+    if (_tableView[i * 8 + j] != nullptr)
+      delete _tableView[i * 8 + j];
   }
 
   for (int i = 0; i < 8; i++) {

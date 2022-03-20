@@ -218,7 +218,9 @@ bool ChessModel::checkGameOver() {
     bool kingCanMove = false;
     for (int i = i_min; i < i_max; i++) {
       for (int j = j_min; j < j_max; j++) {
-        if (!fields.contains(i * N_ + j)) {
+        if (!fields.contains(i * N_ + j) &&
+            !isSamePieceColor(i, j, chessTable_[king_x][king_y]._pieceColor,
+                              false, false)) {
           kingCanMove = true;
           // break
           i = N_;
@@ -624,7 +626,7 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
     if (newTable) {
       if (attack && startPosition &&
           newTable_[x - 2][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x + 1, y, attack))
+          !stepCausesSelfCheck(x, y, x - 2, y, attack))
         fields.append(QPair<int, int>(x - 2, y));
 
       if (attack && newTable_[x - 1][y]._pieceType == PieceTypes::VoidType &&
@@ -646,7 +648,7 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
     } else {
       if (attack && startPosition &&
           chessTable_[x - 2][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x + 1, y, attack))
+          !stepCausesSelfCheck(x, y, x - 2, y, attack))
         fields.append(QPair<int, int>(x - 2, y));
 
       if (attack && chessTable_[x - 1][y]._pieceType == PieceTypes::VoidType &&
@@ -674,7 +676,7 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
     if (newTable) {
       if (attack && startPosition &&
           newTable_[x + 2][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x + 1, y, attack))
+          !stepCausesSelfCheck(x, y, x + 2, y, attack))
         fields.append(QPair<int, int>(x + 2, y));
 
       if (attack && newTable_[x + 1][y]._pieceType == PieceTypes::VoidType &&
@@ -696,7 +698,7 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
     } else {
       if (attack && startPosition &&
           chessTable_[x + 2][y]._pieceType == PieceTypes::VoidType &&
-          !stepCausesSelfCheck(x, y, x + 1, y, attack))
+          !stepCausesSelfCheck(x, y, x + 2, y, attack))
         fields.append(QPair<int, int>(x + 2, y));
 
       if (attack && chessTable_[x + 1][y]._pieceType == PieceTypes::VoidType &&
