@@ -1,6 +1,7 @@
 #include "ChessView.h"
 #include "ui_ChessView.h"
 #include <QMessageBox>
+#include <iostream>
 
 ChessView::ChessView(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessModel) {
@@ -35,6 +36,9 @@ void ChessView::generateTable() {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       _tableView.insert(i * 8 + j, new QPushButton());
+      _tableView[i * 8 + j]->setMinimumSize(QSize(100, 100));
+      _tableView[i * 8 + j]->setSizeIncrement(QSize(1, 1));
+
       ui->gridLayout->addWidget(_tableView[i * 8 + j], i, j);
       updateCell(i, j, _model->getField(i, j), true);
 
@@ -49,7 +53,7 @@ void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
     switch (field._fieldColor) {
     case FieldColor::Black:
       _tableView[x * 8 + y]->setStyleSheet(
-          "background-color: black; color: white;");
+          "background-color: brown; color: white;");
       break;
     case FieldColor::White:
       _tableView[x * 8 + y]->setStyleSheet(
@@ -61,41 +65,46 @@ void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
     }
   }
 
-  switch (field._pieceColor) {
-  case PieceColor::Black:
-    _tableView[x * 8 + y]->setText("B - ");
-    break;
-  case PieceColor::White:
-    _tableView[x * 8 + y]->setText("W - ");
-    break;
-  case PieceColor::VoidColor:
-    _tableView[x * 8 + y]->setText("");
-    break;
-  default:
-    break;
-  }
-
   switch (field._pieceType) {
   case PieceTypes::King:
-    _tableView[x * 8 + y]->setText(_tableView[x * 8 + y]->text() + "King");
+    _tableView[x * 8 + y]->setText("");
+    if (field._pieceColor == PieceColor::White)
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/kingWhite"));
+    else
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/kingBlack"));
     break;
   case PieceTypes::Queen:
-    _tableView[x * 8 + y]->setText(_tableView[x * 8 + y]->text() + "Queen");
+    if (field._pieceColor == PieceColor::White)
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/queenWhite"));
+    else
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/queenBlack"));
     break;
   case PieceTypes::Bishup:
-    _tableView[x * 8 + y]->setText(_tableView[x * 8 + y]->text() + "Bishup");
+    if (field._pieceColor == PieceColor::White)
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/bishupWhite"));
+    else
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/bishupBlack"));
     break;
   case PieceTypes::Knight:
-    _tableView[x * 8 + y]->setText(_tableView[x * 8 + y]->text() + "Knight");
+    if (field._pieceColor == PieceColor::White)
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/knightWhite"));
+    else
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/knightBlack"));
     break;
   case PieceTypes::Rook:
-    _tableView[x * 8 + y]->setText(_tableView[x * 8 + y]->text() + "Rook");
+    if (field._pieceColor == PieceColor::White)
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/rookWhite"));
+    else
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/rookBlack"));
     break;
   case PieceTypes::Pawn:
-    _tableView[x * 8 + y]->setText(_tableView[x * 8 + y]->text() + "Pawn");
+    if (field._pieceColor == PieceColor::White)
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/pawnWhite"));
+    else
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/pawnBlack"));
     break;
   case PieceTypes::VoidType:
-    _tableView[x * 8 + y]->setText("");
+    _tableView[x * 8 + y]->setIcon(QIcon());
     break;
   default:
     break;
@@ -122,8 +131,7 @@ void ChessView::onCellClicked(int x, int y) {
       for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
           updateCell(i, j, _model->getField(i, j), true);
-
-          //          _tableView[i * 8 + y]->setDisabled(false);
+          _model->setHighlighted(i, j, false);
         }
       }
 
@@ -135,8 +143,7 @@ void ChessView::onCellClicked(int x, int y) {
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
             updateCell(i, j, _model->getField(i, j), true);
-
-            //            _tableView[i * 8 + y]->setDisabled(false);
+            _model->setHighlighted(i, j, false);
           }
         }
         green = false;
@@ -144,6 +151,7 @@ void ChessView::onCellClicked(int x, int y) {
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
             updateCell(i, j, _model->getField(i, j), true);
+            _model->setHighlighted(i, j, false);
           }
         }
 
@@ -154,12 +162,14 @@ void ChessView::onCellClicked(int x, int y) {
         for (auto cell : cells) {
           _tableView[cell.first * 8 + cell.second]->setStyleSheet(
               "background-color: green");
-          //      _tableView[cell.first * 8 + cell.second]->setDisabled(false);
 
           _model->setHighlighted(cell.first, cell.second, true);
         }
 
         green = true;
+
+        clickedCell_.first = x;
+        clickedCell_.second = y;
       }
     }
 
@@ -167,8 +177,6 @@ void ChessView::onCellClicked(int x, int y) {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         updateCell(i, j, _model->getField(i, j), true);
-
-        //        _tableView[i * 8 + y]->setDisabled(true);
       }
     }
 
@@ -179,7 +187,6 @@ void ChessView::onCellClicked(int x, int y) {
     for (auto cell : cells) {
       _tableView[cell.first * 8 + cell.second]->setStyleSheet(
           "background-color: green");
-      //      _tableView[cell.first * 8 + cell.second]->setDisabled(false);
 
       _model->setHighlighted(cell.first, cell.second, true);
     }
@@ -193,5 +200,8 @@ void ChessView::onCellClicked(int x, int y) {
 void ChessView::onStepped(bool PieceKnockedDown) {}
 
 void ChessView::onPawnHasReachedEnemysBase(int Pos) {}
-void ChessView::onCheck() {}
+void ChessView::onCheck() {
+  //  QMessageBox::information(this, tr("Check"), QString("Check!"));
+  std::cout << "CHECK!!\n";
+}
 void ChessView::onRefreshTable() {}

@@ -265,33 +265,6 @@ bool ChessModel::checkGameOver() {
     }
     return false;
   }
-
-  //  QPair<int, int> currentPlayersKing;
-  //  QPair<int, int> nextPlayersKing;
-
-  //  for (int i = 0; i < _N; i++) {
-  //    for (int j = 0; j < _N; j++) {
-  //      if (static_cast<int>(_chessTable[i][j]._pieceColor) == _currentPlayer)
-  //      {
-  //        if (_chessTable[i][j]._pieceType == PieceTypes::King) {
-  //          currentPlayersKing.first = i;
-  //          currentPlayersKing.second = j;
-  //        }
-  //      } else if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
-  //                 _currentPlayer % 2 + 1) {
-  //        if (_chessTable[i][j]._pieceType == PieceTypes::King) {
-  //          nextPlayersKing.first = i;
-  //          nextPlayersKing.second = j;
-  //        }
-  //      }
-  //    }
-  //  }
-  //  int n = numberOfCheckers(nextPlayersKing.first,
-  //  currentPlayersKing.second); if (n > 0 &&
-  //      !canDondgeCheck(nextPlayersKing.first, nextPlayersKing.second, n))
-  //    return true;
-
-  //  return false;
 }
 
 // TODO Fix this infinite black hole
@@ -404,8 +377,8 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
 
   QList<QPair<int, int>> fields;
 
-  for (int i = i_min; i < i_max; i++) {
-    for (int j = j_min; j < j_max; j++) {
+  for (int i = i_min; i <= i_max; i++) {
+    for (int j = j_min; j <= j_max; j++) {
       if ((i == x && j == y) ||
           (!newTable && (_chessTable[i][j]._pieceColor == color &&
                          !includeDefendedPieces)) ||
@@ -511,86 +484,70 @@ ChessModel::possibleStepsForBishup(int x, int y, PieceColor color,
 
   // LEFTUP
 
-  for (int i = x - 1; i >= 0; i--) {
-    for (int j = y - 1; j >= 0; j--) {
-      if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces)) {
-        i = -1;
+  int i = x - 1;
+  for (int j = y - 1; j >= 0 && i >= 0; j-- && i--) {
+    if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces))
+      break;
+
+    if (!stepCausesSelfCheck(x, y, i, j, attack)) {
+      fields.append(QPair<int, int>(i, j));
+
+      if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
+          static_cast<int>(color) % 2 + 1)
         break;
-      }
-
-      if (!stepCausesSelfCheck(x, y, i, j, attack)) {
-        fields.append(QPair<int, int>(i, j));
-
-        if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
-            static_cast<int>(color) % 2 + 1) {
-          i = -1;
-          break;
-        }
-      }
-    }
+    } else
+      break;
   }
 
   // LEFTDOWN
 
-  for (int i = x + 1; i < _N; i++) {
-    for (int j = y - 1; j >= 0; j--) {
-      if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces)) {
-        i = _N + 1;
+  i = x + 1;
+  for (int j = y - 1; j >= 0 && i < _N; j-- && i++) {
+    if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces))
+      break;
+
+    if (!stepCausesSelfCheck(x, y, i, j, attack)) {
+      fields.append(QPair<int, int>(i, j));
+
+      if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
+          static_cast<int>(color) % 2 + 1)
         break;
-      }
-
-      if (!stepCausesSelfCheck(x, y, i, j, attack)) {
-        fields.append(QPair<int, int>(i, j));
-
-        if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
-            static_cast<int>(color) % 2 + 1) {
-          i = _N + 1;
-          break;
-        }
-      }
-    }
+    } else
+      break;
   }
 
   // RIGHTUP
 
-  for (int i = x - 1; i >= 0; i--) {
-    for (int j = y + 1; j < _N; j++) {
-      if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces)) {
-        i = -1;
+  i = x - 1;
+  for (int j = y + 1; j < _N && i >= 0; j++ && i--) {
+    if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces))
+      break;
+
+    if (!stepCausesSelfCheck(x, y, i, j, attack)) {
+      fields.append(QPair<int, int>(i, j));
+
+      if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
+          static_cast<int>(color) % 2 + 1)
         break;
-      }
-
-      if (!stepCausesSelfCheck(x, y, i, j, attack)) {
-        fields.append(QPair<int, int>(i, j));
-
-        if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
-            static_cast<int>(color) % 2 + 1) {
-          i = -1;
-          break;
-        }
-      }
-    }
+    } else
+      break;
   }
 
   // RIGHTDOWN
 
-  for (int i = x + 1; i < _N; i++) {
-    for (int j = y + 1; j < _N; j++) {
-      if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces)) {
-        i = _N + 1;
+  i = x + 1;
+  for (int j = y + 1; j < _N && i < _N; j++ && i++) {
+    if (isSamePieceColor(i, j, color, newTable, includeDefendedPieces))
+      break;
+
+    if (!stepCausesSelfCheck(x, y, i, j, attack)) {
+      fields.append(QPair<int, int>(i, j));
+
+      if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
+          static_cast<int>(color) % 2 + 1)
         break;
-      }
-
-      if (!stepCausesSelfCheck(x, y, i, j, attack)) {
-        fields.append(QPair<int, int>(i, j));
-
-        if (static_cast<int>(_chessTable[i][j]._pieceColor) ==
-            static_cast<int>(color) % 2 + 1) {
-          i = _N + 1;
-          break;
-        }
-      }
-    }
+    } else
+      break;
   }
 
   return fields;
