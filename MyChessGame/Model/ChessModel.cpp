@@ -12,6 +12,7 @@ ChessModel::ChessModel() : N_(8), currentPlayer_(1) {
 }
 
 void ChessModel::newGame() {
+  currentPlayer_ = 1;
   // TODO: make this into an exception
   if (chessTable_ == nullptr) {
     // QDebug() << "CHESSTABLE IS NULLPOINTER EXCEPTION";

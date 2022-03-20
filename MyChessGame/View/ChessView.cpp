@@ -13,6 +13,7 @@ ChessView::ChessView(QWidget *parent)
           &ChessView::onPawnHasReachedEnemysBase);
   connect(_model, &ChessModel::check, this, &ChessView::onCheck);
   connect(_model, &ChessModel::refreshTable, this, &ChessView::onRefreshTable);
+  connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
   initUI();
 }
 
