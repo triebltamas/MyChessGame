@@ -32,10 +32,8 @@ private:
   bool checkGameOver();
   bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
                            bool attack);
-  bool isValidStep(int from_x, int from_y, int to_x, int to_y);
   bool isSamePieceColor(int x, int y, PieceColor color, bool newTable,
                         bool includeDefendedPieces);
-  QPair<int, int> getSingleChecker();
 
   QList<QPair<int, int>>
   possibleStepsForKing(int x, int y, PieceColor color,
@@ -62,10 +60,11 @@ private:
                        bool includeDefendedPieces = false, bool attack = false,
                        bool newTable = false);
 
-  int _N;
-  int _currentPlayer; // 1 or 2
-  ChessField **_chessTable;
-  ChessField **_newTable;
+  int N_;
+  int currentPlayer_; // 1 or 2 or 0 if draw
+  bool isChecked = false;
+  ChessField **chessTable_;
+  ChessField **newTable_;
 };
 
 #endif // CHESSMODEL_H

@@ -155,7 +155,7 @@ void ChessView::onCellClicked(int x, int y) {
           }
         }
 
-        auto cells = _model->possibleSteps(x, y);
+        auto cells = _model->possibleSteps(x, y, false, true, false);
         if (!cells.empty())
           cells.append(QPair<int, int>(x, y));
 
@@ -180,7 +180,7 @@ void ChessView::onCellClicked(int x, int y) {
       }
     }
 
-    auto cells = _model->possibleSteps(x, y);
+    auto cells = _model->possibleSteps(x, y, false, true, false);
     if (!cells.empty())
       cells.append(QPair<int, int>(x, y));
 
