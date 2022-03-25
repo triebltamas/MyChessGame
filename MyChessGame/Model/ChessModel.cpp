@@ -185,13 +185,10 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   chessTable_[from_x][from_y]._pieceColor = PieceColor::VoidColor;
   chessTable_[from_x][from_y]._pieceType = PieceTypes::VoidType;
 
-  if (pc != PieceColor::VoidColor)
-    emit stepped(true);
-  else
-    emit stepped(false);
-
-  if (checkGameOver())
+  if (checkGameOver()) {
     emit gameOver(currentPlayer_);
+    return;
+  }
 
   if (from_pt == PieceTypes::Pawn && (to_x == 0 || to_x == N_ - 1))
     emit pawnHasReachedEnemysBase(to_x, to_y);
@@ -204,8 +201,6 @@ void ChessModel::switchToQueen(int x, int y, PieceTypes switchTo) {
     return;
 
   chessTable_[x][y]._pieceType = switchTo;
-
-  emit refreshTable();
 }
 
 bool ChessModel::checkGameOver() {

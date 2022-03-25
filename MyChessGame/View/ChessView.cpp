@@ -9,12 +9,11 @@ ChessView::ChessView(QWidget *parent)
   ui->setupUi(this);
   _model = new ChessModel();
   connect(_model, &ChessModel::gameOver, this, &ChessView::onGameOver);
-  connect(_model, &ChessModel::stepped, this, &ChessView::onStepped);
   connect(_model, &ChessModel::pawnHasReachedEnemysBase, this,
           &ChessView::onPawnHasReachedEnemysBase);
   connect(_model, &ChessModel::check, this, &ChessView::onCheck);
-  connect(_model, &ChessModel::refreshTable, this, &ChessView::onRefreshTable);
   connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
+  connect(ui->actionExit, &QAction::triggered, this, &ChessView::exit);
   initUI();
 }
 
@@ -41,6 +40,7 @@ void ChessView::generateTable() {
       _tableView[i * 8 + j]->setSizeIncrement(QSize(1, 1));
       _tableView[i * 8 + j]->setIconSize(QSize(50, 50));
       _tableView[i * 8 + j]->setStyleSheet("text-align: center;");
+      //      _tableView[i * 8 + j]->setFlat(true);
 
       ui->gridLayout->addWidget(_tableView[i * 8 + j], i, j);
       updateCell(i, j, _model->getField(i, j), true);
@@ -200,7 +200,6 @@ void ChessView::onCellClicked(int x, int y) {
     clickedCell_.second = y;
   }
 }
-void ChessView::onStepped(bool PieceKnockedDown) {}
 
 void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
   bool isWhite = _model->getField(x, y)._pieceColor == PieceColor::White;
@@ -216,4 +215,5 @@ void ChessView::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
   qDebug() << "CHECK!!\n";
 }
-void ChessView::onRefreshTable() {}
+
+void ChessView::exit() { this->close(); }

@@ -22,15 +22,14 @@ public:
 
 public slots:
   void onGameOver(int Player);
-  void onStepped(bool PieceKnockedDown);
   void onCheck();
   void onPawnHasReachedEnemysBase(int x, int y);
-  void onRefreshTable();
   void onCellClicked(int x, int y);
 
 private:
   void initUI();
   void newGame();
+  void exit();
   void generateTable();
   void updateCell(int x, int y, ChessField field, bool initField = false);
 
