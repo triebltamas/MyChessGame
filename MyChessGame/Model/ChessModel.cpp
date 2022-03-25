@@ -130,6 +130,56 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   PieceColor pc = chessTable_[to_x][to_y]._pieceColor;
   PieceTypes from_pt = chessTable_[from_x][from_y]._pieceType;
 
+  bool enPassant =
+      from_pt == PieceTypes::Pawn && chessTable_[to_x][to_y].enPassant;
+
+  if (enPassant) {
+    auto x = (to_x == 2) ? 3 : 4;
+    chessTable_[x][to_y]._pieceType = PieceTypes::VoidType;
+    chessTable_[x][to_y]._pieceColor = PieceColor::VoidColor;
+  }
+
+  for (int i = 0; i < N_; i++)
+    for (int j = 0; j < N_; j++)
+      chessTable_[i][j].enPassant = false;
+
+  if (from_pt == PieceTypes::Pawn) {
+    if (from_x == 1 && to_x == 3)
+      chessTable_[2][to_y].enPassant = true;
+    else if (from_x == 6 && to_x == 4)
+      chessTable_[5][to_y].enPassant = true;
+  }
+
+  chessTable_[from_x][from_y].hasMoved = true;
+  chessTable_[to_x][to_y].hasMoved = true;
+
+  if (from_pt == PieceTypes::King && chessTable_[to_x][to_y].isCastlingField) {
+    int rook_y = (to_y == 2) ? 3 : 5;
+    int rook_x = to_x;
+    if (to_y == 2) {
+      chessTable_[rook_x][rook_y]._pieceType = PieceTypes::Rook;
+      chessTable_[rook_x][rook_y]._pieceColor =
+          chessTable_[to_x][0]._pieceColor;
+      chessTable_[rook_x][rook_y].hasMoved = true;
+      chessTable_[to_x][0].hasMoved = true;
+      chessTable_[to_x][0]._pieceType = PieceTypes::VoidType;
+      chessTable_[to_x][0]._pieceColor = PieceColor::VoidColor;
+    } else {
+
+      chessTable_[rook_x][rook_y]._pieceType = PieceTypes::Rook;
+      chessTable_[rook_x][rook_y]._pieceColor =
+          chessTable_[to_x][7]._pieceColor;
+      chessTable_[rook_x][rook_y].hasMoved = true;
+      chessTable_[to_x][7].hasMoved = true;
+      chessTable_[to_x][7]._pieceType = PieceTypes::VoidType;
+      chessTable_[to_x][7]._pieceColor = PieceColor::VoidColor;
+    }
+  }
+
+  for (int i = 0; i < N_; i++)
+    for (int j = 0; j < N_; j++)
+      chessTable_[i][j].isCastlingField = false;
+
   chessTable_[to_x][to_y]._pieceColor = chessTable_[from_x][from_y]._pieceColor;
   chessTable_[to_x][to_y]._pieceType = from_pt;
   chessTable_[from_x][from_y]._pieceColor = PieceColor::VoidColor;
@@ -212,36 +262,11 @@ bool ChessModel::checkGameOver() {
     emit check();
     isChecked = true;
 
-    //    int i_min = (king_x - 1 >= 0) ? king_x - 1 : 0;
-    //    int i_max = (king_x + 1 < N_) ? king_x + 1 : N_ - 1;
-    //    int j_min = (king_y - 1 >= 0) ? king_y - 1 : 0;
-    //    int j_max = (king_y + 1 < N_) ? king_y + 1 : N_ - 1;
-
-    //    bool kingCanMove = false;
-    //    for (int i = i_min; i <= i_max; i++) {
-    //      for (int j = j_min; j <= j_max; j++) {
-    //        if (!fields.contains(i * N_ + j) &&
-    //            !isSamePieceColor(i, j,
-    //            chessTable_[king_x][king_y]._pieceColor,
-    //                              false, false)) {
-    //          kingCanMove = true;
-    //          // break
-    //          i = N_;
-    //          j = N_;
-    //        }
-    //      }
-    //    }
-    //    if (kingCanMove)
-    //      return false;
-
     currentPlayer_ = currentPlayer_ % 2 + 1;
     auto kingsteps = possibleStepsForKing(
         king_x, king_y, chessTable_[king_x][king_y]._pieceColor, false, true,
         false);
     currentPlayer_ = currentPlayer_ % 2 + 1;
-    QMap<int, QString> ayyo;
-    for (auto s : kingsteps)
-      ayyo.insert(s.first * N_ + s.second, "ass");
 
     if (!kingsteps.isEmpty())
       return false;
@@ -432,6 +457,49 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
         fields.append(QPair<int, int>(i, j));
     }
   }
+  if (chessTable_[x][y].hasMoved)
+    return fields;
+
+  if (color == PieceColor::White) {
+    if (x == 7 && y == 4) {
+      // right
+      if (!chessTable_[7][7].hasMoved &&
+          chessTable_[7][5]._pieceType == PieceTypes::VoidType &&
+          chessTable_[7][6]._pieceType == PieceTypes::VoidType) {
+        fields.append(QPair<int, int>(7, 6));
+        chessTable_[7][6].isCastlingField = true;
+      } else
+        chessTable_[7][6].isCastlingField = false;
+      // left
+      if (!chessTable_[7][0].hasMoved &&
+          chessTable_[7][3]._pieceType == PieceTypes::VoidType &&
+          chessTable_[7][2]._pieceType == PieceTypes::VoidType) {
+        fields.append(QPair<int, int>(7, 2));
+        chessTable_[7][2].isCastlingField = true;
+      } else
+        chessTable_[7][2].isCastlingField = false;
+    }
+  } else {
+    if (x == 0 && y == 4) {
+      // right
+      if (!chessTable_[0][7].hasMoved &&
+          chessTable_[0][5]._pieceType == PieceTypes::VoidType &&
+          chessTable_[0][6]._pieceType == PieceTypes::VoidType) {
+        fields.append(QPair<int, int>(0, 6));
+        chessTable_[0][6].isCastlingField = true;
+      } else
+        chessTable_[0][6].isCastlingField = false;
+      // left
+      if (!chessTable_[0][0].hasMoved &&
+          chessTable_[0][3]._pieceType == PieceTypes::VoidType &&
+          chessTable_[0][2]._pieceType == PieceTypes::VoidType) {
+        fields.append(QPair<int, int>(0, 2));
+        chessTable_[0][2].isCastlingField = true;
+      } else
+        chessTable_[0][2].isCastlingField = false;
+    }
+  }
+
   return fields;
 }
 
@@ -641,6 +709,7 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
     if (newTable) {
       if (attack && startPosition &&
           newTable_[x - 2][y]._pieceType == PieceTypes::VoidType &&
+          newTable_[x - 1][y]._pieceType == PieceTypes::VoidType &&
           !stepCausesSelfCheck(x, y, x - 2, y, attack))
         fields.append(QPair<int, int>(x - 2, y));
 
@@ -660,9 +729,18 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
              includeDefendedPieces))) &&
           !stepCausesSelfCheck(x, y, x - 1, y + 1, attack))
         fields.append(QPair<int, int>(x - 1, y + 1));
+      // enpassant left and right
+      if (y > 0 && x == 3 && newTable_[2][y - 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 2, y - 1, attack))
+        fields.append(QPair<int, int>(2, y - 1));
+
+      if (y < (N_ - 1) && x == 3 && newTable_[2][y + 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 2, y + 1, attack))
+        fields.append(QPair<int, int>(2, y + 1));
     } else {
       if (attack && startPosition &&
           chessTable_[x - 2][y]._pieceType == PieceTypes::VoidType &&
+          chessTable_[x - 1][y]._pieceType == PieceTypes::VoidType &&
           !stepCausesSelfCheck(x, y, x - 2, y, attack))
         fields.append(QPair<int, int>(x - 2, y));
 
@@ -683,6 +761,14 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
              includeDefendedPieces))) &&
           !stepCausesSelfCheck(x, y, x - 1, y + 1, attack))
         fields.append(QPair<int, int>(x - 1, y + 1));
+      // enpassant left and right
+      if (y > 0 && x == 3 && chessTable_[2][y - 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 2, y - 1, attack))
+        fields.append(QPair<int, int>(2, y - 1));
+
+      if (y < (N_ - 1) && x == 3 && chessTable_[2][y + 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 2, y + 1, attack))
+        fields.append(QPair<int, int>(2, y + 1));
     }
   }
 
@@ -691,6 +777,7 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
     if (newTable) {
       if (attack && startPosition &&
           newTable_[x + 2][y]._pieceType == PieceTypes::VoidType &&
+          newTable_[x + 1][y]._pieceType == PieceTypes::VoidType &&
           !stepCausesSelfCheck(x, y, x + 2, y, attack))
         fields.append(QPair<int, int>(x + 2, y));
 
@@ -710,9 +797,18 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
              includeDefendedPieces))) &&
           !stepCausesSelfCheck(x, y, x + 1, y + 1, attack))
         fields.append(QPair<int, int>(x + 1, y + 1));
+      // enpassant left and right
+      if (y > 0 && x == 4 && newTable_[5][y - 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 5, y - 1, attack))
+        fields.append(QPair<int, int>(5, y - 1));
+
+      if (y < (N_ - 1) && x == 4 && newTable_[5][y + 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 5, y + 1, attack))
+        fields.append(QPair<int, int>(5, y + 1));
     } else {
       if (attack && startPosition &&
           chessTable_[x + 2][y]._pieceType == PieceTypes::VoidType &&
+          chessTable_[x + 1][y]._pieceType == PieceTypes::VoidType &&
           !stepCausesSelfCheck(x, y, x + 2, y, attack))
         fields.append(QPair<int, int>(x + 2, y));
 
@@ -733,6 +829,14 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
              includeDefendedPieces))) &&
           !stepCausesSelfCheck(x, y, x + 1, y + 1, attack))
         fields.append(QPair<int, int>(x + 1, y + 1));
+      // enpassant left and right
+      if (y > 0 && x == 4 && chessTable_[5][y - 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 5, y - 1, attack))
+        fields.append(QPair<int, int>(5, y - 1));
+
+      if (y < (N_ - 1) && x == 4 && chessTable_[5][y + 1].enPassant &&
+          !stepCausesSelfCheck(x, y, 5, y + 1, attack))
+        fields.append(QPair<int, int>(5, y + 1));
     }
   }
   return fields;

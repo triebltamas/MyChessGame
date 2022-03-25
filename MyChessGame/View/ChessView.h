@@ -2,6 +2,7 @@
 #define CHESSVIEW_H
 
 #include "MyChessGame/Model/ChessModel.h"
+#include "SwitchPawnDialog.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
@@ -34,7 +35,7 @@ private:
   void updateCell(int x, int y, ChessField field, bool initField = false);
 
   Ui::ChessView *ui;
-
+  SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
   QLabel *currentPlayerLabel;
   ChessModel *_model;

@@ -39,6 +39,8 @@ void ChessView::generateTable() {
       _tableView.insert(i * 8 + j, new QPushButton());
       _tableView[i * 8 + j]->setMinimumSize(QSize(100, 100));
       _tableView[i * 8 + j]->setSizeIncrement(QSize(1, 1));
+      _tableView[i * 8 + j]->setIconSize(QSize(50, 50));
+      _tableView[i * 8 + j]->setStyleSheet("text-align: center;");
 
       ui->gridLayout->addWidget(_tableView[i * 8 + j], i, j);
       updateCell(i, j, _model->getField(i, j), true);
@@ -201,7 +203,14 @@ void ChessView::onCellClicked(int x, int y) {
 void ChessView::onStepped(bool PieceKnockedDown) {}
 
 void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
-  _model->switchToQueen(x, y, PieceTypes::Queen);
+  bool isWhite = _model->getField(x, y)._pieceColor == PieceColor::White;
+  switchDialog = new SwitchPawnDialog(isWhite, x, y, this);
+  connect(switchDialog, &SwitchPawnDialog::pieceChosen, this,
+          [=](int x, int y, PieceTypes piece) {
+            _model->switchToQueen(x, y, piece);
+          });
+  switchDialog->setAttribute(Qt::WA_DeleteOnClose);
+  switchDialog->exec();
 }
 void ChessView::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));

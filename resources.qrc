@@ -13,5 +13,7 @@
         <file alias="queenWhite">MyChessGame/Resources/queenWhite.ico</file>
         <file alias="rookBlack">MyChessGame/Resources/rookBlack.ico</file>
         <file alias="rookWhite">MyChessGame/Resources/rookWhite.ico</file>
+        <file alias="BlackField">MyChessGame/Resources/BlackField.png</file>
+        <file alias="WhiteField">MyChessGame/Resources/WhiteField.png</file>
     </qresource>
 </RCC>
