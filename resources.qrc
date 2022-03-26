@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/Application">
+        <file>MyChessGame/Resources/GameIcon.ico</file>
+        <file alias="bishupBlack">MyChessGame/Resources/bishupBlack.ico</file>
+        <file alias="bishupWhite">MyChessGame/Resources/bishupWhite.ico</file>
+        <file alias="kingBlack">MyChessGame/Resources/kingBlack.ico</file>
+        <file alias="kingWhite">MyChessGame/Resources/kingWhite.ico</file>
+        <file alias="knightBlack">MyChessGame/Resources/knightBlack.ico</file>
+        <file alias="knightWhite">MyChessGame/Resources/knightWhite.ico</file>
+        <file alias="pawnBlack">MyChessGame/Resources/pawnBlack.ico</file>
+        <file alias="pawnWhite">MyChessGame/Resources/pawnWhite.ico</file>
+        <file alias="queenBlack">MyChessGame/Resources/queenBlack.ico</file>
+        <file alias="queenWhite">MyChessGame/Resources/queenWhite.ico</file>
+        <file alias="rookBlack">MyChessGame/Resources/rookBlack.ico</file>
+        <file alias="rookWhite">MyChessGame/Resources/rookWhite.ico</file>
+        <file alias="BlackField">MyChessGame/Resources/BlackField.png</file>
+        <file alias="WhiteField">MyChessGame/Resources/WhiteField.png</file>
+    </qresource>
+</RCC>

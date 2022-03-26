@@ -9,6 +9,10 @@ typedef struct ChessField {
   FieldColor _fieldColor;
   PieceColor _pieceColor;
   PieceTypes _pieceType;
+  bool highlighted = false;
+  bool enPassant = false;
+  bool hasMoved = false;
+  bool isCastlingField = false;
 } ChessField;
 
 #endif // CHESSFIELD_H

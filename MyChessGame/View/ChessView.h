@@ -2,6 +2,8 @@
 #define CHESSVIEW_H
 
 #include "MyChessGame/Model/ChessModel.h"
+#include "SwitchPawnDialog.h"
+#include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
 
@@ -18,12 +20,25 @@ public:
   ChessView(QWidget *parent = nullptr);
   ~ChessView();
 
+public slots:
+  void onGameOver(int Player);
+  void onCheck();
+  void onPawnHasReachedEnemysBase(int x, int y);
+  void onCellClicked(int x, int y);
+
 private:
   void initUI();
+  void newGame();
+  void exit();
+  void generateTable();
+  void updateCell(int x, int y, ChessField field, bool initField = false);
 
   Ui::ChessView *ui;
-
+  SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
+  QLabel *currentPlayerLabel;
   ChessModel *_model;
+  QPair<int, int> clickedCell_;
+  bool green = false;
 };
 #endif // CHESSVIEW_H
