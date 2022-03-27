@@ -1,6 +1,7 @@
 #ifndef CHESSMODEL_H
 #define CHESSMODEL_H
 #include "Common/ChessField.h"
+#include <QJsonObject>
 #include <QList>
 #include <QObject>
 #include <QPair>
@@ -14,12 +15,21 @@ public:
                                        bool includeDefendedPieces = false,
                                        bool attack = false,
                                        bool newTable = false);
+  QList<QPair<int, int>> possibleSteps(QJsonObject parameters);
 
   void stepPiece(int from_x, int from_y, int to_x, int to_y);
+  void stepPiece(QJsonObject parameters);
+
   void newGame();
+
   ChessField getField(int x, int y);
+  ChessField getField(QJsonObject parameters);
+
   void setHighlighted(int x, int y, bool highlight);
+  void setHighlighted(QJsonObject parameters);
+
   void switchToQueen(int x, int y, PieceTypes switchTo);
+  void switchToQueen(QJsonObject parameters);
 
 signals:
   void gameOver(int player);

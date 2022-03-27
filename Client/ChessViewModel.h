@@ -1,6 +1,10 @@
 #ifndef CHESSVIEWMODEL_H
 #define CHESSVIEWMODEL_H
 #include "Common/ChessField.h"
+#include <QDebug>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -9,6 +13,7 @@ class ChessViewModel : public QObject {
   Q_OBJECT
 public:
   ChessViewModel();
+  ~ChessViewModel();
 
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
@@ -27,11 +32,14 @@ signals:
   void connected(bool success);
 
 private:
-  void sendRequest(QString request);
+  QJsonObject sendRequest(QJsonObject request);
 
-  QTcpSocket *socket_;
+  QTcpSocket *requestSocket_;
+  QTcpServer *responseServer_;
+  QTcpSocket *responseSocket_;
   QString hostIP_ = "127.0.0.1";
-  int port_ = 1337;
+  int requestPort_ = 1337;
+  int responsePort_ = 1338;
 };
 
 #endif // CHESSVIEWMODEL_H

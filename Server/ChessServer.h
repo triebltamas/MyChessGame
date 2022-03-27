@@ -3,6 +3,9 @@
 
 #include "ChessModel.h"
 #include "Common/ChessField.h"
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -11,8 +14,7 @@ class ChessServer : public QObject {
   Q_OBJECT
 public:
   ChessServer(QObject *parent = nullptr);
-  virtual ~ChessServer() {}
-
+  ~ChessServer();
 public slots:
   void onGameOver(int Player);
   void onCheck();
@@ -21,8 +23,10 @@ public slots:
 private:
   ChessModel *model_ = nullptr;
   QTcpServer *server_ = nullptr;
-  QMap<QString, QTcpSocket *> sockets_;
-  int port_ = 1337;
+  QMap<QString, QTcpSocket *> requestSockets_;
+  QMap<QString, QTcpSocket *> responseSockets_;
+  int requestPort_ = 1337;
+  int responsePort_ = 1338;
 };
 
 #endif // CHESSSERVER_H

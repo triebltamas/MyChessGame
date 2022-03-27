@@ -74,6 +74,13 @@ void ChessModel::newGame() {
   }
 }
 
+QList<QPair<int, int>> ChessModel::possibleSteps(QJsonObject parameters) {
+  return possibleSteps(parameters["x"].toInt(), parameters["y"].toInt(),
+                       parameters["includeDefendedPieces"].toBool(),
+                       parameters["attack"].toBool(),
+                       parameters["newTable"].toBool());
+}
+
 QList<QPair<int, int>> ChessModel::possibleSteps(int x, int y,
                                                  bool includeDefendedPieces,
                                                  bool attack, bool newTable) {
@@ -106,6 +113,11 @@ QList<QPair<int, int>> ChessModel::possibleSteps(int x, int y,
   default:
     return fields;
   }
+}
+
+void ChessModel::stepPiece(QJsonObject parameters) {
+  return stepPiece(parameters["from_x"].toInt(), parameters["from_y"].toInt(),
+                   parameters["to_x"].toInt(), parameters["to_y"].toInt());
 }
 
 void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
@@ -196,6 +208,10 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   currentPlayer_ = currentPlayer_ % 2 + 1;
 }
 
+void ChessModel::switchToQueen(QJsonObject parameters) {
+  return switchToQueen(parameters["x"].toInt(), parameters["y"].toInt(),
+                       static_cast<PieceTypes>(parameters["switchTo"].toInt()));
+}
 void ChessModel::switchToQueen(int x, int y, PieceTypes switchTo) {
   if (chessTable_[x][y]._pieceType != PieceTypes::Pawn)
     return;
@@ -836,8 +852,16 @@ ChessModel::possibleStepsForPawn(int x, int y, PieceColor color,
   }
   return fields;
 }
+ChessField ChessModel::getField(QJsonObject parameters) {
+  return getField(parameters["x"].toInt(), parameters["y"].toInt());
+}
 
 ChessField ChessModel::getField(int x, int y) { return chessTable_[x][y]; }
+
+void ChessModel::setHighlighted(QJsonObject parameters) {
+  return setHighlighted(parameters["x"].toInt(), parameters["y"].toInt(),
+                        parameters["highlighted"].toBool());
+}
 
 void ChessModel::setHighlighted(int x, int y, bool highlighted) {
   chessTable_[x][y].highlighted = highlighted;
