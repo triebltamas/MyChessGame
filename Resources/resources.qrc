@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/Application">
+        <file>WhiteField.png</file>
+        <file>rookWhite.ico</file>
+        <file>rookBlack.ico</file>
+        <file>queenWhite.ico</file>
+        <file>queenBlack.ico</file>
+        <file>pawnWhite.ico</file>
+        <file>pawnBlack.ico</file>
+        <file>knightWhite.ico</file>
+        <file>knightBlack.ico</file>
+        <file>kingWhite.ico</file>
+        <file>kingBlack.ico</file>
+        <file>GameIcon.ico</file>
+        <file>BlackField.png</file>
+        <file>bishupWhite.ico</file>
+        <file>bishupBlack.ico</file>
+    </qresource>
+</RCC>
