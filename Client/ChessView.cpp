@@ -5,13 +5,12 @@
 #include <iostream>
 
 ChessView::ChessView(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessModel) {
+    : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessViewModel) {
   ui->setupUi(this);
-  _model = new ChessModel();
-  connect(_model, &ChessModel::gameOver, this, &ChessView::onGameOver);
-  connect(_model, &ChessModel::pawnHasReachedEnemysBase, this,
+  connect(_model, &ChessViewModel::gameOver, this, &ChessView::onGameOver);
+  connect(_model, &ChessViewModel::pawnHasReachedEnemysBase, this,
           &ChessView::onPawnHasReachedEnemysBase);
-  connect(_model, &ChessModel::check, this, &ChessView::onCheck);
+  connect(_model, &ChessViewModel::check, this, &ChessView::onCheck);
   connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
   connect(ui->actionExit, &QAction::triggered, this, &ChessView::exit);
   initUI();
