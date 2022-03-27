@@ -71,39 +71,39 @@ void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
   case PieceTypes::King:
     _tableView[x * 8 + y]->setText("");
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/kingWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KingWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/kingBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KingBlack"));
     break;
   case PieceTypes::Queen:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/queenWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/QueenWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/queenBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/QueenBlack"));
     break;
   case PieceTypes::Bishup:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/bishupWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/BishupWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/bishupBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/BishupBlack"));
     break;
   case PieceTypes::Knight:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/knightWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KnightWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/knightBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KnightBlack"));
     break;
   case PieceTypes::Rook:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/rookWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/RookWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/rookBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/RookBlack"));
     break;
   case PieceTypes::Pawn:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/pawnWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/PawnWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/pawnBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/PawnBlack"));
     break;
   case PieceTypes::VoidType:
     _tableView[x * 8 + y]->setIcon(QIcon());

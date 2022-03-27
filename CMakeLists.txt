@@ -37,6 +37,7 @@ file(GLOB SOURCES
     Client/SwitchPawnDialog.cpp
     Server/ChessModel.cpp
     Server/ChessServer.cpp
+    Resources/resources.qrc
     )
 
 set(ignoreMe "${QT_QMAKE_EXECUTABLE}")

@@ -12,16 +12,17 @@ class ChessServer : public QObject {
 public:
   ChessServer(QObject *parent = nullptr);
   virtual ~ChessServer() {}
-  void run();
 
 public slots:
   void onGameOver(int Player);
   void onCheck();
+  void onNewConnection();
 
 private:
   ChessModel *model_ = nullptr;
   QTcpServer *server_ = nullptr;
-  QTcpSocket *socket_ = nullptr;
+  QMap<QString, QTcpSocket *> sockets_;
+  int port_ = 1337;
 };
 
 #endif // CHESSSERVER_H

@@ -24,10 +24,14 @@ signals:
   void gameOver(int player);
   void check();
   void pawnHasReachedEnemysBase(int x, int y);
+  void connected(bool success);
 
 private:
-  QTcpSocket *socket;
-  QTcpServer *server;
+  void sendRequest(QString request);
+
+  QTcpSocket *socket_;
+  QString hostIP_ = "127.0.0.1";
+  int port_ = 1337;
 };
 
 #endif // CHESSVIEWMODEL_H
