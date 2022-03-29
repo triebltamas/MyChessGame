@@ -31,6 +31,9 @@ public:
   void switchToQueen(int x, int y, PieceTypes switchTo);
   void switchToQueen(QJsonObject parameters);
 
+  QJsonObject serializeTable();
+  void deSerializeTable(QJsonObject tableJson);
+
 signals:
   void gameOver(int player);
   void stepped(bool pieceKnockedDown);

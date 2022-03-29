@@ -5,12 +5,12 @@
 #include <iostream>
 
 ChessView::ChessView(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessViewModel) {
+    : QMainWindow(parent), ui(new Ui::ChessView), _model(new Ayyoo) {
   ui->setupUi(this);
-  connect(_model, &ChessViewModel::gameOver, this, &ChessView::onGameOver);
-  connect(_model, &ChessViewModel::pawnHasReachedEnemysBase, this,
+  connect(_model, &Ayyoo::gameOver, this, &ChessView::onGameOver);
+  connect(_model, &Ayyoo::pawnHasReachedEnemysBase, this,
           &ChessView::onPawnHasReachedEnemysBase);
-  connect(_model, &ChessViewModel::check, this, &ChessView::onCheck);
+  connect(_model, &Ayyoo::check, this, &ChessView::onCheck);
   connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
   connect(ui->actionExit, &QAction::triggered, this, &ChessView::exit);
   initUI();

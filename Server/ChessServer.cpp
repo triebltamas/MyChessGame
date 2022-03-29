@@ -55,58 +55,10 @@ void ChessServer::onNewConnection() {
     QJsonDocument itemDoc = QJsonDocument::fromJson(str.toUtf8());
     QJsonObject request = itemDoc.object();
     QString func = request["Function"].toString();
-    auto parameters = request["Parameters"].toObject();
-    ChessField field;
-    QList<QPair<int, int>> possibleSteps;
+    auto tableJson = request["Parameters"].toObject()["Table"].toObject();
 
-    if (func == "newGame") {
-      model_->newGame();
-    } else if (func == "stepPiece") {
-      model_->stepPiece(parameters);
-    } else if (func == "setHighlighted") {
-      model_->setHighlighted(parameters);
-    } else if (func == "switchToQueen") {
-      model_->switchToQueen(parameters);
-    } else if (func == "getField") {
-      field = model_->getField(parameters);
-
-      QJsonObject response;
-      response.insert(
-          "Field",
-          QJsonObject{{"FieldColor", static_cast<int>(field._fieldColor)},
-                      {"PieceColor", static_cast<int>(field._pieceColor)},
-                      {"PieceType", static_cast<int>(field._pieceType)},
-                      {"Highlighted", field.highlighted},
-                      {"EnPassant", field.enPassant},
-                      {"HasMoved", field.hasMoved},
-                      {"IsCastlingField", field.isCastlingField}});
-
-      if (responseSockets_.contains(requestSocket->peerAddress().toString())) {
-        auto socket = responseSockets_[requestSocket->peerAddress().toString()];
-        QJsonDocument doc(response);
-        QByteArray data;
-        data.append(QString::fromLatin1(doc.toJson()));
-        socket->write(data);
-        socket->waitForBytesWritten(1000);
-      }
-    } else if (func == "possibleSteps") {
-      possibleSteps.append(model_->possibleSteps(parameters));
-      QJsonObject response;
-
-      for (int i = 0; i < possibleSteps.length(); i++) {
-        response.insert(QString::number(i),
-                        QJsonObject{{"First", possibleSteps[i].first},
-                                    {"Second", possibleSteps[i].second}});
-      }
-
-      if (responseSockets_.contains(requestSocket->peerAddress().toString())) {
-        auto socket = responseSockets_[requestSocket->peerAddress().toString()];
-        QJsonDocument doc(response);
-        QByteArray data;
-        data.append(QString::fromLatin1(doc.toJson()));
-        socket->write(data);
-        socket->waitForBytesWritten(1000);
-      }
+    if (func == "deSerializeTable") {
+      // feldolgozni a kerest es/vagy tovabbitani a masik kliensnek
     }
   });
   qDebug() << "Localaddress: " << requestSocket->localAddress().toString()

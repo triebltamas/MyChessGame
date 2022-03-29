@@ -866,3 +866,54 @@ void ChessModel::setHighlighted(QJsonObject parameters) {
 void ChessModel::setHighlighted(int x, int y, bool highlighted) {
   chessTable_[x][y].highlighted = highlighted;
 }
+
+QJsonObject ChessModel::serializeTable() {
+  QJsonObject result;
+
+  for (int i = 0; i < N_; i++) {
+    for (int j = 0; j < N_; j++) {
+      QJsonObject field = QJsonObject{
+          {"FieldColor", static_cast<int>(chessTable_[i][j]._fieldColor)},
+          {"PieceColor", static_cast<int>(chessTable_[i][j]._pieceColor)},
+          {"PieceType", static_cast<int>(chessTable_[i][j]._pieceType)},
+          {"Highlighted", chessTable_[i][j].highlighted},
+          {"EnPassant", chessTable_[i][j].enPassant},
+          {"HasMoved", chessTable_[i][j].hasMoved},
+          {"IsCastlingField", chessTable_[i][j].isCastlingField}};
+      result.insert(QString("%1%2").arg(i).arg(j), field);
+    }
+  }
+
+  return result;
+}
+void ChessModel::deSerializeTable(QJsonObject tableJson) {
+  for (int i = 0; i < N_; i++) {
+    for (int j = 0; j < N_; j++) {
+      chessTable_[i][j]._fieldColor =
+          static_cast<FieldColor>(tableJson[QString("%1%2").arg(i).arg(j)]
+                                      .toObject()["FieldColor"]
+                                      .toInt());
+      chessTable_[i][j]._pieceColor =
+          static_cast<PieceColor>(tableJson[QString("%1%2").arg(i).arg(j)]
+                                      .toObject()["PieceColor"]
+                                      .toInt());
+      chessTable_[i][j]._pieceType =
+          static_cast<PieceTypes>(tableJson[QString("%1%2").arg(i).arg(j)]
+                                      .toObject()["PieceTypes"]
+                                      .toInt());
+      chessTable_[i][j].enPassant = tableJson[QString("%1%2").arg(i).arg(j)]
+                                        .toObject()["EnPassant"]
+                                        .toBool();
+      chessTable_[i][j].hasMoved = tableJson[QString("%1%2").arg(i).arg(j)]
+                                       .toObject()["HasMoved"]
+                                       .toBool();
+      chessTable_[i][j].highlighted = tableJson[QString("%1%2").arg(i).arg(j)]
+                                          .toObject()["Highlighted"]
+                                          .toBool();
+      chessTable_[i][j].isCastlingField =
+          tableJson[QString("%1%2").arg(i).arg(j)]
+              .toObject()["IsCastlingField"]
+              .toBool();
+    }
+  }
+}

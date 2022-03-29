@@ -1,6 +1,7 @@
 #ifndef CHESSVIEW_H
 #define CHESSVIEW_H
 
+#include "Ayyoo.h"
 #include "ChessViewModel.h"
 #include "SwitchPawnDialog.h"
 #include <QLabel>
@@ -37,7 +38,7 @@ private:
   SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
   QLabel *currentPlayerLabel;
-  ChessViewModel *_model;
+  Ayyoo *_model;
   QPair<int, int> clickedCell_;
   bool green = false;
 };
