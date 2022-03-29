@@ -118,7 +118,7 @@ ChessField ChessViewModel::getField(int x, int y) {
     auto fieldJSON = response["Field"].toObject();
     f._fieldColor = static_cast<FieldColor>(fieldJSON["FieldColor"].toInt());
     f._pieceColor = static_cast<PieceColor>(fieldJSON["PieceColor"].toInt());
-    f._pieceType = static_cast<PieceTypes>(fieldJSON["PieceTypes"].toInt());
+    f._pieceType = static_cast<PieceTypes>(fieldJSON["PieceType"].toInt());
     f.highlighted = fieldJSON["Highlighted"].toBool();
     f.enPassant = fieldJSON["EnPassant"].toBool();
     f.hasMoved = fieldJSON["HasMoved"].toBool();

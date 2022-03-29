@@ -59,7 +59,6 @@ void ChessServer::onNewConnection() {
     ChessField field;
     QList<QPair<int, int>> possibleSteps;
 
-    int asd;
     if (func == "newGame") {
       model_->newGame();
     } else if (func == "stepPiece") {
