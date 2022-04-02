@@ -25,6 +25,7 @@ public:
 
   QJsonObject serializeTable();
   void deSerializeTable(QJsonObject tableJson);
+  void deSerializeFields(QJsonObject fields);
   QJsonObject serializeField(int x, int y);
   void deSerializeField(QJsonObject fieldJson, int x, int y);
 

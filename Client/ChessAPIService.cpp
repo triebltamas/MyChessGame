@@ -46,6 +46,8 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
         emit startGame();
       } else if (func == "deSerializeTable") {
         model_->deSerializeTable(parameters["Table"].toObject());
+      } else if (func == "deSerializeFields") {
+        model_->deSerializeFields(parameters["Fields"].toObject());
       } else if (func == "gameOver") {
         int winner = parameters["Player"].toInt();
         emit gameOver(winner);
@@ -147,8 +149,8 @@ void ChessAPIService::sendFields(QList<QPair<int, int>> fields) {
     fieldsJson.insert(QString("%1%2").arg(field.first).arg(field.second),
                       model_->serializeField(field.first, field.second));
   }
-  QJsonObject request = {{"Function", "deSerializeTable"},
-                         {"Parameters", fieldsJson}};
+  QJsonObject request = {{"Function", "deSerializeFields"},
+                         {"Parameters", QJsonObject{{"Fields", fieldsJson}}}};
 
   sendRequest(request);
 }

@@ -843,6 +843,16 @@ void ChessModel::setHighlighted(int x, int y, bool highlighted) {
   chessTable_[x][y].highlighted = highlighted;
 }
 
+void ChessModel::deSerializeFields(QJsonObject fields) {
+  for (int i = 0; i < N_; i++)
+    for (int j = 0; j < N_; j++)
+      if (fields.contains(QString("%1%2").arg(i).arg(j)))
+        deSerializeField(fields[QString("%1%2").arg(i).arg(j)].toObject(), i,
+                         j);
+
+  refreshTable();
+}
+
 QJsonObject ChessModel::serializeField(int x, int y) {
   return QJsonObject{
       {"FieldColor", static_cast<int>(chessTable_[x][y]._fieldColor)},
