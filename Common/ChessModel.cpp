@@ -850,7 +850,7 @@ void ChessModel::deSerializeFields(QJsonObject fields) {
         deSerializeField(fields[QString("%1%2").arg(i).arg(j)].toObject(), i,
                          j);
 
-  refreshTable();
+  emit refreshTable();
 }
 
 QJsonObject ChessModel::serializeField(int x, int y) {
@@ -870,7 +870,7 @@ void ChessModel::deSerializeField(QJsonObject fieldJson, int x, int y) {
   chessTable_[x][y]._pieceColor =
       static_cast<PieceColor>(fieldJson["PieceColor"].toInt());
   chessTable_[x][y]._pieceType =
-      static_cast<PieceTypes>(fieldJson["PieceTypes"].toInt());
+      static_cast<PieceTypes>(fieldJson["PieceType"].toInt());
   chessTable_[x][y].enPassant = fieldJson["EnPassant"].toBool();
   chessTable_[x][y].hasMoved = fieldJson["HasMoved"].toBool();
   chessTable_[x][y].highlighted = fieldJson["Highlighted"].toBool();
