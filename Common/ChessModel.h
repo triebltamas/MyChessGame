@@ -25,6 +25,8 @@ public:
 
   QJsonObject serializeTable();
   void deSerializeTable(QJsonObject tableJson);
+  QJsonObject serializeField(int x, int y);
+  void deSerializeField(QJsonObject fieldJson, int x, int y);
 
 signals:
   void gameOver(int player);
@@ -34,9 +36,6 @@ signals:
   void refreshTable();
 
 private:
-  QJsonObject serializeField(int x, int y);
-  void deSerializeField(QJsonObject fieldJson, int x, int y);
-
   bool checkGameOver();
   bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
                            bool attack);

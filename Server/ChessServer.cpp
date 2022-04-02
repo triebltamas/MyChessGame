@@ -1,4 +1,5 @@
 #include "ChessServer.h"
+#include <QThread>
 
 ChessServer::ChessServer(QObject *parent) : QObject(parent) {
   model_ = new ChessModel();
@@ -38,24 +39,33 @@ void ChessServer::onDisconnected(QString key) {
 
   auto sessionID = sessionIDs_[key];
   auto session = sessions_[sessionID];
-  sessionIDs_.remove(session.player1RequestSocket->peerAddress().toString());
-  sessionIDs_.remove(session.player2RequestSocket->peerAddress().toString());
 
-  if (session.player1RequestSocket->isOpen()) {
-    session.player1RequestSocket->close();
-    session.player1RequestSocket->deleteLater();
+  auto p1reqSocket = session.player1RequestSocket;
+  auto p1resSocket = session.player1ResponseSocket;
+  auto p2reqSocket = session.player2RequestSocket;
+  auto p2resSocket = session.player2ResponseSocket;
+
+  if (p1reqSocket != nullptr)
+    sessionIDs_.remove(p1reqSocket->peerAddress().toString());
+
+  if (p2reqSocket != nullptr)
+    sessionIDs_.remove(p2reqSocket->peerAddress().toString());
+
+  if (p1reqSocket != nullptr && p1reqSocket->isOpen()) {
+    p1reqSocket->close();
+    p1reqSocket->deleteLater();
   }
-  if (session.player1ResponseSocket->isOpen()) {
-    session.player1ResponseSocket->close();
-    session.player1ResponseSocket->deleteLater();
+  if (p1resSocket != nullptr && p1resSocket->isOpen()) {
+    p1resSocket->close();
+    p1resSocket->deleteLater();
   }
-  if (session.player2RequestSocket->isOpen()) {
-    session.player2RequestSocket->close();
-    session.player2RequestSocket->deleteLater();
+  if (p2reqSocket != nullptr && p2reqSocket->isOpen()) {
+    p2reqSocket->close();
+    p2reqSocket->deleteLater();
   }
-  if (session.player2ResponseSocket->isOpen()) {
-    session.player2ResponseSocket->close();
-    session.player2ResponseSocket->deleteLater();
+  if (p2resSocket != nullptr && p2resSocket->isOpen()) {
+    p2resSocket->close();
+    p2resSocket->deleteLater();
   }
 
   sessions_.remove(session.sessionID);
@@ -66,17 +76,18 @@ void ChessServer::onNewConnection() {
   QTcpSocket *requestSocket = server_->nextPendingConnection();
 
   // TODO ezt meg kene csinalni, mert gaz lenne h valaki lecsatlakozik
-  if (sessionIDs_.contains(requestSocket->peerAddress().toString())) {
-    return;
-    // maybe delete socket here
-  }
+  //  if (sessionIDs_.contains(requestSocket->peerAddress().toString())) {
+  //    return;
+  //    // maybe delete socket here
+  //  }
 
-  connect(requestSocket, &QTcpSocket::disconnected, this,
-          [=]() { onDisconnected(requestSocket->peerAddress().toString()); });
+  //  connect(requestSocket, &QTcpSocket::disconnected, this,
+  //          [=]() { onDisconnected(requestSocket->peerAddress().toString());
+  //          });
 
   connect(requestSocket, &QTcpSocket::readyRead, this, [=]() {
     auto data = requestSocket->readAll();
-    //    qDebug() << data;
+    qDebug() << data;
 
     QString str = QString(data);
     str = str.replace("\n", "");
@@ -94,9 +105,9 @@ void ChessServer::onNewConnection() {
 
     QTcpSocket *socket = nullptr;
     if (senderPlayer == 1)
-      socket = sessions_[sessionID].player1ResponseSocket;
-    else
       socket = sessions_[sessionID].player2ResponseSocket;
+    else
+      socket = sessions_[sessionID].player1ResponseSocket;
 
     if (socket == nullptr)
       return;
@@ -106,7 +117,7 @@ void ChessServer::onNewConnection() {
 
   QTcpSocket *responseSocket = new QTcpSocket(this);
   responseSocket->connectToHost(requestSocket->peerAddress(), responsePort_);
-  if (!responseSocket->waitForConnected(3000)) {
+  if (responseSocket->waitForConnected(3000)) {
     qDebug() << "Successfully connected to host on IP: "
              << requestSocket->peerAddress().toString()
              << " and port: " << responsePort_;
@@ -116,8 +127,9 @@ void ChessServer::onNewConnection() {
              << " and port: " << responsePort_;
   }
 
-  connect(responseSocket, &QTcpSocket::disconnected, this,
-          [=]() { onDisconnected(requestSocket->peerAddress().toString()); });
+  //  connect(responseSocket, &QTcpSocket::disconnected, this,
+  //          [=]() { onDisconnected(requestSocket->peerAddress().toString());
+  //          });
 
   bool hasConnected = false;
   for (auto session : sessions_) {
@@ -142,16 +154,17 @@ void ChessServer::onNewConnection() {
       QByteArray connectedData;
       connectedData.append(QString::fromLatin1(connectedDoc.toJson()));
       session.player2ResponseSocket->write(connectedData);
-      session.player2ResponseSocket->waitForBytesWritten(1000);
+      session.player2ResponseSocket->waitForBytesWritten(10000);
 
+      QThread::msleep(1000);
       // send start game
       QJsonDocument startGamedoc(QJsonObject{{"Function", "startGame"}});
       QByteArray startGameData;
       startGameData.append(QString::fromLatin1(startGamedoc.toJson()));
       session.player1ResponseSocket->write(startGameData);
-      session.player1ResponseSocket->waitForBytesWritten(1000);
+      session.player1ResponseSocket->waitForBytesWritten(10000);
       session.player2ResponseSocket->write(startGameData);
-      session.player2ResponseSocket->waitForBytesWritten(1000);
+      session.player2ResponseSocket->waitForBytesWritten(10000);
       break;
     }
   }
@@ -167,15 +180,16 @@ void ChessServer::onNewConnection() {
     QJsonObject json;
     json.insert("Function", "connected");
     json.insert("Parameters", QJsonObject{{"SessionID", newSessionID},
-                                          {"SessionPlayerNumber", 2}});
+                                          {"SessionPlayerNumber", 1}});
 
     QJsonDocument doc(json);
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
     newSession.player1ResponseSocket->write(data);
-    newSession.player1ResponseSocket->waitForBytesWritten(1000);
+    newSession.player1ResponseSocket->waitForBytesWritten(10000);
 
     qDebug() << "newSessionID: " << newSessionID;
     // TODO maybe seed random generator here
+    randomGenerator->seed();
   }
 }

@@ -39,6 +39,7 @@ private:
 
   void sendRequest(QJsonObject request);
   void sendTable();
+  void sendFields(QList<QPair<int, int>> fields);
 
   // QPair<SessionID, p1/p2>
   QPair<QString, int> gameSessionID;

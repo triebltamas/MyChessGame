@@ -227,7 +227,7 @@ void ChessView::onConnected(int fixedPlayerNumber) {
 
 void ChessView::onStartGame() {
   // TODO get gametable widget and start the game
-  _model->startGame();
+  _model->newGame();
   qDebug() << "STARTING GAME";
 }
 
