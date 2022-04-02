@@ -33,8 +33,7 @@ include_directories(${RESOURCES_DIR})
 
 file(GLOB SOURCES
     Client/ChessView.cpp
-    Client/ChessViewModel.cpp
-    Client/Ayyoo.cpp
+    Client/ChessAPIService.cpp
     Client/SwitchPawnDialog.cpp
     Common/ChessModel.cpp
     Server/ChessServer.cpp

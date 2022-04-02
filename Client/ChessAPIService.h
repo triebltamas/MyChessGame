@@ -10,11 +10,11 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-class Ayyoo : public QObject {
+class ChessAPIService : public QObject {
   Q_OBJECT
 public:
-  Ayyoo();
-  ~Ayyoo();
+  ChessAPIService();
+  ~ChessAPIService();
 
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
@@ -30,12 +30,18 @@ signals:
   void gameOver(int player);
   void check();
   void pawnHasReachedEnemysBase(int x, int y);
-  void connected(bool success);
+  void connected(int fixedPlayerNumber);
+  void startGame();
+  void refreshTable();
 
 private:
   ChessModel *model_;
 
   void sendRequest(QJsonObject request);
+  void sendTable();
+
+  // QPair<SessionID, p1/p2>
+  QPair<QString, int> gameSessionID;
 
   QTcpSocket *requestSocket_;
   QTcpServer *responseServer_;

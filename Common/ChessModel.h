@@ -10,26 +10,18 @@ class ChessModel : public QObject {
   Q_OBJECT
 public:
   ChessModel();
+  ChessModel(int fixedPlayerNumber);
 
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
                                        bool attack = false,
                                        bool newTable = false);
-  QList<QPair<int, int>> possibleSteps(QJsonObject parameters);
-
-  void stepPiece(int from_x, int from_y, int to_x, int to_y);
-  void stepPiece(QJsonObject parameters);
 
   void newGame();
-
+  void stepPiece(int from_x, int from_y, int to_x, int to_y);
   ChessField getField(int x, int y);
-  ChessField getField(QJsonObject parameters);
-
   void setHighlighted(int x, int y, bool highlight);
-  void setHighlighted(QJsonObject parameters);
-
   void switchToQueen(int x, int y, PieceTypes switchTo);
-  void switchToQueen(QJsonObject parameters);
 
   QJsonObject serializeTable();
   void deSerializeTable(QJsonObject tableJson);
@@ -42,6 +34,9 @@ signals:
   void refreshTable();
 
 private:
+  QJsonObject serializeField(int x, int y);
+  void deSerializeField(QJsonObject fieldJson, int x, int y);
+
   bool checkGameOver();
   bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
                            bool attack);
@@ -75,6 +70,7 @@ private:
 
   int N_;
   int currentPlayer_; // 1 or 2 or 0 if draw
+  int fixedPlayerNumber_;
   bool isChecked = false;
   ChessField **chessTable_;
   ChessField **newTable_;

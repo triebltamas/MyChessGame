@@ -1,8 +1,7 @@
 #ifndef CHESSVIEW_H
 #define CHESSVIEW_H
 
-#include "Ayyoo.h"
-#include "ChessViewModel.h"
+#include "ChessAPIService.h"
 #include "SwitchPawnDialog.h"
 #include <QLabel>
 #include <QMainWindow>
@@ -24,6 +23,9 @@ public:
 public slots:
   void onGameOver(int Player);
   void onCheck();
+  void onRefreshTable();
+  void onStartGame();
+  void onConnected(int fixedPlayerNumber);
   void onPawnHasReachedEnemysBase(int x, int y);
   void onCellClicked(int x, int y);
 
@@ -38,8 +40,9 @@ private:
   SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
   QLabel *currentPlayerLabel;
-  Ayyoo *_model;
+  ChessAPIService *_model;
   QPair<int, int> clickedCell_;
   bool green = false;
+  int fixedPlayerNumber_ = -1;
 };
 #endif // CHESSVIEW_H

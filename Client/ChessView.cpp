@@ -5,12 +5,16 @@
 #include <iostream>
 
 ChessView::ChessView(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessView), _model(new Ayyoo) {
+    : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessAPIService) {
   ui->setupUi(this);
-  connect(_model, &Ayyoo::gameOver, this, &ChessView::onGameOver);
-  connect(_model, &Ayyoo::pawnHasReachedEnemysBase, this,
+  connect(_model, &ChessAPIService::connected, this, &ChessView::onConnected);
+  connect(_model, &ChessAPIService::startGame, this, &ChessView::onStartGame);
+  connect(_model, &ChessAPIService::refreshTable, this,
+          &ChessView::onRefreshTable);
+  connect(_model, &ChessAPIService::gameOver, this, &ChessView::onGameOver);
+  connect(_model, &ChessAPIService::pawnHasReachedEnemysBase, this,
           &ChessView::onPawnHasReachedEnemysBase);
-  connect(_model, &Ayyoo::check, this, &ChessView::onCheck);
+  connect(_model, &ChessAPIService::check, this, &ChessView::onCheck);
   connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
   connect(ui->actionExit, &QAction::triggered, this, &ChessView::exit);
   initUI();
@@ -213,6 +217,27 @@ void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
 void ChessView::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
   qDebug() << "CHECK!!\n";
+}
+
+void ChessView::onConnected(int fixedPlayerNumber) {
+  fixedPlayerNumber_ = fixedPlayerNumber;
+  // TODO waiting screen
+  qDebug() << "CONNECTED!!WAITING FOR OTHER PLAYER\n";
+}
+
+void ChessView::onStartGame() {
+  // TODO get gametable widget and start the game
+  _model->startGame();
+  qDebug() << "STARTING GAME";
+}
+
+void ChessView::onRefreshTable() {
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      updateCell(i, j, _model->getField(i, j));
+    }
+  }
+  qDebug() << "Refreshing Table";
 }
 
 void ChessView::exit() { this->close(); }
