@@ -20,27 +20,7 @@
    <string>ChessView</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <layout class="QGridLayout" name="gridLayout">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <property name="spacing">
-       <number>0</number>
-      </property>
-     </layout>
-    </item>
-   </layout>
+   <layout class="QVBoxLayout" name="verticalLayout"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -55,30 +35,20 @@
     <property name="title">
      <string>Menu</string>
     </property>
-    <addaction name="actionNewGame"/>
     <addaction name="separator"/>
+    <addaction name="actionHomePage"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
-  <action name="actionNewGame">
-   <property name="text">
-    <string>New Game</string>
-   </property>
-  </action>
-  <action name="actionSave">
-   <property name="text">
-    <string>Save</string>
-   </property>
-  </action>
-  <action name="actionLoad">
-   <property name="text">
-    <string>Load</string>
-   </property>
-  </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionHomePage">
+   <property name="text">
+    <string>Home Page</string>
    </property>
   </action>
  </widget>

@@ -4,8 +4,8 @@
 #include "ChessModel.h"
 #include "SwitchPawnDialog.h"
 #include <QLabel>
-#include <QMainWindow>
 #include <QPushButton>
+#include <QWidget>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -13,11 +13,11 @@ class LocalChessWidget;
 }
 QT_END_NAMESPACE
 
-class LocalChessWidget : public QMainWindow {
+class LocalChessWidget : public QWidget {
   Q_OBJECT
 
 public:
-  LocalChessWidget(QWidget *parent = nullptr);
+  LocalChessWidget();
   ~LocalChessWidget();
 
 public slots:
@@ -27,9 +27,7 @@ public slots:
   void onCellClicked(int x, int y);
 
 private:
-  void initUI();
   void newGame();
-  void exit();
   void generateTable();
   void updateCell(int x, int y, ChessField field, bool initField = false);
 

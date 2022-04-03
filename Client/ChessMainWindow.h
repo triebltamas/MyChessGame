@@ -3,6 +3,9 @@
 
 #include "ChessAPIService.h"
 #include "ChessField.h"
+#include "HomePageWidget.h"
+#include "LocalChessWidget.h"
+#include "OnlineChessWidget.h"
 #include "SwitchPawnDialog.h"
 #include <QLabel>
 #include <QMainWindow>
@@ -22,28 +25,17 @@ public:
   ~ChessMainWindow();
 
 public slots:
-  void onGameOver(int Player);
-  void onCheck();
-  void onRefreshTable();
-  void onStartGame();
-  void onConnected(int fixedPlayerNumber);
-  void onPawnHasReachedEnemysBase(int x, int y);
-  void onCellClicked(int x, int y);
+  void onConnectedToServer();
+  void onOnlineGameClicked();
+  void onLocalGameClicked();
 
 private:
-  void initUI();
-  void newGame();
   void exit();
-  void generateTable();
-  void updateCell(int x, int y, ChessField field, bool initField = false);
+  void homePage();
 
   Ui::ChessMainWindow *ui;
-  SwitchPawnDialog *switchDialog = nullptr;
-  QMap<int, QPushButton *> _tableView;
-  QLabel *currentPlayerLabel;
-  ChessAPIService *_model;
-  QPair<int, int> clickedCell_;
-  bool green = false;
-  int fixedPlayerNumber_ = -1;
+  OnlineChessWidget *onlineWidget_ = nullptr;
+  LocalChessWidget *localWidget_ = nullptr;
+  HomePageWidget *homePageWidget_ = nullptr;
 };
 #endif // CHESSMAINWINDOW_H

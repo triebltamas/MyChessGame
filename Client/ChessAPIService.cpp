@@ -62,6 +62,12 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
         model_->deSerializeTable(parameters["Table"].toObject());
       } else if (func == "deSerializeFields") {
         model_->deSerializeFields(parameters["Fields"].toObject());
+      } else if (func == "stepPiece") {
+        model_->stepPiece(parameters["Fields"].toObject()["FromX"].toInt(),
+                          parameters["Fields"].toObject()["FromY"].toInt(),
+                          parameters["Fields"].toObject()["ToX"].toInt(),
+                          parameters["Fields"].toObject()["ToY"].toInt());
+        emit refreshTable();
       } else if (func == "gameOver") {
         int winner = parameters["Player"].toInt();
         emit gameOver(winner);
@@ -122,10 +128,16 @@ ChessAPIService::possibleSteps(int x, int y, bool includeDefendedPieces,
 void ChessAPIService::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   model_->stepPiece(from_x, from_y, to_x, to_y);
 
-  QList<QPair<int, int>> fields;
-  fields.append(QPair<int, int>(from_x, from_y));
-  fields.append(QPair<int, int>(to_x, to_y));
-  sendFields(fields);
+  QJsonObject fieldsJson;
+
+  fieldsJson.insert(QString("FromX"), from_x);
+  fieldsJson.insert(QString("FromY"), from_y);
+  fieldsJson.insert(QString("ToX"), to_x);
+  fieldsJson.insert(QString("ToY"), to_y);
+  QJsonObject request = {{"Function", "stepPiece"},
+                         {"Parameters", QJsonObject{{"Fields", fieldsJson}}}};
+
+  sendRequest(request);
 }
 
 void ChessAPIService::newGame() { model_->newGame(); }
@@ -168,3 +180,5 @@ void ChessAPIService::sendFields(QList<QPair<int, int>> fields) {
 
   sendRequest(request);
 }
+
+int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPLayer(); }

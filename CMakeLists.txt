@@ -25,12 +25,10 @@ find_package(Qt5Network REQUIRED)
 
 #=================== INCLUSION OF Project Files ====================#
 set(CLIENT_DIR "${CMAKE_SOURCE_DIR}/Client")
-set(COMMON_DIR "${CMAKE_SOURCE_DIR}/Common")
 set(SERVER_DIR "${CMAKE_SOURCE_DIR}/Server")
 set(RESOURCES_DIR "${CMAKE_SOURCE_DIR}/Resources")
 
 include_directories(${CLIENT_DIR})
-include_directories(${COMMON_DIR})
 include_directories(${SERVER_DIR})
 include_directories(${RESOURCES_DIR})
 
@@ -41,6 +39,7 @@ file(GLOB SOURCES
     Client/ChessAPIService.cpp
     Client/SwitchPawnDialog.cpp
     Client/ChessModel.cpp
+    Client/HomePageWidget.cpp
     Server/ChessServer.cpp
     Resources/resources.qrc
     )
@@ -63,8 +62,6 @@ endif()
 # Add the target includes for Network_Chess
 target_include_directories(Network_Chess_Client PUBLIC ${CLIENT_DIR})
 target_include_directories(Network_Chess_Server PUBLIC ${SERVER_DIR})
-target_include_directories(Network_Chess_Client PUBLIC ${COMMON_DIR})
-target_include_directories(Network_Chess_Server PUBLIC ${COMMON_DIR})
 target_include_directories(Network_Chess_Client PUBLIC ${RESOURCES_DIR})
 
 #===================== LINKING LIBRARIES =======================#

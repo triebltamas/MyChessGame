@@ -894,3 +894,4 @@ void ChessModel::deSerializeTable(QJsonObject tableJson) {
 
   emit refreshTable();
 }
+int ChessModel::getCurrentPLayer() { return currentPlayer_; }

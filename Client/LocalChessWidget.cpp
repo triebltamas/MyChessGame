@@ -4,23 +4,17 @@
 #include <QMessageBox>
 #include <iostream>
 
-LocalChessWidget::LocalChessWidget(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::LocalChessWidget),
-      _model(new ChessModel) {
+LocalChessWidget::LocalChessWidget()
+    : ui(new Ui::LocalChessWidget), _model(new ChessModel) {
   ui->setupUi(this);
   connect(_model, &ChessModel::gameOver, this, &LocalChessWidget::onGameOver);
   connect(_model, &ChessModel::pawnHasReachedEnemysBase, this,
           &LocalChessWidget::onPawnHasReachedEnemysBase);
   connect(_model, &ChessModel::check, this, &LocalChessWidget::onCheck);
-  connect(ui->actionNewGame, &QAction::triggered, this,
-          &LocalChessWidget::newGame);
-  connect(ui->actionExit, &QAction::triggered, this, &LocalChessWidget::exit);
-  initUI();
+  newGame();
 }
 
 LocalChessWidget::~LocalChessWidget() { delete ui; }
-
-void LocalChessWidget::initUI() { newGame(); }
 
 void LocalChessWidget::newGame() {
   _model->newGame();
@@ -217,5 +211,3 @@ void LocalChessWidget::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
   qDebug() << "CHECK!!\n";
 }
-
-void LocalChessWidget::exit() { this->close(); }

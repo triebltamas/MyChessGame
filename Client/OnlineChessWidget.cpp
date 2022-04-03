@@ -4,9 +4,8 @@
 #include <QMessageBox>
 #include <iostream>
 
-OnlineChessWidget::OnlineChessWidget(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::OnlineChessWidget),
-      _model(new ChessAPIService) {
+OnlineChessWidget::OnlineChessWidget()
+    : ui(new Ui::OnlineChessWidget), _model(new ChessAPIService) {
   ui->setupUi(this);
   connect(_model, &ChessAPIService::connected, this,
           &OnlineChessWidget::onConnected);
@@ -19,15 +18,9 @@ OnlineChessWidget::OnlineChessWidget(QWidget *parent)
   connect(_model, &ChessAPIService::pawnHasReachedEnemysBase, this,
           &OnlineChessWidget::onPawnHasReachedEnemysBase);
   connect(_model, &ChessAPIService::check, this, &OnlineChessWidget::onCheck);
-  connect(ui->actionNewGame, &QAction::triggered, this,
-          &OnlineChessWidget::newGame);
-  connect(ui->actionExit, &QAction::triggered, this, &OnlineChessWidget::exit);
-  initUI();
 }
 
 OnlineChessWidget::~OnlineChessWidget() { delete ui; }
-
-void OnlineChessWidget::initUI() { newGame(); }
 
 void OnlineChessWidget::newGame() {
   _model->newGame();
@@ -48,7 +41,6 @@ void OnlineChessWidget::generateTable() {
       _tableView[i * 8 + j]->setSizeIncrement(QSize(1, 1));
       _tableView[i * 8 + j]->setIconSize(QSize(50, 50));
       _tableView[i * 8 + j]->setStyleSheet("text-align: center;");
-      //      _tableView[i * 8 + j]->setFlat(true);
 
       ui->gridLayout->addWidget(_tableView[i * 8 + j], i, j);
       updateCell(i, j, _model->getField(i, j), true);
@@ -130,7 +122,7 @@ void OnlineChessWidget::onGameOver(int Player) {
     QString msg = (Player == 1) ? QString("White won!") : QString("Black won!");
     QMessageBox::information(this, tr("Game over"), msg);
   }
-  newGame();
+  // todo go to main menu
 }
 
 void OnlineChessWidget::onCellClicked(int x, int y) {
@@ -159,6 +151,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
           }
         }
         green = false;
+        updateStatusLabel();
       } else {
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
@@ -227,13 +220,17 @@ void OnlineChessWidget::onCheck() {
 
 void OnlineChessWidget::onConnected(int fixedPlayerNumber) {
   fixedPlayerNumber_ = fixedPlayerNumber;
+  fixedOwnPieceColor_ = static_cast<PieceColor>(fixedPlayerNumber);
+  fixedEnemyPieceColor_ = static_cast<PieceColor>(fixedPlayerNumber % 2 + 1);
+
   // TODO waiting screen
   qDebug() << "CONNECTED!!WAITING FOR OTHER PLAYER\n";
 }
 
 void OnlineChessWidget::onStartGame() {
   // TODO get gametable widget and start the game
-  _model->newGame();
+  newGame();
+  updateStatusLabel();
   qDebug() << "STARTING GAME";
 }
 
@@ -243,7 +240,24 @@ void OnlineChessWidget::onRefreshTable() {
       updateCell(i, j, _model->getField(i, j));
     }
   }
+  updateStatusLabel();
   qDebug() << "Refreshing Table";
 }
 
-void OnlineChessWidget::exit() { this->close(); }
+void OnlineChessWidget::updateStatusLabel() {
+  if (_model->getCurrentPlayer() == fixedPlayerNumber_) {
+    ui->statusLabel->setText("You may step...");
+    updateTableEnabled(true);
+  } else {
+    ui->statusLabel->setText("Waiting for opponet to step...");
+    updateTableEnabled(false);
+  }
+}
+
+void OnlineChessWidget::updateTableEnabled(bool enabled) {
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      _tableView[i * 8 + j]->setEnabled(enabled);
+    }
+  }
+}

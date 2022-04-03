@@ -13,11 +13,11 @@ class OnlineChessWidget;
 }
 QT_END_NAMESPACE
 
-class OnlineChessWidget : public QMainWindow {
+class OnlineChessWidget : public QWidget {
   Q_OBJECT
 
 public:
-  OnlineChessWidget(QWidget *parent = nullptr);
+  OnlineChessWidget();
   ~OnlineChessWidget();
 
 public slots:
@@ -30,19 +30,21 @@ public slots:
   void onCellClicked(int x, int y);
 
 private:
-  void initUI();
   void newGame();
   void exit();
   void generateTable();
   void updateCell(int x, int y, ChessField field, bool initField = false);
+  void updateStatusLabel();
+  void updateTableEnabled(bool enable);
 
   Ui::OnlineChessWidget *ui;
   SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
-  QLabel *currentPlayerLabel;
   ChessAPIService *_model;
   QPair<int, int> clickedCell_;
   bool green = false;
   int fixedPlayerNumber_ = -1;
+  PieceColor fixedOwnPieceColor_ = PieceColor::VoidColor;
+  PieceColor fixedEnemyPieceColor_ = PieceColor::VoidColor;
 };
 #endif // ONLINECHESSWIDGET_H
