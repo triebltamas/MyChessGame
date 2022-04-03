@@ -842,3 +842,55 @@ ChessField ChessModel::getField(int x, int y) { return chessTable_[x][y]; }
 void ChessModel::setHighlighted(int x, int y, bool highlighted) {
   chessTable_[x][y].highlighted = highlighted;
 }
+
+void ChessModel::deSerializeFields(QJsonObject fields) {
+  for (int i = 0; i < N_; i++)
+    for (int j = 0; j < N_; j++)
+      if (fields.contains(QString("%1%2").arg(i).arg(j)))
+        deSerializeField(fields[QString("%1%2").arg(i).arg(j)].toObject(), i,
+                         j);
+
+  emit refreshTable();
+}
+
+QJsonObject ChessModel::serializeField(int x, int y) {
+  return QJsonObject{
+      {"FieldColor", static_cast<int>(chessTable_[x][y]._fieldColor)},
+      {"PieceColor", static_cast<int>(chessTable_[x][y]._pieceColor)},
+      {"PieceType", static_cast<int>(chessTable_[x][y]._pieceType)},
+      {"Highlighted", chessTable_[x][y].highlighted},
+      {"EnPassant", chessTable_[x][y].enPassant},
+      {"HasMoved", chessTable_[x][y].hasMoved},
+      {"IsCastlingField", chessTable_[x][y].isCastlingField}};
+}
+
+void ChessModel::deSerializeField(QJsonObject fieldJson, int x, int y) {
+  chessTable_[x][y]._fieldColor =
+      static_cast<FieldColor>(fieldJson["FieldColor"].toInt());
+  chessTable_[x][y]._pieceColor =
+      static_cast<PieceColor>(fieldJson["PieceColor"].toInt());
+  chessTable_[x][y]._pieceType =
+      static_cast<PieceTypes>(fieldJson["PieceType"].toInt());
+  chessTable_[x][y].enPassant = fieldJson["EnPassant"].toBool();
+  chessTable_[x][y].hasMoved = fieldJson["HasMoved"].toBool();
+  chessTable_[x][y].highlighted = fieldJson["Highlighted"].toBool();
+  chessTable_[x][y].isCastlingField = fieldJson["IsCastlingField"].toBool();
+}
+
+QJsonObject ChessModel::serializeTable() {
+  QJsonObject result;
+
+  for (int i = 0; i < N_; i++)
+    for (int j = 0; j < N_; j++)
+      result.insert(QString("%1%2").arg(i).arg(j), serializeField(i, j));
+
+  return result;
+}
+void ChessModel::deSerializeTable(QJsonObject tableJson) {
+  for (int i = 0; i < N_; i++)
+    for (int j = 0; j < N_; j++)
+      deSerializeField(tableJson[QString("%1%2").arg(i).arg(j)].toObject(), i,
+                       j);
+
+  emit refreshTable();
+}

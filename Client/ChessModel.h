@@ -1,6 +1,7 @@
 #ifndef CHESSMODEL_H
 #define CHESSMODEL_H
-#include "Common/ChessField.h"
+#include "ChessField.h"
+#include <QJsonObject>
 #include <QList>
 #include <QObject>
 #include <QPair>
@@ -9,17 +10,24 @@ class ChessModel : public QObject {
   Q_OBJECT
 public:
   ChessModel();
+  ChessModel(int fixedPlayerNumber);
 
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
                                        bool attack = false,
                                        bool newTable = false);
 
-  void stepPiece(int from_x, int from_y, int to_x, int to_y);
   void newGame();
+  void stepPiece(int from_x, int from_y, int to_x, int to_y);
   ChessField getField(int x, int y);
   void setHighlighted(int x, int y, bool highlight);
   void switchToQueen(int x, int y, PieceTypes switchTo);
+
+  QJsonObject serializeTable();
+  void deSerializeTable(QJsonObject tableJson);
+  void deSerializeFields(QJsonObject fields);
+  QJsonObject serializeField(int x, int y);
+  void deSerializeField(QJsonObject fieldJson, int x, int y);
 
 signals:
   void gameOver(int player);
@@ -62,6 +70,7 @@ private:
 
   int N_;
   int currentPlayer_; // 1 or 2 or 0 if draw
+  int fixedPlayerNumber_;
   bool isChecked = false;
   ChessField **chessTable_;
   ChessField **newTable_;

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10.2)
 
 if (WIN32)
     project(Network_Chess_Client LANGUAGES CXX)
@@ -7,6 +7,9 @@ elseif(UNIX)
     project(Network_Chess_Client)
     project(Network_Chess_Server)
 endif()
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CONFIGURATION_TYPES "Release;RelWithDebInfo" CACHE STRING "" FORCE)
 
@@ -32,11 +35,14 @@ include_directories(${SERVER_DIR})
 include_directories(${RESOURCES_DIR})
 
 file(GLOB SOURCES
-    Client/ChessView.cpp
-    Client/ChessViewModel.cpp
+    Client/ChessMainWindow.cpp
+    Client/LocalChessWidget.cpp
+    Client/OnlineChessWidget.cpp
+    Client/ChessAPIService.cpp
     Client/SwitchPawnDialog.cpp
-    Server/ChessModel.cpp
+    Client/ChessModel.cpp
     Server/ChessServer.cpp
+    Resources/resources.qrc
     )
 
 set(ignoreMe "${QT_QMAKE_EXECUTABLE}")
