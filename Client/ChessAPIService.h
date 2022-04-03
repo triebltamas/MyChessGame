@@ -1,7 +1,7 @@
-#ifndef AYYOO_H
-#define AYYOO_H
-#include "Common/ChessField.h"
-#include "Common/ChessModel.h"
+#ifndef CHESSAPISERVICE_H
+#define CHESSAPISERVICE_H
+#include "ChessField.h"
+#include "ChessModel.h"
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -47,9 +47,9 @@ private:
   QTcpSocket *requestSocket_;
   QTcpServer *responseServer_;
   QTcpSocket *responseSocket_;
-  QString hostIP_ = "127.0.0.1";
+  QString hostIP_ = "192.168.0.11";
   int requestPort_ = 1337;
   int responsePort_ = 1338;
 };
 
-#endif // AYYOO_H
+#endif // CHESSAPISERVICE_H

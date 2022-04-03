@@ -1,8 +1,8 @@
 #ifndef CHESSSERVER_H
 #define CHESSSERVER_H
 
-#include "Common/ChessField.h"
-#include "Common/ChessModel.h"
+#include "ChessField.h"
+#include "ChessModel.h"
 #include "GameSession.h"
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -24,8 +24,9 @@ public slots:
 
 private:
   void onDisconnected(QString key);
+  void onResponseSockectAvailable(QHostAddress address, int responsePort,
+                                  QTcpSocket *requestSocket);
 
-  ChessModel *model_ = nullptr;
   QTcpServer *server_ = nullptr;
   QMap<QString, GameSession> sessions_;
   QMap<QString, QString> sessionIDs_;

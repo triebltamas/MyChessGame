@@ -1,6 +1,6 @@
 #ifndef CHESSMODEL_H
 #define CHESSMODEL_H
-#include "Common/ChessField.h"
+#include "ChessField.h"
 #include <QJsonObject>
 #include <QList>
 #include <QObject>

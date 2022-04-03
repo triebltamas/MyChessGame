@@ -1,35 +1,40 @@
-#include "ChessView.h"
-#include "ui_ChessView.h"
+#include "OnlineChessWidget.h"
+#include "ui_OnlineChessWidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <iostream>
 
-ChessView::ChessView(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessAPIService) {
+OnlineChessWidget::OnlineChessWidget(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::OnlineChessWidget),
+      _model(new ChessAPIService) {
   ui->setupUi(this);
-  connect(_model, &ChessAPIService::connected, this, &ChessView::onConnected);
-  connect(_model, &ChessAPIService::startGame, this, &ChessView::onStartGame);
+  connect(_model, &ChessAPIService::connected, this,
+          &OnlineChessWidget::onConnected);
+  connect(_model, &ChessAPIService::startGame, this,
+          &OnlineChessWidget::onStartGame);
   connect(_model, &ChessAPIService::refreshTable, this,
-          &ChessView::onRefreshTable);
-  connect(_model, &ChessAPIService::gameOver, this, &ChessView::onGameOver);
+          &OnlineChessWidget::onRefreshTable);
+  connect(_model, &ChessAPIService::gameOver, this,
+          &OnlineChessWidget::onGameOver);
   connect(_model, &ChessAPIService::pawnHasReachedEnemysBase, this,
-          &ChessView::onPawnHasReachedEnemysBase);
-  connect(_model, &ChessAPIService::check, this, &ChessView::onCheck);
-  connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
-  connect(ui->actionExit, &QAction::triggered, this, &ChessView::exit);
+          &OnlineChessWidget::onPawnHasReachedEnemysBase);
+  connect(_model, &ChessAPIService::check, this, &OnlineChessWidget::onCheck);
+  connect(ui->actionNewGame, &QAction::triggered, this,
+          &OnlineChessWidget::newGame);
+  connect(ui->actionExit, &QAction::triggered, this, &OnlineChessWidget::exit);
   initUI();
 }
 
-ChessView::~ChessView() { delete ui; }
+OnlineChessWidget::~OnlineChessWidget() { delete ui; }
 
-void ChessView::initUI() { newGame(); }
+void OnlineChessWidget::initUI() { newGame(); }
 
-void ChessView::newGame() {
+void OnlineChessWidget::newGame() {
   _model->newGame();
   generateTable();
 }
 
-void ChessView::generateTable() {
+void OnlineChessWidget::generateTable() {
   int i = 0;
   for (int j = 0; j < 8 && i < 8; ++j && ++i) {
     if (_tableView[i * 8 + j] != nullptr)
@@ -54,7 +59,8 @@ void ChessView::generateTable() {
   }
 }
 
-void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
+void OnlineChessWidget::updateCell(int x, int y, ChessField field,
+                                   bool initField) {
   if (initField) {
     switch (field._fieldColor) {
     case FieldColor::Black:
@@ -117,7 +123,7 @@ void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
   }
 }
 
-void ChessView::onGameOver(int Player) {
+void OnlineChessWidget::onGameOver(int Player) {
   if (Player == 0) {
     QMessageBox::information(this, tr("Game over"), QString("Draw"));
   } else {
@@ -127,7 +133,7 @@ void ChessView::onGameOver(int Player) {
   newGame();
 }
 
-void ChessView::onCellClicked(int x, int y) {
+void OnlineChessWidget::onCellClicked(int x, int y) {
   if (_model->getField(x, y)._pieceColor == PieceColor::VoidColor &&
       !_model->getField(x, y).highlighted)
     return;
@@ -204,7 +210,7 @@ void ChessView::onCellClicked(int x, int y) {
   }
 }
 
-void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
+void OnlineChessWidget::onPawnHasReachedEnemysBase(int x, int y) {
   bool isWhite = _model->getField(x, y)._pieceColor == PieceColor::White;
   switchDialog = new SwitchPawnDialog(isWhite, x, y, this);
   connect(switchDialog, &SwitchPawnDialog::pieceChosen, this,
@@ -214,24 +220,24 @@ void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
   switchDialog->setAttribute(Qt::WA_DeleteOnClose);
   switchDialog->exec();
 }
-void ChessView::onCheck() {
+void OnlineChessWidget::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
   qDebug() << "CHECK!!\n";
 }
 
-void ChessView::onConnected(int fixedPlayerNumber) {
+void OnlineChessWidget::onConnected(int fixedPlayerNumber) {
   fixedPlayerNumber_ = fixedPlayerNumber;
   // TODO waiting screen
   qDebug() << "CONNECTED!!WAITING FOR OTHER PLAYER\n";
 }
 
-void ChessView::onStartGame() {
+void OnlineChessWidget::onStartGame() {
   // TODO get gametable widget and start the game
   _model->newGame();
   qDebug() << "STARTING GAME";
 }
 
-void ChessView::onRefreshTable() {
+void OnlineChessWidget::onRefreshTable() {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
       updateCell(i, j, _model->getField(i, j));
@@ -240,4 +246,4 @@ void ChessView::onRefreshTable() {
   qDebug() << "Refreshing Table";
 }
 
-void ChessView::exit() { this->close(); }
+void OnlineChessWidget::exit() { this->close(); }

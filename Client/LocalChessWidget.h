@@ -1,7 +1,7 @@
-#ifndef CHESSVIEW_H
-#define CHESSVIEW_H
+#ifndef LOCALCHESSWIDGET_H
+#define LOCALCHESSWIDGET_H
 
-#include "ChessAPIService.h"
+#include "ChessModel.h"
 #include "SwitchPawnDialog.h"
 #include <QLabel>
 #include <QMainWindow>
@@ -9,23 +9,20 @@
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
-class ChessView;
+class LocalChessWidget;
 }
 QT_END_NAMESPACE
 
-class ChessView : public QMainWindow {
+class LocalChessWidget : public QMainWindow {
   Q_OBJECT
 
 public:
-  ChessView(QWidget *parent = nullptr);
-  ~ChessView();
+  LocalChessWidget(QWidget *parent = nullptr);
+  ~LocalChessWidget();
 
 public slots:
   void onGameOver(int Player);
   void onCheck();
-  void onRefreshTable();
-  void onStartGame();
-  void onConnected(int fixedPlayerNumber);
   void onPawnHasReachedEnemysBase(int x, int y);
   void onCellClicked(int x, int y);
 
@@ -36,13 +33,12 @@ private:
   void generateTable();
   void updateCell(int x, int y, ChessField field, bool initField = false);
 
-  Ui::ChessView *ui;
+  Ui::LocalChessWidget *ui;
   SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
   QLabel *currentPlayerLabel;
-  ChessAPIService *_model;
+  ChessModel *_model;
   QPair<int, int> clickedCell_;
   bool green = false;
-  int fixedPlayerNumber_ = -1;
 };
-#endif // CHESSVIEW_H
+#endif // LOCALCHESSWIDGET_H

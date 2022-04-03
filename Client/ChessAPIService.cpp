@@ -5,10 +5,16 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   responseServer_ = new QTcpServer(this);
 
   // STARTING VIEWMODEL'S RESPONSE SERVER
-  if (!responseServer_->listen(QHostAddress::Any, responsePort_)) {
-    qDebug() << "Response server could not start";
-  } else {
-    qDebug() << "Response server is listening on port " << responsePort_;
+  int counter = 0;
+  while (counter < 10000) {
+    if (!responseServer_->listen(QHostAddress::Any, responsePort_)) {
+      qDebug() << "Response server could not start";
+    } else {
+      qDebug() << "Response server is listening on port " << responsePort_;
+      break;
+    }
+    responsePort_++;
+    counter++;
   }
 
   // CONNECTING TO CHESSSERVER'S REQUEST SERVER
@@ -16,6 +22,14 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   if (requestSocket_->waitForConnected(3000)) {
     qDebug() << "Successfully connected to host on IP: " << hostIP_
              << " and port: " << requestPort_;
+
+    QJsonDocument doc(
+        QJsonObject{{"Function", "responsePort"},
+                    {"Parameters", QJsonObject{{"Port", responsePort_}}}});
+    QByteArray data;
+    data.append(QString::fromLatin1(doc.toJson()));
+    requestSocket_->write(data);
+
   } else {
     qDebug() << "Failed to connect to host on IP: " << hostIP_
              << " and port: " << requestPort_;
