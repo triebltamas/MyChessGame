@@ -34,12 +34,19 @@ include_directories(${RESOURCES_DIR})
 
 file(GLOB SOURCES
     Client/ChessMainWindow.cpp
+    Client/ChessMainWindow.ui
     Client/LocalChessWidget.cpp
+    Client/LocalChessWidget.ui
     Client/OnlineChessWidget.cpp
+    Client/OnlineChessWidget.ui
     Client/ChessAPIService.cpp
     Client/SwitchPawnDialog.cpp
-    Client/ChessModel.cpp
+    Client/SwitchPawnDialog.ui
     Client/HomePageWidget.cpp
+    Client/HomePageWidget.ui
+    Client/LoginWidget.cpp
+    Client/LoginWidget.ui
+    Client/ChessModel.cpp
     Server/ChessServer.cpp
     Resources/resources.qrc
     )
