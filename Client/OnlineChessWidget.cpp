@@ -4,26 +4,26 @@
 #include <QMessageBox>
 #include <iostream>
 
-OnlineChessWidget::OnlineChessWidget()
-    : ui(new Ui::OnlineChessWidget), _model(new ChessAPIService) {
+OnlineChessWidget::OnlineChessWidget(ChessAPIService *chessAPIService)
+    : ui(new Ui::OnlineChessWidget), chessAPIService_(chessAPIService) {
   ui->setupUi(this);
-  connect(_model, &ChessAPIService::connected, this,
-          &OnlineChessWidget::onConnected);
-  connect(_model, &ChessAPIService::startGame, this,
+  connect(chessAPIService_, &ChessAPIService::startGame, this,
           &OnlineChessWidget::onStartGame);
-  connect(_model, &ChessAPIService::refreshTable, this,
+  connect(chessAPIService_, &ChessAPIService::refreshTable, this,
           &OnlineChessWidget::onRefreshTable);
-  connect(_model, &ChessAPIService::gameOver, this,
+  connect(chessAPIService_, &ChessAPIService::gameOver, this,
           &OnlineChessWidget::onGameOver);
-  connect(_model, &ChessAPIService::pawnHasReachedEnemysBase, this,
+  connect(chessAPIService_, &ChessAPIService::pawnHasReachedEnemysBase, this,
           &OnlineChessWidget::onPawnHasReachedEnemysBase);
-  connect(_model, &ChessAPIService::check, this, &OnlineChessWidget::onCheck);
+  connect(chessAPIService_, &ChessAPIService::check, this,
+          &OnlineChessWidget::onCheck);
+  chessAPIService->startQueueing();
 }
 
 OnlineChessWidget::~OnlineChessWidget() { delete ui; }
 
 void OnlineChessWidget::newGame() {
-  _model->newGame();
+  chessAPIService_->newGame();
   generateTable();
 }
 
@@ -43,7 +43,7 @@ void OnlineChessWidget::generateTable() {
       _tableView[i * 8 + j]->setStyleSheet("text-align: center;");
 
       ui->gridLayout->addWidget(_tableView[i * 8 + j], i, j);
-      updateCell(i, j, _model->getField(i, j), true);
+      updateCell(i, j, chessAPIService_->getField(i, j), true);
 
       connect(_tableView[i * 8 + j], &QPushButton::clicked, this,
               [this, i, j]() { onCellClicked(i, j); });
@@ -126,28 +126,29 @@ void OnlineChessWidget::onGameOver(int Player) {
 }
 
 void OnlineChessWidget::onCellClicked(int x, int y) {
-  if (_model->getField(x, y)._pieceColor == PieceColor::VoidColor &&
-      !_model->getField(x, y).highlighted)
+  if (chessAPIService_->getField(x, y)._pieceColor == PieceColor::VoidColor &&
+      !chessAPIService_->getField(x, y).highlighted)
     return;
 
   if (green) {
     if (x == clickedCell_.first && y == clickedCell_.second) {
       for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
-          updateCell(i, j, _model->getField(i, j), true);
-          _model->setHighlighted(i, j, false);
+          updateCell(i, j, chessAPIService_->getField(i, j), true);
+          chessAPIService_->setHighlighted(i, j, false);
         }
       }
 
       green = false;
     } else {
-      if (_model->getField(x, y).highlighted) {
-        _model->stepPiece(clickedCell_.first, clickedCell_.second, x, y);
+      if (chessAPIService_->getField(x, y).highlighted) {
+        chessAPIService_->stepPiece(clickedCell_.first, clickedCell_.second, x,
+                                    y);
 
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
-            updateCell(i, j, _model->getField(i, j), true);
-            _model->setHighlighted(i, j, false);
+            updateCell(i, j, chessAPIService_->getField(i, j), true);
+            chessAPIService_->setHighlighted(i, j, false);
           }
         }
         green = false;
@@ -155,12 +156,12 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
       } else {
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
-            updateCell(i, j, _model->getField(i, j), true);
-            _model->setHighlighted(i, j, false);
+            updateCell(i, j, chessAPIService_->getField(i, j), true);
+            chessAPIService_->setHighlighted(i, j, false);
           }
         }
 
-        auto cells = _model->possibleSteps(x, y, false, true, false);
+        auto cells = chessAPIService_->possibleSteps(x, y, false, true, false);
         if (!cells.empty())
           cells.append(QPair<int, int>(x, y));
 
@@ -168,7 +169,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
           _tableView[cell.first * 8 + cell.second]->setStyleSheet(
               "background-color: green");
 
-          _model->setHighlighted(cell.first, cell.second, true);
+          chessAPIService_->setHighlighted(cell.first, cell.second, true);
         }
 
         green = true;
@@ -181,11 +182,11 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
   } else {
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
-        updateCell(i, j, _model->getField(i, j), true);
+        updateCell(i, j, chessAPIService_->getField(i, j), true);
       }
     }
 
-    auto cells = _model->possibleSteps(x, y, false, true, false);
+    auto cells = chessAPIService_->possibleSteps(x, y, false, true, false);
     if (!cells.empty())
       cells.append(QPair<int, int>(x, y));
 
@@ -193,7 +194,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
       _tableView[cell.first * 8 + cell.second]->setStyleSheet(
           "background-color: green");
 
-      _model->setHighlighted(cell.first, cell.second, true);
+      chessAPIService_->setHighlighted(cell.first, cell.second, true);
     }
 
     green = true;
@@ -204,11 +205,12 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
 }
 
 void OnlineChessWidget::onPawnHasReachedEnemysBase(int x, int y) {
-  bool isWhite = _model->getField(x, y)._pieceColor == PieceColor::White;
+  bool isWhite =
+      chessAPIService_->getField(x, y)._pieceColor == PieceColor::White;
   switchDialog = new SwitchPawnDialog(isWhite, x, y, this);
   connect(switchDialog, &SwitchPawnDialog::pieceChosen, this,
           [=](int x, int y, PieceTypes piece) {
-            _model->switchToQueen(x, y, piece);
+            chessAPIService_->switchToQueen(x, y, piece);
           });
   switchDialog->setAttribute(Qt::WA_DeleteOnClose);
   switchDialog->exec();
@@ -218,26 +220,21 @@ void OnlineChessWidget::onCheck() {
   qDebug() << "CHECK!!\n";
 }
 
-void OnlineChessWidget::onConnected(int fixedPlayerNumber) {
+void OnlineChessWidget::onStartGame(int fixedPlayerNumber) {
   fixedPlayerNumber_ = fixedPlayerNumber;
   fixedOwnPieceColor_ = static_cast<PieceColor>(fixedPlayerNumber);
   fixedEnemyPieceColor_ = static_cast<PieceColor>(fixedPlayerNumber % 2 + 1);
 
-  // TODO waiting screen
-  qDebug() << "CONNECTED!!WAITING FOR OTHER PLAYER\n";
-}
-
-void OnlineChessWidget::onStartGame() {
-  // TODO get gametable widget and start the game
   newGame();
   updateStatusLabel();
+
   qDebug() << "STARTING GAME";
 }
 
 void OnlineChessWidget::onRefreshTable() {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      updateCell(i, j, _model->getField(i, j));
+      updateCell(i, j, chessAPIService_->getField(i, j));
     }
   }
   updateStatusLabel();
@@ -245,7 +242,7 @@ void OnlineChessWidget::onRefreshTable() {
 }
 
 void OnlineChessWidget::updateStatusLabel() {
-  if (_model->getCurrentPlayer() == fixedPlayerNumber_) {
+  if (chessAPIService_->getCurrentPlayer() == fixedPlayerNumber_) {
     ui->statusLabel->setText("You may step...");
     updateTableEnabled(true);
   } else {

@@ -17,15 +17,14 @@ class OnlineChessWidget : public QWidget {
   Q_OBJECT
 
 public:
-  OnlineChessWidget();
+  OnlineChessWidget(ChessAPIService *chessAPIService);
   ~OnlineChessWidget();
 
 public slots:
   void onGameOver(int Player);
   void onCheck();
   void onRefreshTable();
-  void onStartGame();
-  void onConnected(int fixedPlayerNumber);
+  void onStartGame(int fixedPlayerNumber);
   void onPawnHasReachedEnemysBase(int x, int y);
   void onCellClicked(int x, int y);
 
@@ -40,7 +39,7 @@ private:
   Ui::OnlineChessWidget *ui;
   SwitchPawnDialog *switchDialog = nullptr;
   QMap<int, QPushButton *> _tableView;
-  ChessAPIService *_model;
+  ChessAPIService *chessAPIService_;
   QPair<int, int> clickedCell_;
   bool green = false;
   int fixedPlayerNumber_ = -1;

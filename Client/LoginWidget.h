@@ -18,7 +18,8 @@ public:
   void inCorrectSignIn();
   void inCorrectSignUp();
 signals:
-  void loggedIn();
+  void loginClicked(QString username, QString password);
+  void signUpClicked(QString email, QString username, QString password);
   void networkSettingsChanged(QString serverAddress, int requestPort,
                               int responsePort);
 

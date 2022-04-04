@@ -4,81 +4,7 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   requestSocket_ = new QTcpSocket(this);
   responseServer_ = new QTcpServer(this);
 
-  // STARTING VIEWMODEL'S RESPONSE SERVER
-  int counter = 0;
-  while (counter < 10000) {
-    if (!responseServer_->listen(QHostAddress::Any, responsePort_)) {
-      qDebug() << "Response server could not start";
-    } else {
-      qDebug() << "Response server is listening on port " << responsePort_;
-      break;
-    }
-    responsePort_++;
-    counter++;
-  }
-
-  // CONNECTING TO CHESSSERVER'S REQUEST SERVER
-  requestSocket_->connectToHost(hostIP_, requestPort_);
-  if (requestSocket_->waitForConnected(3000)) {
-    qDebug() << "Successfully connected to host on IP: " << hostIP_
-             << " and port: " << requestPort_;
-
-    QJsonDocument doc(
-        QJsonObject{{"Function", "responsePort"},
-                    {"Parameters", QJsonObject{{"Port", responsePort_}}}});
-    QByteArray data;
-    data.append(QString::fromLatin1(doc.toJson()));
-    requestSocket_->write(data);
-
-  } else {
-    qDebug() << "Failed to connect to host on IP: " << hostIP_
-             << " and port: " << requestPort_;
-  }
-
-  connect(responseServer_, &QTcpServer::newConnection, this, [this]() {
-    responseSocket_ = responseServer_->nextPendingConnection();
-    qDebug() << "Successful connection to response server from ip:"
-             << responseSocket_->peerAddress().toString()
-             << " and port: " << responsePort_;
-
-    connect(responseSocket_, &QTcpSocket::readyRead, this, [this]() {
-      auto data = responseSocket_->readAll();
-      qDebug() << data;
-
-      QString str = QString(data);
-      str = str.replace("\n", "");
-      QJsonDocument itemDoc = QJsonDocument::fromJson(str.toUtf8());
-      QJsonObject request = itemDoc.object();
-      QJsonObject parameters = request["Parameters"].toObject();
-      QString func = request["Function"].toString();
-
-      if (func == "connected") {
-        gameSessionID.first = parameters["SessionID"].toString();
-        gameSessionID.second = parameters["SessionPlayerNumber"].toInt();
-        emit connected(gameSessionID.second);
-      } else if (func == "startGame") {
-        emit startGame();
-      } else if (func == "deSerializeTable") {
-        model_->deSerializeTable(parameters["Table"].toObject());
-      } else if (func == "deSerializeFields") {
-        model_->deSerializeFields(parameters["Fields"].toObject());
-      } else if (func == "stepPiece") {
-        model_->stepPiece(parameters["Fields"].toObject()["FromX"].toInt(),
-                          parameters["Fields"].toObject()["FromY"].toInt(),
-                          parameters["Fields"].toObject()["ToX"].toInt(),
-                          parameters["Fields"].toObject()["ToY"].toInt());
-        emit refreshTable();
-      } else if (func == "gameOver") {
-        int winner = parameters["Player"].toInt();
-        emit gameOver(winner);
-        // todo maybe csakha kileptek a menube akkor kene ezt
-        requestSocket_->write("deleteSession");
-        requestSocket_->waitForBytesWritten(1000);
-      } else if (func == "check") {
-        emit check();
-      }
-    });
-  });
+  initSockets();
 
   // CONNECTIONS
 
@@ -103,14 +29,169 @@ ChessAPIService::~ChessAPIService() {
   }
 }
 
+void ChessAPIService::closeSockets() {
+  if (requestSocket_ != nullptr) {
+    if (requestSocket_->isOpen())
+      requestSocket_->close();
+
+    delete requestSocket_;
+  }
+  if (responseSocket_ != nullptr) {
+    if (responseSocket_->isOpen())
+      responseSocket_->close();
+
+    delete responseSocket_;
+  }
+  if (responseServer_ != nullptr) {
+    if (responseServer_->isListening())
+      responseServer_->close();
+
+    delete responseServer_;
+  }
+}
+void ChessAPIService::initSockets() {
+  // STARTING CHESSAPISERVICE'S RESPONSE SERVER
+  int counter = 0;
+  while (counter < 10000) {
+    if (!responseServer_->listen(QHostAddress::Any, responsePort_)) {
+      qDebug() << "Response server could not start";
+    } else {
+      qDebug() << "Response server is listening on port " << responsePort_;
+      break;
+    }
+    responsePort_++;
+    counter++;
+  }
+
+  // CONNECTING TO CHESSSERVER'S REQUEST SERVER
+  requestSocket_->connectToHost(serverAddress_, requestPort_);
+  if (requestSocket_->waitForConnected(3000)) {
+    qDebug() << "Successfully connected to host on IP: " << serverAddress_
+             << " and port: " << requestPort_;
+
+    QJsonDocument doc(
+        QJsonObject{{"Function", "responsePort"},
+                    {"Parameters", QJsonObject{{"Port", responsePort_}}}});
+    QByteArray data;
+    data.append(QString::fromLatin1(doc.toJson()));
+    requestSocket_->write(data);
+    requestSocket_->waitForBytesWritten(1000);
+
+  } else {
+    qDebug() << "Failed to connect to host on IP: " << serverAddress_
+             << " and port: " << requestPort_;
+  }
+
+  connect(responseServer_, &QTcpServer::newConnection, this, [this]() {
+    responseSocket_ = responseServer_->nextPendingConnection();
+    qDebug() << "Successful connection to response server from ip:"
+             << responseSocket_->peerAddress().toString()
+             << " and port: " << responsePort_;
+
+    emit connectedToServer();
+
+    connect(responseSocket_, &QTcpSocket::readyRead, this, [this]() {
+      auto data = responseSocket_->readAll();
+      qDebug() << data;
+
+      QString str = QString(data);
+      str = str.replace("\n", "");
+      QJsonDocument itemDoc = QJsonDocument::fromJson(str.toUtf8());
+      QJsonObject request = itemDoc.object();
+      QJsonObject parameters = request["Parameters"].toObject();
+      QString func = request["Function"].toString();
+
+      if (func == "connected") {
+        userSessionID = parameters["UserSessionID"].toString();
+        emit connectedToServer();
+      } else if (func == "userDisconnected") {
+        gameEnded("Opponent disconnected");
+      } else if (func == "loginSuccess") {
+        emit loginSuccess(parameters["Success"].toBool(),
+                          parameters["Message"].toString());
+      } else if (func == "createSuccess") {
+        emit createSuccess(parameters["Success"].toBool(),
+                           parameters["Message"].toString());
+      } else if (func == "startGame") {
+        gameSessionID.first = parameters["GameSessionID"].toString();
+        gameSessionID.second = parameters["SessionPlayerNumber"].toInt();
+        inGame = true;
+        emit startGame(gameSessionID.second);
+      } else if (func == "deSerializeTable") {
+        model_->deSerializeTable(parameters["Table"].toObject());
+      } else if (func == "deSerializeFields") {
+        model_->deSerializeFields(parameters["Fields"].toObject());
+      } else if (func == "stepPiece") {
+        model_->stepPiece(parameters["Fields"].toObject()["FromX"].toInt(),
+                          parameters["Fields"].toObject()["FromY"].toInt(),
+                          parameters["Fields"].toObject()["ToX"].toInt(),
+                          parameters["Fields"].toObject()["ToY"].toInt());
+        emit refreshTable();
+      } else if (func == "gameOver") {
+        int winner = parameters["Player"].toInt();
+        emit gameOver(winner);
+        inGame = false;
+      } else if (func == "check") {
+        emit check();
+      }
+    });
+  });
+}
+
+void ChessAPIService::loginToServer(QString username, QString password) {
+  QJsonObject request = {
+      {"Function", "login"},
+      {"Parameters", QJsonObject{{"UserSessionID", userSessionID},
+                                 {"Username", username},
+                                 {"Password", password}}}};
+
+  sendRequest(request);
+}
+void ChessAPIService::signUpToServer(QString email, QString username,
+                                     QString password) {
+  QJsonObject request = {
+      {"Function", "signUp"},
+      {"Parameters", QJsonObject{{"UserSessionID", userSessionID},
+                                 {"Email", email},
+                                 {"Username", username},
+                                 {"Password", password}}}};
+
+  sendRequest(request);
+}
+
+void ChessAPIService::startQueueing() {
+  QJsonObject request = {
+      {"Function", "startQueueing"},
+      {"Parameters", QJsonObject{{"UserSessionID", userSessionID}}}};
+
+  sendRequest(request);
+}
+
+void ChessAPIService::endGameSession() {
+  QJsonObject request = {
+      {"Function", "endGameSession"},
+      {"Parameters", QJsonObject{{"UserSessionID", userSessionID}}}};
+
+  sendRequest(request);
+}
+
+void ChessAPIService::setNetworkValues(QString serverAddress, int requestPort,
+                                       int responsePort) {
+  serverAddress_ = serverAddress;
+  requestPort_ = requestPort;
+  responsePort_ = responsePort;
+}
+
 void ChessAPIService::sendRequest(QJsonObject request) {
   if (!requestSocket_->isWritable()) {
     qWarning() << "Socket is not writeable!";
     return;
   }
 
-  request.insert("SessionID", gameSessionID.first);
-  request.insert("SessionPlayer", gameSessionID.second);
+  if (inGame) {
+    request.insert("GameSessionID", userSessionID);
+    request.insert("SessionPlayer", gameSessionID.second);
+  }
 
   QJsonDocument doc(request);
   QByteArray data;
@@ -182,3 +263,4 @@ void ChessAPIService::sendFields(QList<QPair<int, int>> fields) {
 }
 
 int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPLayer(); }
+bool ChessAPIService::getInGame() { return inGame; }

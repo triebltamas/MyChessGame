@@ -29,22 +29,24 @@ public slots:
   void onConnectedToServer();
   void onOnlineGameClicked();
   void onLocalGameClicked();
-  void onLoggedIn();
+  void onLoginClicked(QString username, QString password);
+  void onSignUpClicked(QString email, QString username, QString password);
+  void onLoginSuccess(bool success, QString message);
+  void onCreateSuccess(bool success, QString message);
   void onNetworkSettingsChanged(QString serverAddress, int requestPort,
                                 int responsePort);
+  void onGameEnded(QString message);
 
 private:
   void exit();
   void homePage();
+  void connectToServer();
 
   Ui::ChessMainWindow *ui;
+  ChessAPIService *chessAPIService_ = nullptr;
   OnlineChessWidget *onlineWidget_ = nullptr;
   LocalChessWidget *localWidget_ = nullptr;
   HomePageWidget *homePageWidget_ = nullptr;
   LoginWidget *loginWidget_ = nullptr;
-
-  QString serverAddress_ = "127.0.0.1";
-  int requestPort_ = 1337;
-  int responsePort_ = 1338;
 };
 #endif // CHESSMAINWINDOW_H

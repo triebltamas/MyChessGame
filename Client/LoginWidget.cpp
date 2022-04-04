@@ -51,12 +51,13 @@ LoginWidget::~LoginWidget() { delete ui; }
 
 void LoginWidget::onSignInClicked() {
   // todo db check
-  emit loggedIn();
+  emit loginClicked(ui->usernameEdit->text(), ui->passwordEdit->text());
 }
 
 void LoginWidget::onNewSignUp() {
   // todo db create user
-  emit loggedIn();
+  emit signUpClicked(ui->emailEdit->text(), ui->usernameEdit->text(),
+                     ui->passwordEdit->text());
 }
 
 void LoginWidget::onNetworkSettingsChanged() {
