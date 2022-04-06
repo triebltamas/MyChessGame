@@ -36,7 +36,12 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   // UI
 }
 
-ChessMainWindow::~ChessMainWindow() { delete ui; }
+ChessMainWindow::~ChessMainWindow() {
+  if (chessAPIService_->getInGame())
+    chessAPIService_->endGameSession();
+  chessAPIService_->closeSockets();
+  delete ui;
+}
 
 void ChessMainWindow::onLoginClicked(QString username, QString password) {
   // todo leellenorizni h jo e a bejelentkezes
@@ -78,8 +83,10 @@ void ChessMainWindow::onOnlineGameClicked() {
   ui->centralwidget->layout()->removeWidget(homePageWidget_);
   ui->centralwidget->layout()->addWidget(onlineWidget_);
 
-  if (homePageWidget_ != nullptr)
+  if (homePageWidget_ != nullptr) {
     delete homePageWidget_;
+    homePageWidget_ = nullptr;
+  }
 }
 void ChessMainWindow::onLocalGameClicked() {
   // todo local
@@ -87,28 +94,37 @@ void ChessMainWindow::onLocalGameClicked() {
   ui->centralwidget->layout()->removeWidget(homePageWidget_);
   ui->centralwidget->layout()->addWidget(localWidget_);
 
-  if (homePageWidget_ != nullptr)
+  if (homePageWidget_ != nullptr) {
     delete homePageWidget_;
+    homePageWidget_ = nullptr;
+  }
 }
 
 void ChessMainWindow::homePage() {
+  if (homePageWidget_ != nullptr)
+    return;
+
   // todo msgBoxositani
   if (chessAPIService_->getInGame())
     chessAPIService_->endGameSession();
 
+  ui->centralwidget->layout()->removeWidget(onlineWidget_);
+  ui->centralwidget->layout()->removeWidget(localWidget_);
+  ui->centralwidget->layout()->removeWidget(homePageWidget_);
   if (onlineWidget_ != nullptr) {
-    ui->centralwidget->layout()->removeWidget(onlineWidget_);
     delete onlineWidget_;
+    onlineWidget_ = nullptr;
   } else if (localWidget_ != nullptr) {
-    ui->centralwidget->layout()->removeWidget(localWidget_);
     delete localWidget_;
-  } else if (homePageWidget_ != nullptr) {
-    ui->centralwidget->layout()->removeWidget(homePageWidget_);
-    delete homePageWidget_;
+    localWidget_ = nullptr;
   }
 
-  homePageWidget_ = new HomePageWidget();
+  homePageWidget_ = new HomePageWidget(this);
   ui->centralwidget->layout()->addWidget(homePageWidget_);
+  connect(homePageWidget_, &HomePageWidget::localGameButtonClicked, this,
+          &ChessMainWindow::onLocalGameClicked);
+  connect(homePageWidget_, &HomePageWidget::onlineGameButtonClicked, this,
+          &ChessMainWindow::onOnlineGameClicked);
 }
 void ChessMainWindow::exit() { this->close(); }
 void ChessMainWindow::connectToServer() {}
@@ -125,8 +141,10 @@ void ChessMainWindow::onLoginSuccess(bool success, QString message) {
 
   ui->centralwidget->layout()->removeWidget(loginWidget_);
 
-  if (loginWidget_ != nullptr)
+  if (loginWidget_ != nullptr) {
     delete loginWidget_;
+    loginWidget_ = nullptr;
+  }
 
   homePageWidget_ = new HomePageWidget(this);
   ui->centralwidget->layout()->addWidget(homePageWidget_);

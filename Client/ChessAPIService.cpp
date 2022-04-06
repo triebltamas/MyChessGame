@@ -31,14 +31,18 @@ ChessAPIService::~ChessAPIService() {
 
 void ChessAPIService::closeSockets() {
   if (requestSocket_ != nullptr) {
-    if (requestSocket_->isOpen())
+    if (requestSocket_->isOpen()) {
       requestSocket_->close();
+      requestSocket_->disconnectFromHost();
+    }
 
     delete requestSocket_;
   }
   if (responseSocket_ != nullptr) {
-    if (responseSocket_->isOpen())
+    if (responseSocket_->isOpen()) {
       responseSocket_->close();
+      responseSocket_->disconnectFromHost();
+    }
 
     delete responseSocket_;
   }

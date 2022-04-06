@@ -165,7 +165,6 @@ void ChessServer::onStartQueueing(QString userSessionID) {
     if (!session.sessionStarted) {
       session.player2 = userSessions_[userSessionID];
       session.sessionStarted = true;
-      session.player1.inGame = true;
       session.player2.inGame = true;
 
       hasConnected = true;
@@ -212,6 +211,7 @@ void ChessServer::onStartQueueing(QString userSessionID) {
     GameSession newSession;
     newSession.sessionID = newGameSessionID;
     newSession.player1 = userSessions_[userSessionID];
+    newSession.player1.inGame = true;
     gameSessions_[newGameSessionID] = newSession;
 
     qDebug() << "newGameSessionID: " << newGameSessionID;
@@ -222,6 +222,10 @@ void ChessServer::endGameSession(QString userSessionID) {
   QString gameSessionID = "";
   for (auto session : gameSessions_) {
     if (session.player1.sessionID == userSessionID) {
+      gameSessionID = session.sessionID;
+      if (!session.sessionStarted)
+        break;
+
       QJsonObject json;
       json.insert("Function", "userDisconnected");
 
@@ -231,11 +235,11 @@ void ChessServer::endGameSession(QString userSessionID) {
       session.player2.responseSocket->write(data);
       session.player2.responseSocket->waitForBytesWritten(1000);
 
-      gameSessionID = session.sessionID;
-
       break;
 
     } else if (session.player2.sessionID == userSessionID) {
+      if (!session.sessionStarted)
+        break;
       QJsonObject json;
       json.insert("Function", "userDisconnected");
 
