@@ -102,6 +102,9 @@ void ChessMainWindow::homePage() {
   } else if (localWidget_ != nullptr) {
     ui->centralwidget->layout()->removeWidget(localWidget_);
     delete localWidget_;
+  } else if (homePageWidget_ != nullptr) {
+    ui->centralwidget->layout()->removeWidget(homePageWidget_);
+    delete homePageWidget_;
   }
 
   homePageWidget_ = new HomePageWidget();
