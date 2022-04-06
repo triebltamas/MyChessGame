@@ -54,7 +54,7 @@ void ChessServer::onNewConnection() {
 
   connect(requestSocket, &QTcpSocket::readyRead, this, [=]() {
     auto data = requestSocket->readAll();
-    //    qDebug() << data;
+    qDebug() << data;
 
     QString str = QString(data);
     str = str.replace("\n", "");
@@ -70,21 +70,21 @@ void ChessServer::onNewConnection() {
       onResponseSockectAvailable(requestSocket->peerAddress(),
                                  parameters["Port"].toInt(), requestSocket);
       return;
-    }
-    if (func == "login") {
+    } else if (func == "login") {
       loginUser(parameters["UserSessionID"].toString(),
                 parameters["Username"].toString(),
                 parameters["Password"].toString());
       return;
-    }
-    if (func == "signUp") {
+    } else if (func == "signUp") {
       createUser(parameters["UserSessionID"].toString(),
                  parameters["Email"].toString(),
                  parameters["Username"].toString(),
                  parameters["Password"].toString());
       return;
-    }
-    if (func == "endGameSession") {
+    } else if (func == "startQueueing") {
+      onStartQueueing(parameters["UserSessionID"].toString());
+      return;
+    } else if (func == "endGameSession") {
       endGameSession(parameters["UserSessionID"].toString());
       return;
     }
@@ -119,14 +119,6 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
       if (!userSessions_.contains(newSessionID))
         break;
 
-      if (counter > 250) {
-        qDebug() << "Generator did not seed";
-        randomGenerator->seed();
-      }
-      if (counter > 500) {
-        qDebug() << "GENERATOR DID NOT SEED";
-        randomGenerator->seed(4324);
-      }
       counter++;
     }
 
@@ -171,11 +163,12 @@ void ChessServer::onStartQueueing(QString userSessionID) {
   bool hasConnected = false;
   for (auto session : gameSessions_) {
     if (!session.sessionStarted) {
-      session.player2.requestSocket = requestSocket;
-      session.player2.responseSocket = responseSocket;
+      session.player2 = userSessions_[userSessionID];
       session.sessionStarted = true;
-      hasConnected = true;
+      session.player1.inGame = true;
+      session.player2.inGame = true;
 
+      hasConnected = true;
       // send start to both clients
       QJsonObject json1;
       json1.insert("Function", "startGame");
@@ -214,14 +207,6 @@ void ChessServer::onStartQueueing(QString userSessionID) {
       if (!gameSessions_.contains(newGameSessionID))
         break;
 
-      if (counter > 250) {
-        qDebug() << "Generator did not seed";
-        randomGenerator->seed();
-      }
-      if (counter > 500) {
-        qDebug() << "GENERATOR DID NOT SEED";
-        randomGenerator->seed(4324);
-      }
       counter++;
     }
     GameSession newSession;

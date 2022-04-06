@@ -189,7 +189,7 @@ void ChessAPIService::sendRequest(QJsonObject request) {
   }
 
   if (inGame) {
-    request.insert("GameSessionID", userSessionID);
+    request.insert("GameSessionID", gameSessionID.first);
     request.insert("SessionPlayer", gameSessionID.second);
   }
 

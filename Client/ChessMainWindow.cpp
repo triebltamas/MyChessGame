@@ -5,7 +5,8 @@
 #include <iostream>
 
 ChessMainWindow::ChessMainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessMainWindow) {
+    : QMainWindow(parent), ui(new Ui::ChessMainWindow),
+      chessAPIService_(new ChessAPIService) {
   ui->setupUi(this);
   connect(ui->actionExit, &QAction::triggered, this, &ChessMainWindow::exit);
   connect(ui->actionHomePage, &QAction::triggered, this,
@@ -24,12 +25,15 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   connect(loginWidget_, &LoginWidget::loginClicked, this,
           &ChessMainWindow::onLoginClicked);
 
+  connect(loginWidget_, &LoginWidget::signUpClicked, this,
+          &ChessMainWindow::onSignUpClicked);
+
   connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
           &ChessMainWindow::onNetworkSettingsChanged);
 
   ui->centralwidget->layout()->addWidget(loginWidget_);
 
-  // CONNECTING TO SERVER
+  // UI
 }
 
 ChessMainWindow::~ChessMainWindow() { delete ui; }
@@ -73,12 +77,18 @@ void ChessMainWindow::onOnlineGameClicked() {
   onlineWidget_ = new OnlineChessWidget(chessAPIService_);
   ui->centralwidget->layout()->removeWidget(homePageWidget_);
   ui->centralwidget->layout()->addWidget(onlineWidget_);
+
+  if (homePageWidget_ != nullptr)
+    delete homePageWidget_;
 }
 void ChessMainWindow::onLocalGameClicked() {
   // todo local
   localWidget_ = new LocalChessWidget();
   ui->centralwidget->layout()->removeWidget(homePageWidget_);
   ui->centralwidget->layout()->addWidget(localWidget_);
+
+  if (homePageWidget_ != nullptr)
+    delete homePageWidget_;
 }
 
 void ChessMainWindow::homePage() {
@@ -94,6 +104,7 @@ void ChessMainWindow::homePage() {
     delete localWidget_;
   }
 
+  homePageWidget_ = new HomePageWidget();
   ui->centralwidget->layout()->addWidget(homePageWidget_);
 }
 void ChessMainWindow::exit() { this->close(); }
