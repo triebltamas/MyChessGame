@@ -3,7 +3,8 @@
 
 ChessServer::ChessServer(QObject *parent) : QObject(parent) {
   server_ = new QTcpServer(this);
-  randomGenerator = new QRandomGenerator(1234);
+  randomGenerator_ = new QRandomGenerator(1234);
+  databaseHandler_ = new DatabaseHandler();
 
   connect(server_, &QTcpServer::newConnection, this,
           &ChessServer::onNewConnection);
@@ -25,12 +26,31 @@ ChessServer::~ChessServer() {
     server_->close();
     server_->deleteLater();
   }
-  if (randomGenerator != nullptr)
-    delete randomGenerator;
+  if (randomGenerator_ != nullptr)
+    delete randomGenerator_;
+
+  if (databaseHandler_ != nullptr)
+    delete databaseHandler_;
 }
 
-void ChessServer::onGameOver(QString sessionID, int sessionPlayer,
-                             int winnerPlayer) {}
+void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
+  if (!gameSessions_.contains(sessionID))
+    return;
+
+  auto session = gameSessions_[sessionID];
+
+  // TODO calculate 2 players new elo
+  // todo send the two players game over
+  QJsonObject json = {{"Function", "gameOverHandled"},
+                      {"Parameters", QJsonObject{{"Player", winnerPlayer}}}};
+  QJsonDocument doc(json);
+  QByteArray data;
+  data.append(QString::fromLatin1(doc.toJson()));
+  session.player2.responseSocket->write(data);
+  session.player2.responseSocket->waitForBytesWritten(1000);
+  session.player1.responseSocket->write(data);
+  session.player1.responseSocket->waitForBytesWritten(1000);
+}
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
 void ChessServer::onDisconnected(QString key) {
@@ -87,6 +107,9 @@ void ChessServer::onNewConnection() {
     } else if (func == "endGameSession") {
       endGameSession(parameters["UserSessionID"].toString());
       return;
+    } else if (func == "gameOver") {
+      onGameOver(sessionID, parameters["Player"].toInt());
+      return;
     }
 
     QTcpSocket *socket = nullptr;
@@ -115,7 +138,7 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
 
     int counter = 0;
     while (counter < 1000) {
-      newSessionID = QString::number(randomGenerator->generate());
+      newSessionID = QString::number(randomGenerator_->generate());
       if (!userSessions_.contains(newSessionID))
         break;
 
@@ -202,7 +225,7 @@ void ChessServer::onStartQueueing(QString userSessionID) {
 
     int counter = 0;
     while (counter < 1000) {
-      newGameSessionID = QString::number(randomGenerator->generate());
+      newGameSessionID = QString::number(randomGenerator_->generate());
       if (!gameSessions_.contains(newGameSessionID))
         break;
 
@@ -258,10 +281,13 @@ void ChessServer::endGameSession(QString userSessionID) {
 
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
-  // itt kell a dbbol majd lekerdezni a a jelszavakat meg a felhasznaloneveket
+  bool exists = databaseHandler_->UserExists(username, password);
+  if (exists)
+    userSessions_[userSessionID].username = username;
+
   QJsonObject json;
   json.insert("Function", "loginSuccess");
-  json.insert("Parameters", QJsonObject{{"Success", true}, {"Message", ""}});
+  json.insert("Parameters", QJsonObject{{"Success", exists}, {"Message", ""}});
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
@@ -271,10 +297,14 @@ void ChessServer::loginUser(QString userSessionID, QString username,
 
 void ChessServer::createUser(QString userSessionID, QString email,
                              QString username, QString password) {
+  bool success = databaseHandler_->createUser(username, password, email);
+  if (success)
+    userSessions_[userSessionID].username = username;
+
   // itt kell a dbvel megnezni h lehet e regisztralni
   QJsonObject json;
   json.insert("Function", "createSuccess");
-  json.insert("Parameters", QJsonObject{{"Success", true}, {"Message", ""}});
+  json.insert("Parameters", QJsonObject{{"Success", success}, {"Message", ""}});
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));

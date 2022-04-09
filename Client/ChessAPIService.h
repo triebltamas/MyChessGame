@@ -41,29 +41,31 @@ signals:
   void check();
   void pawnHasReachedEnemysBase(int x, int y);
   void startGame(int fixedPlayerNumber);
-  void connectedToServer();
+  void connectedToServer(bool success);
   void loginSuccess(bool success, QString message);
   void createSuccess(bool success, QString message);
   void refreshTable();
   void gameEnded(QString message);
 
 private:
-  ChessModel *model_;
-
   void sendRequest(QJsonObject request);
-  void sendTable();
+  //  void sendTable();
   void sendFields(QList<QPair<int, int>> fields);
+  void handleGameOver(int winner);
 
   // QPair<SessionID, p1/p2>
-  QPair<QString, int> gameSessionID;
+  QPair<QString, int> gameSessionID_;
 
-  QString userSessionID = "";
-  bool inGame = false;
+  QString userSessionID_ = "";
+  bool inGame_ = false;
+  bool pieceSwitched_ = false;
+  PieceTypes pieceSwitchedType_ = PieceTypes::VoidType;
 
+  ChessModel *model_;
   QTcpSocket *requestSocket_ = nullptr;
   QTcpServer *responseServer_ = nullptr;
   QTcpSocket *responseSocket_ = nullptr;
-  QString serverAddress_ = "192.168.0.11";
+  QString serverAddress_ = "127.0.0.1";
   int requestPort_ = 1337;
   int responsePort_ = 1338;
 };

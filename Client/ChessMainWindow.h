@@ -26,7 +26,7 @@ public:
   ~ChessMainWindow();
 
 public slots:
-  void onConnectedToServer();
+  void onConnectedToServer(bool success);
   void onOnlineGameClicked();
   void onLocalGameClicked();
   void onLoginClicked(QString username, QString password);

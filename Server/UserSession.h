@@ -4,6 +4,7 @@
 #include <QTcpSocket>
 struct UserSession {
   QString sessionID = "";
+  QString username = "";
   bool inGame = false;
   QTcpSocket *requestSocket = nullptr;
   QTcpSocket *responseSocket = nullptr;

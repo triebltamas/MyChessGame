@@ -7,6 +7,7 @@ LoginWidget::LoginWidget(QWidget *parent)
 
   // INIT_UI
   ui->passwordEdit->setEchoMode(QLineEdit::EchoMode::Password);
+  ui->passwordEdit_2->setEchoMode(QLineEdit::EchoMode::Password);
   ui->stackedWidget->setCurrentWidget(ui->signInPage);
   updateWarningLabels(false);
 
@@ -56,8 +57,8 @@ void LoginWidget::onSignInClicked() {
 
 void LoginWidget::onNewSignUp() {
   // todo db create user
-  emit signUpClicked(ui->emailEdit->text(), ui->usernameEdit->text(),
-                     ui->passwordEdit->text());
+  emit signUpClicked(ui->emailEdit->text(), ui->usernameEdit_2->text(),
+                     ui->passwordEdit_2->text());
 }
 
 void LoginWidget::onNetworkSettingsChanged() {

@@ -31,6 +31,9 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
           &ChessMainWindow::onNetworkSettingsChanged);
 
+  connect(chessAPIService_, &ChessAPIService::connectedToServer, this,
+          &ChessMainWindow::onConnectedToServer);
+
   ui->centralwidget->layout()->addWidget(loginWidget_);
 
   // UI
@@ -63,17 +66,13 @@ void ChessMainWindow::onNetworkSettingsChanged(QString serverAddress,
     return;
 
   chessAPIService_->setNetworkValues(serverAddress, requestPort, responsePort);
-
-  // todo reconnect to server
-  //  loginWidget_->setConnected(success);
-  loginWidget_->setConnected(true);
 }
 
-void ChessMainWindow::onConnectedToServer() {
+void ChessMainWindow::onConnectedToServer(bool connected) {
   if (loginWidget_ == nullptr)
     return;
 
-  loginWidget_->setConnected(true);
+  loginWidget_->setConnected(connected);
 
   // todo login screen
 }
@@ -131,6 +130,8 @@ void ChessMainWindow::connectToServer() {}
 void ChessMainWindow::onGameEnded(QString message) {
   // todo msg boxba kirakni a messaget
   homePage();
+  if (message != "")
+    QMessageBox::information(this, tr("Game over"), message);
 }
 void ChessMainWindow::onLoginSuccess(bool success, QString message) {
   if (!success) {

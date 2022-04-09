@@ -117,9 +117,10 @@ void OnlineChessWidget::updateCell(int x, int y, ChessField field,
 
 void OnlineChessWidget::onGameOver(int Player) {
   if (Player == 0) {
-    QMessageBox::information(this, tr("Game over"), QString("Draw"));
+    QMessageBox::information(this, tr("Game over"), QString("Draw!"));
   } else {
-    QString msg = (Player == 1) ? QString("White won!") : QString("Black won!");
+    QString msg = (Player == fixedPlayerNumber_) ? QString("You won!")
+                                                 : QString("You lost!");
     QMessageBox::information(this, tr("Game over"), msg);
   }
   // todo go to main menu
