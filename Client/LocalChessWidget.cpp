@@ -1,32 +1,27 @@
-#include "ChessView.h"
-#include "ui_ChessView.h"
+#include "LocalChessWidget.h"
+#include "ui_LocalChessWidget.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <iostream>
 
-ChessView::ChessView(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessView), _model(new ChessModel) {
+LocalChessWidget::LocalChessWidget()
+    : ui(new Ui::LocalChessWidget), _model(new ChessModel) {
   ui->setupUi(this);
-  _model = new ChessModel();
-  connect(_model, &ChessModel::gameOver, this, &ChessView::onGameOver);
+  connect(_model, &ChessModel::gameOver, this, &LocalChessWidget::onGameOver);
   connect(_model, &ChessModel::pawnHasReachedEnemysBase, this,
-          &ChessView::onPawnHasReachedEnemysBase);
-  connect(_model, &ChessModel::check, this, &ChessView::onCheck);
-  connect(ui->actionNewGame, &QAction::triggered, this, &ChessView::newGame);
-  connect(ui->actionExit, &QAction::triggered, this, &ChessView::exit);
-  initUI();
+          &LocalChessWidget::onPawnHasReachedEnemysBase);
+  connect(_model, &ChessModel::check, this, &LocalChessWidget::onCheck);
+  newGame();
 }
 
-ChessView::~ChessView() { delete ui; }
+LocalChessWidget::~LocalChessWidget() { delete ui; }
 
-void ChessView::initUI() { newGame(); }
-
-void ChessView::newGame() {
+void LocalChessWidget::newGame() {
   _model->newGame();
   generateTable();
 }
 
-void ChessView::generateTable() {
+void LocalChessWidget::generateTable() {
   int i = 0;
   for (int j = 0; j < 8 && i < 8; ++j && ++i) {
     if (_tableView[i * 8 + j] != nullptr)
@@ -51,7 +46,8 @@ void ChessView::generateTable() {
   }
 }
 
-void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
+void LocalChessWidget::updateCell(int x, int y, ChessField field,
+                                  bool initField) {
   if (initField) {
     switch (field._fieldColor) {
     case FieldColor::Black:
@@ -72,39 +68,39 @@ void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
   case PieceTypes::King:
     _tableView[x * 8 + y]->setText("");
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/kingWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KingWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/kingBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KingBlack"));
     break;
   case PieceTypes::Queen:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/queenWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/QueenWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/queenBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/QueenBlack"));
     break;
   case PieceTypes::Bishup:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/bishupWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/BishupWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/bishupBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/BishupBlack"));
     break;
   case PieceTypes::Knight:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/knightWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KnightWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/knightBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KnightBlack"));
     break;
   case PieceTypes::Rook:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/rookWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/RookWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/rookBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/RookBlack"));
     break;
   case PieceTypes::Pawn:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/pawnWhite"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/PawnWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/pawnBlack"));
+      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/PawnBlack"));
     break;
   case PieceTypes::VoidType:
     _tableView[x * 8 + y]->setIcon(QIcon());
@@ -114,7 +110,7 @@ void ChessView::updateCell(int x, int y, ChessField field, bool initField) {
   }
 }
 
-void ChessView::onGameOver(int Player) {
+void LocalChessWidget::onGameOver(int Player) {
   if (Player == 0) {
     QMessageBox::information(this, tr("Game over"), QString("Draw"));
   } else {
@@ -124,7 +120,7 @@ void ChessView::onGameOver(int Player) {
   newGame();
 }
 
-void ChessView::onCellClicked(int x, int y) {
+void LocalChessWidget::onCellClicked(int x, int y) {
   if (_model->getField(x, y)._pieceColor == PieceColor::VoidColor &&
       !_model->getField(x, y).highlighted)
     return;
@@ -201,7 +197,7 @@ void ChessView::onCellClicked(int x, int y) {
   }
 }
 
-void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
+void LocalChessWidget::onPawnHasReachedEnemysBase(int x, int y) {
   bool isWhite = _model->getField(x, y)._pieceColor == PieceColor::White;
   switchDialog = new SwitchPawnDialog(isWhite, x, y, this);
   connect(switchDialog, &SwitchPawnDialog::pieceChosen, this,
@@ -211,9 +207,7 @@ void ChessView::onPawnHasReachedEnemysBase(int x, int y) {
   switchDialog->setAttribute(Qt::WA_DeleteOnClose);
   switchDialog->exec();
 }
-void ChessView::onCheck() {
+void LocalChessWidget::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
   qDebug() << "CHECK!!\n";
 }
-
-void ChessView::exit() { this->close(); }

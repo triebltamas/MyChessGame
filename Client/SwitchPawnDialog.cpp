@@ -17,15 +17,15 @@ SwitchPawnDialog::SwitchPawnDialog(bool white, int x, int y, QWidget *parent)
   bishupButton->setSizeIncrement(QSize(1, 1));
 
   if (white) {
-    queenButton->setIcon(QIcon(":/Application/queenWhite"));
-    rookButton->setIcon(QIcon(":/Application/rookWhite"));
-    knightButton->setIcon(QIcon(":/Application/knightWhite"));
-    bishupButton->setIcon(QIcon(":/Application/bishupWhite"));
+    queenButton->setIcon(QIcon(":/Application/QueenWhite"));
+    rookButton->setIcon(QIcon(":/Application/RookWhite"));
+    knightButton->setIcon(QIcon(":/Application/KnightWhite"));
+    bishupButton->setIcon(QIcon(":/Application/BishupWhite"));
   } else {
-    queenButton->setIcon(QIcon(":/Application/queenBlack"));
-    rookButton->setIcon(QIcon(":/Application/rookBlack"));
-    knightButton->setIcon(QIcon(":/Application/knightBlack"));
-    bishupButton->setIcon(QIcon(":/Application/bishupBlack"));
+    queenButton->setIcon(QIcon(":/Application/QueenBlack"));
+    rookButton->setIcon(QIcon(":/Application/RookBlack"));
+    knightButton->setIcon(QIcon(":/Application/KnightBlack"));
+    bishupButton->setIcon(QIcon(":/Application/BishupBlack"));
   }
   ui->piecesLayout->addWidget(queenButton);
   ui->piecesLayout->addWidget(rookButton);
