@@ -5,6 +5,7 @@
 #include "ChessField.h"
 #include "HomePageWidget.h"
 #include "LocalChessWidget.h"
+#include "LoginWidget.h"
 #include "OnlineChessWidget.h"
 #include "SwitchPawnDialog.h"
 #include <QLabel>
@@ -25,17 +26,27 @@ public:
   ~ChessMainWindow();
 
 public slots:
-  void onConnectedToServer();
+  void onConnectedToServer(bool success);
   void onOnlineGameClicked();
   void onLocalGameClicked();
+  void onLoginClicked(QString username, QString password);
+  void onSignUpClicked(QString email, QString username, QString password);
+  void onLoginSuccess(bool success, QString message);
+  void onCreateSuccess(bool success, QString message);
+  void onNetworkSettingsChanged(QString serverAddress, int requestPort,
+                                int responsePort);
+  void onGameEnded(QString message);
 
 private:
   void exit();
   void homePage();
+  void connectToServer();
 
   Ui::ChessMainWindow *ui;
+  ChessAPIService *chessAPIService_ = nullptr;
   OnlineChessWidget *onlineWidget_ = nullptr;
   LocalChessWidget *localWidget_ = nullptr;
   HomePageWidget *homePageWidget_ = nullptr;
+  LoginWidget *loginWidget_ = nullptr;
 };
 #endif // CHESSMAINWINDOW_H

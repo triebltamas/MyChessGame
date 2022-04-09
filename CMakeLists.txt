@@ -22,6 +22,7 @@ set(CMAKE_PREFIX_PATH $ENV{QTDIR})
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5Network REQUIRED)
+find_package(Qt5Sql REQUIRED)
 
 #=================== INCLUSION OF Project Files ====================#
 set(CLIENT_DIR "${CMAKE_SOURCE_DIR}/Client")
@@ -34,13 +35,21 @@ include_directories(${RESOURCES_DIR})
 
 file(GLOB SOURCES
     Client/ChessMainWindow.cpp
+    Client/ChessMainWindow.ui
     Client/LocalChessWidget.cpp
+    Client/LocalChessWidget.ui
     Client/OnlineChessWidget.cpp
+    Client/OnlineChessWidget.ui
     Client/ChessAPIService.cpp
     Client/SwitchPawnDialog.cpp
-    Client/ChessModel.cpp
+    Client/SwitchPawnDialog.ui
     Client/HomePageWidget.cpp
+    Client/HomePageWidget.ui
+    Client/LoginWidget.cpp
+    Client/LoginWidget.ui
+    Client/ChessModel.cpp
     Server/ChessServer.cpp
+    Server/DatabaseHandler.cpp
     Resources/resources.qrc
     )
 
@@ -65,5 +74,5 @@ target_include_directories(Network_Chess_Server PUBLIC ${SERVER_DIR})
 target_include_directories(Network_Chess_Client PUBLIC ${RESOURCES_DIR})
 
 #===================== LINKING LIBRARIES =======================#
-target_link_libraries(Network_Chess_Client Qt5::Widgets Qt5::Network)
-target_link_libraries(Network_Chess_Server Qt5::Widgets Qt5::Network)
+target_link_libraries(Network_Chess_Client Qt5::Widgets Qt5::Network Qt5::Sql)
+target_link_libraries(Network_Chess_Server Qt5::Widgets Qt5::Network Qt5::Sql)

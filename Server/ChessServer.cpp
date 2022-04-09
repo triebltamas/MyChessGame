@@ -3,7 +3,8 @@
 
 ChessServer::ChessServer(QObject *parent) : QObject(parent) {
   server_ = new QTcpServer(this);
-  randomGenerator = new QRandomGenerator();
+  randomGenerator_ = new QRandomGenerator(1234);
+  databaseHandler_ = new DatabaseHandler();
 
   connect(server_, &QTcpServer::newConnection, this,
           &ChessServer::onNewConnection);
@@ -17,94 +18,105 @@ ChessServer::ChessServer(QObject *parent) : QObject(parent) {
 }
 
 ChessServer::~ChessServer() {
-  for (auto session : sessions_) {
-    onDisconnected(session.sessionID);
-  }
+  //  for (auto session : gameSessions_) {
+  //    onDisconnected(session.sessionID);
+  //  }
   if (server_->isListening()) {
     qDebug() << "Closing server";
     server_->close();
     server_->deleteLater();
   }
+  if (randomGenerator_ != nullptr)
+    delete randomGenerator_;
+
+  if (databaseHandler_ != nullptr)
+    delete databaseHandler_;
 }
 
-void ChessServer::onGameOver(QString sessionID, int sessionPlayer,
-                             int winnerPlayer) {}
-void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
-void ChessServer::onDisconnected(QString key) {
-  if (!sessionIDs_.contains(key))
+void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
+  if (!gameSessions_.contains(sessionID))
     return;
 
-  auto sessionID = sessionIDs_[key];
-  auto session = sessions_[sessionID];
+  auto session = gameSessions_[sessionID];
 
-  auto p1reqSocket = session.player1RequestSocket;
-  auto p1resSocket = session.player1ResponseSocket;
-  auto p2reqSocket = session.player2RequestSocket;
-  auto p2resSocket = session.player2ResponseSocket;
+  // TODO calculate 2 players new elo
+  // todo send the two players game over
+  QJsonObject json = {{"Function", "gameOverHandled"},
+                      {"Parameters", QJsonObject{{"Player", winnerPlayer}}}};
+  QJsonDocument doc(json);
+  QByteArray data;
+  data.append(QString::fromLatin1(doc.toJson()));
+  session.player2.responseSocket->write(data);
+  session.player2.responseSocket->waitForBytesWritten(1000);
+  session.player1.responseSocket->write(data);
+  session.player1.responseSocket->waitForBytesWritten(1000);
+}
+void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
-  if (p1reqSocket != nullptr)
-    sessionIDs_.remove(p1reqSocket->peerAddress().toString());
+void ChessServer::onDisconnected(QString key) {
+  if (!userSessions_.contains(key))
+    return;
+  auto requestSocket = userSessions_[key].requestSocket;
+  auto responseSocket = userSessions_[key].responseSocket;
 
-  if (p2reqSocket != nullptr)
-    sessionIDs_.remove(p2reqSocket->peerAddress().toString());
-
-  if (p1reqSocket != nullptr && p1reqSocket->isOpen()) {
-    p1reqSocket->close();
-    p1reqSocket->deleteLater();
+  if (requestSocket != nullptr && requestSocket->isOpen()) {
+    requestSocket->close();
+    requestSocket->deleteLater();
   }
-  if (p1resSocket != nullptr && p1resSocket->isOpen()) {
-    p1resSocket->close();
-    p1resSocket->deleteLater();
+  if (responseSocket != nullptr && responseSocket->isOpen()) {
+    responseSocket->close();
+    responseSocket->deleteLater();
   }
-  if (p2reqSocket != nullptr && p2reqSocket->isOpen()) {
-    p2reqSocket->close();
-    p2reqSocket->deleteLater();
-  }
-  if (p2resSocket != nullptr && p2resSocket->isOpen()) {
-    p2resSocket->close();
-    p2resSocket->deleteLater();
-  }
-
-  sessions_.remove(session.sessionID);
-  qDebug() << "disconnected players from session:" << sessionID
-           << " due to one of the sockets disconnecting";
 }
 
 void ChessServer::onNewConnection() {
   QTcpSocket *requestSocket = server_->nextPendingConnection();
 
-  connect(requestSocket, &QTcpSocket::disconnected, this,
-          [=]() { onDisconnected(requestSocket->peerAddress().toString()); });
-
   connect(requestSocket, &QTcpSocket::readyRead, this, [=]() {
     auto data = requestSocket->readAll();
-    //    qDebug() << data;
+    qDebug() << data;
 
     QString str = QString(data);
     str = str.replace("\n", "");
     QJsonDocument itemDoc = QJsonDocument::fromJson(str.toUtf8());
     QJsonObject request = itemDoc.object();
-    QString sessionID = request["SessionID"].toString();
+    QString sessionID = request["GameSessionID"].toString();
     int senderPlayer = request["SessionPlayer"].toInt();
 
     QString func = request["Function"].toString();
     QJsonObject parameters = request["Parameters"].toObject();
 
-    if (func == "deleteSession") {
-      onDisconnected(sessionID);
-      return;
-    }
     if (func == "responsePort") {
       onResponseSockectAvailable(requestSocket->peerAddress(),
                                  parameters["Port"].toInt(), requestSocket);
+      return;
+    } else if (func == "login") {
+      loginUser(parameters["UserSessionID"].toString(),
+                parameters["Username"].toString(),
+                parameters["Password"].toString());
+      return;
+    } else if (func == "signUp") {
+      createUser(parameters["UserSessionID"].toString(),
+                 parameters["Email"].toString(),
+                 parameters["Username"].toString(),
+                 parameters["Password"].toString());
+      return;
+    } else if (func == "startQueueing") {
+      onStartQueueing(parameters["UserSessionID"].toString());
+      return;
+    } else if (func == "endGameSession") {
+      endGameSession(parameters["UserSessionID"].toString());
+      return;
+    } else if (func == "gameOver") {
+      onGameOver(sessionID, parameters["Player"].toInt());
       return;
     }
 
     QTcpSocket *socket = nullptr;
     if (senderPlayer == 1)
-      socket = sessions_[sessionID].player2ResponseSocket;
+      socket = gameSessions_[sessionID].player2.responseSocket;
     else
-      socket = sessions_[sessionID].player1ResponseSocket;
+      socket = gameSessions_[sessionID].player1.responseSocket;
 
     if (socket == nullptr)
       return;
@@ -121,75 +133,181 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
   if (responseSocket->waitForConnected(3000)) {
     qDebug() << "Successfully connected to host on IP: " << address.toString()
              << " and port: " << responsePort;
+
+    QString newSessionID;
+
+    int counter = 0;
+    while (counter < 1000) {
+      newSessionID = QString::number(randomGenerator_->generate());
+      if (!userSessions_.contains(newSessionID))
+        break;
+
+      counter++;
+    }
+
+    UserSession session;
+    session.sessionID = newSessionID;
+    session.requestSocket = requestSocket;
+    session.responseSocket = responseSocket;
+
+    userSessions_[newSessionID] = session;
+
+    QJsonDocument doc(QJsonObject{
+        {"Function", "connected"},
+        {"Parameters", QJsonObject{{"UserSessionID", newSessionID}}}});
+    QByteArray data;
+    data.append(QString::fromLatin1(doc.toJson()));
+    responseSocket->write(data);
+    responseSocket->waitForBytesWritten(1000);
+
+    connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
+      if (userSessions_[newSessionID].inGame)
+        endGameSession(newSessionID);
+
+      onDisconnected(newSessionID);
+    });
+
+    connect(requestSocket, &QTcpSocket::disconnected, this, [=]() {
+      if (userSessions_[newSessionID].inGame)
+        endGameSession(newSessionID);
+
+      onDisconnected(newSessionID);
+    });
+
   } else {
     qDebug() << "Failed to connect to host on IP: " << address.toString()
              << " and port: " << responsePort;
   }
+}
 
-  connect(responseSocket, &QTcpSocket::disconnected, this,
-          [=]() { onDisconnected(requestSocket->peerAddress().toString()); });
-
+void ChessServer::onStartQueueing(QString userSessionID) {
+  auto requestSocket = userSessions_[userSessionID].requestSocket;
+  auto responseSocket = userSessions_[userSessionID].responseSocket;
   bool hasConnected = false;
-  for (auto session : sessions_) {
+  for (auto session : gameSessions_) {
     if (!session.sessionStarted) {
-      session.player2RequestSocket = requestSocket;
-      session.player2ResponseSocket = responseSocket;
+      session.player2 = userSessions_[userSessionID];
       session.sessionStarted = true;
+      session.player2.inGame = true;
+
       hasConnected = true;
+      // send start to both clients
+      QJsonObject json1;
+      json1.insert("Function", "startGame");
+      json1.insert("Parameters",
+                   QJsonObject{{"GameSessionID", session.sessionID},
+                               {"SessionPlayerNumber", 1}});
 
-      sessionIDs_.insert(requestSocket->peerAddress().toString(),
-                         session.sessionID);
+      QJsonDocument doc1(json1);
+      QByteArray data1;
+      data1.append(QString::fromLatin1(doc1.toJson()));
+      session.player1.responseSocket->write(data1);
+      session.player1.responseSocket->waitForBytesWritten(1000);
 
-      // send connected to player2
-      // TODO ha a lenti mukszik akkor ez is ilyen legyen
-      QJsonObject connectedJson;
-      connectedJson.insert("Function", "connected");
-      connectedJson.insert("Parameters",
-                           QJsonObject{{"SessionID", session.sessionID},
-                                       {"SessionPlayerNumber", 2}});
+      QJsonObject json2;
+      json2.insert("Function", "startGame");
+      json2.insert("Parameters",
+                   QJsonObject{{"GameSessionID", session.sessionID},
+                               {"SessionPlayerNumber", 2}});
 
-      QJsonDocument connectedDoc(connectedJson);
-      QByteArray connectedData;
-      connectedData.append(QString::fromLatin1(connectedDoc.toJson()));
-      session.player2ResponseSocket->write(connectedData);
-      session.player2ResponseSocket->waitForBytesWritten(10000);
+      QJsonDocument doc2(json2);
+      QByteArray data2;
+      data2.append(QString::fromLatin1(doc2.toJson()));
+      session.player2.responseSocket->write(data2);
+      session.player2.responseSocket->waitForBytesWritten(1000);
 
-      QThread::msleep(1000);
-      // send start game
-      QJsonDocument startGamedoc(QJsonObject{{"Function", "startGame"}});
-      QByteArray startGameData;
-      startGameData.append(QString::fromLatin1(startGamedoc.toJson()));
-      session.player1ResponseSocket->write(startGameData);
-      session.player1ResponseSocket->waitForBytesWritten(10000);
-      session.player2ResponseSocket->write(startGameData);
-      session.player2ResponseSocket->waitForBytesWritten(10000);
-
-      sessions_[session.sessionID] = session;
+      gameSessions_[session.sessionID] = session;
       break;
     }
   }
   if (!hasConnected) {
-    QString newSessionID = QString::number(randomGenerator->generate());
+    QString newGameSessionID;
+
+    int counter = 0;
+    while (counter < 1000) {
+      newGameSessionID = QString::number(randomGenerator_->generate());
+      if (!gameSessions_.contains(newGameSessionID))
+        break;
+
+      counter++;
+    }
     GameSession newSession;
-    newSession.sessionID = newSessionID;
-    newSession.player1RequestSocket = requestSocket;
-    newSession.player1ResponseSocket = responseSocket;
-    sessions_.insert(newSessionID, newSession);
-    sessionIDs_.insert(requestSocket->peerAddress().toString(), newSessionID);
+    newSession.sessionID = newGameSessionID;
+    newSession.player1 = userSessions_[userSessionID];
+    newSession.player1.inGame = true;
+    gameSessions_[newGameSessionID] = newSession;
 
-    QJsonObject json;
-    json.insert("Function", "connected");
-    json.insert("Parameters", QJsonObject{{"SessionID", newSessionID},
-                                          {"SessionPlayerNumber", 1}});
-
-    QJsonDocument doc(json);
-    QByteArray data;
-    data.append(QString::fromLatin1(doc.toJson()));
-    newSession.player1ResponseSocket->write(data);
-    newSession.player1ResponseSocket->waitForBytesWritten(10000);
-
-    qDebug() << "newSessionID: " << newSessionID;
-    // TODO maybe seed random generator here
-    randomGenerator->seed();
+    qDebug() << "newGameSessionID: " << newGameSessionID;
   }
+}
+
+void ChessServer::endGameSession(QString userSessionID) {
+  QString gameSessionID = "";
+  for (auto session : gameSessions_) {
+    if (session.player1.sessionID == userSessionID) {
+      gameSessionID = session.sessionID;
+      if (!session.sessionStarted)
+        break;
+
+      QJsonObject json;
+      json.insert("Function", "userDisconnected");
+
+      QJsonDocument doc(json);
+      QByteArray data;
+      data.append(QString::fromLatin1(doc.toJson()));
+      session.player2.responseSocket->write(data);
+      session.player2.responseSocket->waitForBytesWritten(1000);
+
+      break;
+
+    } else if (session.player2.sessionID == userSessionID) {
+      if (!session.sessionStarted)
+        break;
+      QJsonObject json;
+      json.insert("Function", "userDisconnected");
+
+      QJsonDocument doc(json);
+      QByteArray data;
+      data.append(QString::fromLatin1(doc.toJson()));
+      session.player1.responseSocket->write(data);
+      session.player1.responseSocket->waitForBytesWritten(1000);
+
+      gameSessionID = session.sessionID;
+      break;
+    }
+  }
+  gameSessions_.remove(gameSessionID);
+}
+
+void ChessServer::loginUser(QString userSessionID, QString username,
+                            QString password) {
+  bool exists = databaseHandler_->UserExists(username, password);
+  if (exists)
+    userSessions_[userSessionID].username = username;
+
+  QJsonObject json;
+  json.insert("Function", "loginSuccess");
+  json.insert("Parameters", QJsonObject{{"Success", exists}, {"Message", ""}});
+  QJsonDocument doc(json);
+  QByteArray data;
+  data.append(QString::fromLatin1(doc.toJson()));
+  userSessions_[userSessionID].responseSocket->write(data);
+  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
+}
+
+void ChessServer::createUser(QString userSessionID, QString email,
+                             QString username, QString password) {
+  bool success = databaseHandler_->createUser(username, password, email);
+  if (success)
+    userSessions_[userSessionID].username = username;
+
+  // itt kell a dbvel megnezni h lehet e regisztralni
+  QJsonObject json;
+  json.insert("Function", "createSuccess");
+  json.insert("Parameters", QJsonObject{{"Success", success}, {"Message", ""}});
+  QJsonDocument doc(json);
+  QByteArray data;
+  data.append(QString::fromLatin1(doc.toJson()));
+  userSessions_[userSessionID].responseSocket->write(data);
+  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
 }
