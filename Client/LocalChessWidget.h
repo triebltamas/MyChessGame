@@ -32,11 +32,10 @@ private:
   void updateCell(int x, int y, ChessField field, bool initField = false);
 
   Ui::LocalChessWidget *ui;
-  SwitchPawnDialog *switchDialog = nullptr;
-  QMap<int, QPushButton *> _tableView;
-  QLabel *currentPlayerLabel;
-  ChessModel *_model;
+  SwitchPawnDialog *switchDialog_ = nullptr;
+  QMap<int, QPushButton *> tableView_;
+  ChessModel *model_;
   QPair<int, int> clickedCell_;
-  bool green = false;
+  bool green_ = false;
 };
 #endif // LOCALCHESSWIDGET_H

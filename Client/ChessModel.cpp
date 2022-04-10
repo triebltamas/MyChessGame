@@ -374,7 +374,7 @@ bool ChessModel::checkGameOver() {
       }
     }
     if (nextPlayersFields.isEmpty()) {
-      // its a draw, so i'll indicate it with _currentPlayer = 0
+      // its a draw, so i'll indicate it with currentPlayer_ = 0
       currentPlayer_ = 0;
       return true;
     }
