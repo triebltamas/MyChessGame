@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,5">
+  <layout class="QVBoxLayout" name="verticalLayout_2" stretch="2,5">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -30,11 +30,41 @@
       </spacer>
      </item>
      <item>
-      <widget class="QLabel" name="label">
-       <property name="text">
-        <string>Home Page</string>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <property name="rightMargin">
+        <number>0</number>
        </property>
-      </widget>
+       <item>
+        <widget class="QLabel" name="homePageLabel">
+         <property name="styleSheet">
+          <string notr="true">font: 75 italic 20pt &quot;Ubuntu Condensed&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Home Page</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="usernameLabel">
+         <property name="styleSheet">
+          <string notr="true">font: italic 13pt &quot;Ubuntu Condensed&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Usename:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="eloLabel">
+         <property name="styleSheet">
+          <string notr="true">font: italic 13pt &quot;Ubuntu Condensed&quot;;</string>
+         </property>
+         <property name="text">
+          <string>Elo:</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <spacer name="horizontalSpacer">

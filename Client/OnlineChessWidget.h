@@ -21,7 +21,7 @@ public:
   ~OnlineChessWidget();
 
 public slots:
-  void onGameOver(int Player);
+  void onGameOver(int Player, int newElo);
   void onCheck();
   void onRefreshTable();
   void onStartGame(int fixedPlayerNumber);

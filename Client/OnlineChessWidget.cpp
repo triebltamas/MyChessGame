@@ -115,12 +115,14 @@ void OnlineChessWidget::updateCell(int x, int y, ChessField field,
   }
 }
 
-void OnlineChessWidget::onGameOver(int Player) {
+void OnlineChessWidget::onGameOver(int Player, int newElo) {
   if (Player == 0) {
-    QMessageBox::information(this, tr("Game over"), QString("Draw!"));
+    QMessageBox::information(this, tr("Game over"),
+                             QString("Draw!\nNew elo: %1").arg(newElo));
   } else {
-    QString msg = (Player == fixedPlayerNumber_) ? QString("You won!")
-                                                 : QString("You lost!");
+    QString msg = (Player == fixedPlayerNumber_)
+                      ? QString("You won!\nNew elo: %1").arg(newElo)
+                      : QString("You lost!\nNew elo: %1").arg(newElo);
     QMessageBox::information(this, tr("Game over"), msg);
   }
   // todo go to main menu

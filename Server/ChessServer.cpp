@@ -40,16 +40,35 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
   auto session = gameSessions_[sessionID];
 
   // TODO calculate 2 players new elo
+  auto username1 = gameSessions_[sessionID].player1.username;
+  auto username2 = gameSessions_[sessionID].player2.username;
+
+  int elo1 = databaseHandler_->getElo(username1);
+  int elo2 = databaseHandler_->getElo(username2);
+
+  auto ratings = getNewEloRating(elo1, elo2, winnerPlayer);
+
+  databaseHandler_->setElo(username1, ratings.first);
+  databaseHandler_->setElo(username2, ratings.second);
+
   // todo send the two players game over
-  QJsonObject json = {{"Function", "gameOverHandled"},
-                      {"Parameters", QJsonObject{{"Player", winnerPlayer}}}};
-  QJsonDocument doc(json);
-  QByteArray data;
-  data.append(QString::fromLatin1(doc.toJson()));
-  session.player2.responseSocket->write(data);
-  session.player2.responseSocket->waitForBytesWritten(1000);
-  session.player1.responseSocket->write(data);
+  QJsonObject json1 = {{"Function", "gameOverHandled"},
+                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                  {"Elo", ratings.first}}}};
+  QJsonDocument doc1(json1);
+  QByteArray data1;
+  data1.append(QString::fromLatin1(doc1.toJson()));
+  session.player1.responseSocket->write(data1);
   session.player1.responseSocket->waitForBytesWritten(1000);
+
+  QJsonObject json2 = {{"Function", "gameOverHandled"},
+                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                  {"Elo", ratings.second}}}};
+  QJsonDocument doc2(json2);
+  QByteArray data2;
+  data2.append(QString::fromLatin1(doc2.toJson()));
+  session.player2.responseSocket->write(data2);
+  session.player2.responseSocket->waitForBytesWritten(1000);
 }
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
@@ -287,7 +306,11 @@ void ChessServer::loginUser(QString userSessionID, QString username,
 
   QJsonObject json;
   json.insert("Function", "loginSuccess");
-  json.insert("Parameters", QJsonObject{{"Success", exists}, {"Message", ""}});
+  json.insert("Parameters",
+              QJsonObject{{"Success", exists},
+                          {"Message", ""},
+                          {"Username", username},
+                          {"Elo", databaseHandler_->getElo(username)}});
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
@@ -304,10 +327,37 @@ void ChessServer::createUser(QString userSessionID, QString email,
   // itt kell a dbvel megnezni h lehet e regisztralni
   QJsonObject json;
   json.insert("Function", "createSuccess");
-  json.insert("Parameters", QJsonObject{{"Success", success}, {"Message", ""}});
+  json.insert("Parameters",
+              QJsonObject{{"Success", success},
+                          {"Message", ""},
+                          {"Username", username},
+                          {"Elo", databaseHandler_->getElo(username)}});
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
   userSessions_[userSessionID].responseSocket->write(data);
   userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
+}
+
+float ChessServer::getProbability(int rating1, int rating2) {
+  return 1.0 * 1.0 / (1 + 1.0 * pow(10, 1.0 * (rating1 - rating2) / 400));
+}
+
+QPair<int, int> ChessServer::getNewEloRating(float player1, float player2,
+                                             int winnerPlayer) {
+  float P2 = getProbability(player1, player2);
+
+  float P1 = getProbability(player2, player1);
+
+  if (winnerPlayer == 0) {
+    player1 = player1 + constant_ * (0.5 - P1);
+    player2 = player2 + constant_ * (0.5 - P2);
+  } else if (winnerPlayer == 1) {
+    player1 = player1 + constant_ * (1 - P1);
+    player2 = player2 + constant_ * (0 - P2);
+  } else if (winnerPlayer == 2) {
+    player1 = player1 + constant_ * (0 - P1);
+    player2 = player2 + constant_ * (1 - P2);
+  }
+  return QPair<int, int>(player1, player2);
 }

@@ -36,8 +36,10 @@ public:
   void switchToQueen(int x, int y, PieceTypes switchTo);
   int getCurrentPlayer();
   bool getInGame();
+  int getElo();
+  QString getUsername();
 signals:
-  void gameOver(int player);
+  void gameOver(int player, int newElo);
   void check();
   void pawnHasReachedEnemysBase(int x, int y);
   void startGame(int fixedPlayerNumber);
@@ -45,18 +47,18 @@ signals:
   void loginSuccess(bool success, QString message);
   void createSuccess(bool success, QString message);
   void refreshTable();
-  void gameEnded(QString message);
+  void gameEnded(QString message, int newElo);
 
 private:
   void sendRequest(QJsonObject request);
-  //  void sendTable();
-  void sendFields(QList<QPair<int, int>> fields);
   void handleGameOver(int winner);
 
   // QPair<SessionID, p1/p2>
   QPair<QString, int> gameSessionID_;
 
   QString userSessionID_ = "";
+  QString userName_ = "";
+  int elo_ = -1;
   bool inGame_ = false;
   bool pieceSwitched_ = false;
   PieceTypes pieceSwitchedType_ = PieceTypes::VoidType;
