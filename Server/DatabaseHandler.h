@@ -5,7 +5,7 @@
 
 class DatabaseHandler {
 public:
-  DatabaseHandler();
+  DatabaseHandler(const QString &path);
   ~DatabaseHandler();
   bool createUser(QString username, QString password, QString email);
   bool UserExists(QString username, QString password);

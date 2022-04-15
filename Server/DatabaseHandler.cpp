@@ -1,8 +1,8 @@
 #include "DatabaseHandler.h"
 
-DatabaseHandler::DatabaseHandler() {
+DatabaseHandler::DatabaseHandler(const QString &path) {
   db = QSqlDatabase::addDatabase("QSQLITE");
-  db.setDatabaseName("/home/tamas/Documents/crap/db.sqlite");
+  db.setDatabaseName(path);
   if (!db.open()) {
     qDebug() << "COULD NOT OPEN DATABASE";
     return;

@@ -13,9 +13,8 @@ ChessModel::ChessModel() : N_(8), currentPlayer_(1) {
 
 void ChessModel::newGame() {
   currentPlayer_ = 1;
-  // TODO: make this into an exception
   if (chessTable_ == nullptr) {
-    // QDebug() << "CHESSTABLE IS NULLPOINTER EXCEPTION";
+    qWarning() << "CHESSTABLE IS NULLPOINTER!";
     return;
   }
 
@@ -228,10 +227,6 @@ bool ChessModel::checkGameOver() {
       bool check = false;
       for (auto field : possibleFields) {
         fields.insert(field.first * N_ + field.second, field);
-        if (chessTable_[field.first][field.second]._pieceType ==
-            PieceTypes::King) {
-          qDebug() << "adas";
-        }
         if (chessTable_[field.first][field.second]._pieceType ==
                 PieceTypes::King &&
             currentPlayer_ !=
@@ -718,23 +713,16 @@ ChessModel::possibleStepsForKnight(int x, int y, PieceColor color,
           isSamePieceColor(i, j, color, newTable, includeDefendedPieces))
         continue;
 
-      if (i == 0 && j == 5) {
-        qDebug() << "sadads";
-      }
       int x_diff = std::abs(i - x);
       int y_diff = std::abs(j - y);
 
-      if (x_diff == 1 && y_diff == 2) {
-        if (!stepCausesSelfCheck(x, y, i, j, attack))
-          fields.append(QPair<int, int>(i, j));
-      }
+      if (x_diff == 1 && y_diff == 2 &&
+          !stepCausesSelfCheck(x, y, i, j, attack))
+        fields.append(QPair<int, int>(i, j));
 
       else if (x_diff == 2 && y_diff == 1 &&
                !stepCausesSelfCheck(x, y, i, j, attack))
         fields.append(QPair<int, int>(i, j));
-      else {
-        qDebug() << "asdas";
-      }
     }
   }
 

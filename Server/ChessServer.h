@@ -25,6 +25,7 @@ public slots:
   void onNewConnection();
 
 private:
+  void initServer();
   void onDisconnected(QString key);
   void onResponseSockectAvailable(QHostAddress address, int responsePort,
                                   QTcpSocket *requestSocket);
@@ -32,9 +33,12 @@ private:
 
   void endGameSession(QString userSessionID);
 
+  // ---- DB FUNCTIONS ----------------------------------------------------
   void loginUser(QString userSessionID, QString username, QString password);
   void createUser(QString userSessionID, QString email, QString username,
                   QString password);
+
+  // ---- ELO CALCULATOR FUNCTIONS ----------------------------------------
   float getProbability(int rating1, int rating2);
   QPair<int, int> getNewEloRating(float player1, float player2,
                                   int winnerPlayer);
@@ -45,7 +49,7 @@ private:
   QMap<QString, GameSession> gameSessions_;
   QMap<QString, UserSession> userSessions_;
   int requestPort_ = 1337;
-  int responsePort_ = 1338;
+  QString dbPath_ = "";
   int constant_ = 30;
 };
 

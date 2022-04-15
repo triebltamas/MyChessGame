@@ -2,10 +2,11 @@
 #include <QThread>
 
 ChessServer::ChessServer(QObject *parent) : QObject(parent) {
-  server_ = new QTcpServer(this);
+  initServer();
   randomGenerator_ = new QRandomGenerator(1234);
-  databaseHandler_ = new DatabaseHandler();
+  databaseHandler_ = new DatabaseHandler(dbPath_);
 
+  server_ = new QTcpServer(this);
   connect(server_, &QTcpServer::newConnection, this,
           &ChessServer::onNewConnection);
 
@@ -31,6 +32,40 @@ ChessServer::~ChessServer() {
 
   if (databaseHandler_ != nullptr)
     delete databaseHandler_;
+}
+
+void ChessServer::initServer() {
+  QString absolutePath =
+      QDir(QCoreApplication::applicationDirPath()).filePath("server.ini");
+
+  if (QFile(absolutePath).exists()) {
+    QSettings serverSettings(absolutePath, QSettings::IniFormat);
+    serverSettings.beginGroup("GeneralSettings");
+    dbPath_ = serverSettings.value("path").toString();
+    auto port = serverSettings.value("port");
+    requestPort_ = port.toInt();
+    serverSettings.endGroup();
+
+    if (dbPath_ == "" || port.toString() == "") {
+      qWarning() << "The server.ini file is invalid. Example of a correct "
+                    "file:\n---------------------------------------\n\n["
+                    "GeneralSettings]\npath=MY_PATH/"
+                    "DATABASE_NAME.sqlite\nport=1337\n\n---"
+                    "------------------------------------\nPath for file: "
+                 << absolutePath;
+      exit(EXIT_FAILURE);
+    }
+
+  } else {
+    qWarning() << "The server.ini file does not exist, please create it here: "
+               << QCoreApplication::applicationDirPath();
+    qWarning() << "Example of a correct "
+                  "file:\n---------------------------------------\n\n["
+                  "GeneralSettings]\npath=MY_PATH/"
+                  "DATABASE_NAME.sqlite\nport=1337\n\n---"
+                  "------------------------------------";
+    exit(EXIT_FAILURE);
+  }
 }
 
 void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
