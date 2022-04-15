@@ -77,8 +77,16 @@ void ChessModel::newGame() {
 QList<QPair<int, int>> ChessModel::possibleSteps(int x, int y,
                                                  bool includeDefendedPieces,
                                                  bool attack, bool newTable) {
-  PieceTypes type = chessTable_[x][y]._pieceType;
-  PieceColor color = chessTable_[x][y]._pieceColor;
+
+  PieceTypes type;
+  PieceColor color;
+  if (newTable) {
+    type = newTable_[x][y]._pieceType;
+    color = newTable_[x][y]._pieceColor;
+  } else {
+    type = chessTable_[x][y]._pieceType;
+    color = chessTable_[x][y]._pieceColor;
+  }
 
   QList<QPair<int, int>> fields;
 
@@ -222,6 +230,13 @@ bool ChessModel::checkGameOver() {
         fields.insert(field.first * N_ + field.second, field);
         if (chessTable_[field.first][field.second]._pieceType ==
             PieceTypes::King) {
+          qDebug() << "adas";
+        }
+        if (chessTable_[field.first][field.second]._pieceType ==
+                PieceTypes::King &&
+            currentPlayer_ !=
+                static_cast<int>(
+                    chessTable_[field.first][field.second]._pieceColor)) {
           lastCheck = QPair<int, int>(i, j);
           numberOfChecks++;
           check = true;
@@ -304,7 +319,7 @@ bool ChessModel::checkGameOver() {
           if (nextPlayersSteps.contains(QPair<int, int>(king_x, j)))
             return false;
         }
-      } else {
+      } else if (lastCheck.second == king_y) {
         // rook is in the same column
         int i_min = (lastCheck.first < king_x) ? lastCheck.first : king_x;
         int i_max = (lastCheck.first < king_x) ? king_x : lastCheck.first;
@@ -314,8 +329,9 @@ bool ChessModel::checkGameOver() {
             return false;
         }
       }
-    } else if (checkerPiece == PieceTypes::Bishup ||
-               checkerPiece == PieceTypes::Queen) {
+    }
+    if (checkerPiece == PieceTypes::Bishup ||
+        checkerPiece == PieceTypes::Queen) {
       // Bottom_right <-> Upper_left
       if (lastCheck.first - king_x == lastCheck.second - king_y) {
 
@@ -412,8 +428,11 @@ bool ChessModel::stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
           possibleSteps(i, j, false, false, true);
 
       for (auto field : possibleFields)
-        if (newTable_[field.first][field.second]._pieceType == PieceTypes::King)
+        if (newTable_[field.first][field.second]._pieceType ==
+            PieceTypes::King) {
+          possibleSteps(i, j, false, false, true);
           return true;
+        }
     }
   }
 
@@ -460,7 +479,8 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
       // right
       if (!chessTable_[7][7].hasMoved &&
           chessTable_[7][5]._pieceType == PieceTypes::VoidType &&
-          chessTable_[7][6]._pieceType == PieceTypes::VoidType) {
+          chessTable_[7][6]._pieceType == PieceTypes::VoidType &&
+          !stepCausesSelfCheck(x, y, 7, 6, attack)) {
         fields.append(QPair<int, int>(7, 6));
         chessTable_[7][6].isCastlingField = true;
       } else
@@ -468,7 +488,9 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
       // left
       if (!chessTable_[7][0].hasMoved &&
           chessTable_[7][3]._pieceType == PieceTypes::VoidType &&
-          chessTable_[7][2]._pieceType == PieceTypes::VoidType) {
+          chessTable_[7][2]._pieceType == PieceTypes::VoidType &&
+          chessTable_[7][1]._pieceType == PieceTypes::VoidType &&
+          !stepCausesSelfCheck(x, y, 7, 2, attack)) {
         fields.append(QPair<int, int>(7, 2));
         chessTable_[7][2].isCastlingField = true;
       } else
@@ -479,7 +501,8 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
       // right
       if (!chessTable_[0][7].hasMoved &&
           chessTable_[0][5]._pieceType == PieceTypes::VoidType &&
-          chessTable_[0][6]._pieceType == PieceTypes::VoidType) {
+          chessTable_[0][6]._pieceType == PieceTypes::VoidType &&
+          !stepCausesSelfCheck(x, y, 0, 6, attack)) {
         fields.append(QPair<int, int>(0, 6));
         chessTable_[0][6].isCastlingField = true;
       } else
@@ -487,7 +510,9 @@ ChessModel::possibleStepsForKing(int x, int y, PieceColor color,
       // left
       if (!chessTable_[0][0].hasMoved &&
           chessTable_[0][3]._pieceType == PieceTypes::VoidType &&
-          chessTable_[0][2]._pieceType == PieceTypes::VoidType) {
+          chessTable_[0][2]._pieceType == PieceTypes::VoidType &&
+          chessTable_[0][1]._pieceType == PieceTypes::VoidType &&
+          !stepCausesSelfCheck(x, y, 0, 2, attack)) {
         fields.append(QPair<int, int>(0, 2));
         chessTable_[0][2].isCastlingField = true;
       } else
@@ -542,6 +567,9 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
                                static_cast<int>(color) % 2 + 1)
         break;
     }
+
+    if (isSamePieceColor(i, y, color, newTable, false))
+      break;
   }
 
   // DOWN
@@ -559,6 +587,9 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
                                static_cast<int>(color) % 2 + 1)
         break;
     }
+
+    if (isSamePieceColor(i, y, color, newTable, false))
+      break;
   }
 
   // LEFT
@@ -576,6 +607,9 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
                                static_cast<int>(color) % 2 + 1)
         break;
     }
+
+    if (isSamePieceColor(x, j, color, newTable, false))
+      break;
   }
 
   // RIGHT
@@ -593,6 +627,9 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
                                static_cast<int>(color) % 2 + 1)
         break;
     }
+
+    if (isSamePieceColor(x, j, color, newTable, false))
+      break;
   }
 
   return fields;
@@ -620,6 +657,9 @@ ChessModel::possibleStepsForBishup(int x, int y, PieceColor color,
                                static_cast<int>(color) % 2 + 1)
         return true;
     } else
+      return true;
+
+    if (isSamePieceColor(i, j, color, newTable, false))
       return true;
 
     return false;
@@ -678,16 +718,23 @@ ChessModel::possibleStepsForKnight(int x, int y, PieceColor color,
           isSamePieceColor(i, j, color, newTable, includeDefendedPieces))
         continue;
 
+      if (i == 0 && j == 5) {
+        qDebug() << "sadads";
+      }
       int x_diff = std::abs(i - x);
       int y_diff = std::abs(j - y);
 
-      if (x_diff == 1 && y_diff == 2 &&
-          !stepCausesSelfCheck(x, y, i, j, attack))
-        fields.append(QPair<int, int>(i, j));
+      if (x_diff == 1 && y_diff == 2) {
+        if (!stepCausesSelfCheck(x, y, i, j, attack))
+          fields.append(QPair<int, int>(i, j));
+      }
 
       else if (x_diff == 2 && y_diff == 1 &&
                !stepCausesSelfCheck(x, y, i, j, attack))
         fields.append(QPair<int, int>(i, j));
+      else {
+        qDebug() << "asdas";
+      }
     }
   }
 
@@ -843,16 +890,6 @@ void ChessModel::setHighlighted(int x, int y, bool highlighted) {
   chessTable_[x][y].highlighted = highlighted;
 }
 
-void ChessModel::deSerializeFields(QJsonObject fields) {
-  for (int i = 0; i < N_; i++)
-    for (int j = 0; j < N_; j++)
-      if (fields.contains(QString("%1%2").arg(i).arg(j)))
-        deSerializeField(fields[QString("%1%2").arg(i).arg(j)].toObject(), i,
-                         j);
-
-  emit refreshTable();
-}
-
 QJsonObject ChessModel::serializeField(int x, int y) {
   return QJsonObject{
       {"FieldColor", static_cast<int>(chessTable_[x][y]._fieldColor)},
@@ -877,21 +914,8 @@ void ChessModel::deSerializeField(QJsonObject fieldJson, int x, int y) {
   chessTable_[x][y].isCastlingField = fieldJson["IsCastlingField"].toBool();
 }
 
-QJsonObject ChessModel::serializeTable() {
-  QJsonObject result;
-
-  for (int i = 0; i < N_; i++)
-    for (int j = 0; j < N_; j++)
-      result.insert(QString("%1%2").arg(i).arg(j), serializeField(i, j));
-
-  return result;
-}
-void ChessModel::deSerializeTable(QJsonObject tableJson) {
-  for (int i = 0; i < N_; i++)
-    for (int j = 0; j < N_; j++)
-      deSerializeField(tableJson[QString("%1%2").arg(i).arg(j)].toObject(), i,
-                       j);
-
-  emit refreshTable();
-}
 int ChessModel::getCurrentPLayer() { return currentPlayer_; }
+
+bool ChessModel::isMyPiece(int x, int y) {
+  return currentPlayer_ == static_cast<int>(chessTable_[x][y]._pieceColor);
+}

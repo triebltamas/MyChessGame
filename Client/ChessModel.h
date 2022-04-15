@@ -23,10 +23,8 @@ public:
   void setHighlighted(int x, int y, bool highlight);
   void switchToQueen(int x, int y, PieceTypes switchTo);
   int getCurrentPLayer();
+  bool isMyPiece(int x, int y);
 
-  QJsonObject serializeTable();
-  void deSerializeTable(QJsonObject tableJson);
-  void deSerializeFields(QJsonObject fields);
   QJsonObject serializeField(int x, int y);
   void deSerializeField(QJsonObject fieldJson, int x, int y);
 
