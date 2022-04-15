@@ -1,8 +1,7 @@
 #include "HomePageWidget.h"
 #include "ui_HomePageWidget.h"
 
-HomePageWidget::HomePageWidget(QWidget *parent)
-    : QWidget(parent), ui(new Ui::HomePageWidget) {
+HomePageWidget::HomePageWidget() : ui(new Ui::HomePageWidget) {
   ui->setupUi(this);
   connect(ui->localGameButton, &QPushButton::clicked, this,
           &HomePageWidget::localGameButtonClicked);
@@ -12,3 +11,10 @@ HomePageWidget::HomePageWidget(QWidget *parent)
 }
 
 HomePageWidget::~HomePageWidget() { delete ui; }
+
+void HomePageWidget::setUsername(QString username) {
+  ui->usernameLabel->setText("Username: " + username);
+}
+void HomePageWidget::setElo(int elo) {
+  ui->eloLabel->setText(QString("Elo: %1").arg(elo));
+}

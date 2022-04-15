@@ -7,19 +7,21 @@ namespace Ui {
 class HomePageWidget;
 }
 
-class HomePageWidget : public QWidget
-{
-    Q_OBJECT
+class HomePageWidget : public QWidget {
+  Q_OBJECT
 
 public:
-    explicit HomePageWidget(QWidget *parent = nullptr);
-    ~HomePageWidget();
+  explicit HomePageWidget();
+  ~HomePageWidget();
+  void setUsername(QString username);
+  void setElo(int elo);
 
 signals:
-    void localGameButtonClicked();
-    void onlineGameButtonClicked();
+  void localGameButtonClicked();
+  void onlineGameButtonClicked();
+
 private:
-    Ui::HomePageWidget *ui;
+  Ui::HomePageWidget *ui;
 };
 
 #endif // HOMEPAGEWIDGET_H

@@ -30,22 +30,22 @@ void OnlineChessWidget::newGame() {
 void OnlineChessWidget::generateTable() {
   int i = 0;
   for (int j = 0; j < 8 && i < 8; ++j && ++i) {
-    if (_tableView[i * 8 + j] != nullptr)
-      delete _tableView[i * 8 + j];
+    if (tableView_[i * 8 + j] != nullptr)
+      delete tableView_[i * 8 + j];
   }
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      _tableView.insert(i * 8 + j, new QPushButton());
-      _tableView[i * 8 + j]->setMinimumSize(QSize(100, 100));
-      _tableView[i * 8 + j]->setSizeIncrement(QSize(1, 1));
-      _tableView[i * 8 + j]->setIconSize(QSize(50, 50));
-      _tableView[i * 8 + j]->setStyleSheet("text-align: center;");
+      tableView_.insert(i * 8 + j, new QPushButton());
+      tableView_[i * 8 + j]->setMinimumSize(QSize(100, 100));
+      tableView_[i * 8 + j]->setSizeIncrement(QSize(1, 1));
+      tableView_[i * 8 + j]->setIconSize(QSize(50, 50));
+      tableView_[i * 8 + j]->setStyleSheet("text-align: center;");
 
-      ui->gridLayout->addWidget(_tableView[i * 8 + j], i, j);
+      ui->gridLayout->addWidget(tableView_[i * 8 + j], i, j);
       updateCell(i, j, chessAPIService_->getField(i, j), true);
 
-      connect(_tableView[i * 8 + j], &QPushButton::clicked, this,
+      connect(tableView_[i * 8 + j], &QPushButton::clicked, this,
               [this, i, j]() { onCellClicked(i, j); });
     }
   }
@@ -56,11 +56,11 @@ void OnlineChessWidget::updateCell(int x, int y, ChessField field,
   if (initField) {
     switch (field._fieldColor) {
     case FieldColor::Black:
-      _tableView[x * 8 + y]->setStyleSheet(
+      tableView_[x * 8 + y]->setStyleSheet(
           "background-color: brown; color: white;");
       break;
     case FieldColor::White:
-      _tableView[x * 8 + y]->setStyleSheet(
+      tableView_[x * 8 + y]->setStyleSheet(
           "background-color: white; color: black;");
 
       break;
@@ -71,56 +71,58 @@ void OnlineChessWidget::updateCell(int x, int y, ChessField field,
 
   switch (field._pieceType) {
   case PieceTypes::King:
-    _tableView[x * 8 + y]->setText("");
+    tableView_[x * 8 + y]->setText("");
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KingWhite"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/KingWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KingBlack"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/KingBlack"));
     break;
   case PieceTypes::Queen:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/QueenWhite"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/QueenWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/QueenBlack"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/QueenBlack"));
     break;
   case PieceTypes::Bishup:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/BishupWhite"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/BishupWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/BishupBlack"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/BishupBlack"));
     break;
   case PieceTypes::Knight:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KnightWhite"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/KnightWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/KnightBlack"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/KnightBlack"));
     break;
   case PieceTypes::Rook:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/RookWhite"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/RookWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/RookBlack"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/RookBlack"));
     break;
   case PieceTypes::Pawn:
     if (field._pieceColor == PieceColor::White)
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/PawnWhite"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/PawnWhite"));
     else
-      _tableView[x * 8 + y]->setIcon(QIcon(":/Application/PawnBlack"));
+      tableView_[x * 8 + y]->setIcon(QIcon(":/Application/PawnBlack"));
     break;
   case PieceTypes::VoidType:
-    _tableView[x * 8 + y]->setIcon(QIcon());
+    tableView_[x * 8 + y]->setIcon(QIcon());
     break;
   default:
     break;
   }
 }
 
-void OnlineChessWidget::onGameOver(int Player) {
+void OnlineChessWidget::onGameOver(int Player, int newElo) {
   if (Player == 0) {
-    QMessageBox::information(this, tr("Game over"), QString("Draw!"));
+    QMessageBox::information(this, tr("Game over"),
+                             QString("Draw!\nNew elo: %1").arg(newElo));
   } else {
-    QString msg = (Player == fixedPlayerNumber_) ? QString("You won!")
-                                                 : QString("You lost!");
+    QString msg = (Player == fixedPlayerNumber_)
+                      ? QString("You won!\nNew elo: %1").arg(newElo)
+                      : QString("You lost!\nNew elo: %1").arg(newElo);
     QMessageBox::information(this, tr("Game over"), msg);
   }
   // todo go to main menu
@@ -131,7 +133,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
       !chessAPIService_->getField(x, y).highlighted)
     return;
 
-  if (green) {
+  if (green_) {
     if (x == clickedCell_.first && y == clickedCell_.second) {
       for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -140,7 +142,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
         }
       }
 
-      green = false;
+      green_ = false;
     } else {
       if (chessAPIService_->getField(x, y).highlighted) {
         chessAPIService_->stepPiece(clickedCell_.first, clickedCell_.second, x,
@@ -152,7 +154,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
             chessAPIService_->setHighlighted(i, j, false);
           }
         }
-        green = false;
+        green_ = false;
         updateStatusLabel();
       } else {
         for (int i = 0; i < 8; i++) {
@@ -162,18 +164,21 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
           }
         }
 
+        if (!chessAPIService_->isMyPiece(x, y))
+          return;
+
         auto cells = chessAPIService_->possibleSteps(x, y, false, true, false);
         if (!cells.empty())
           cells.append(QPair<int, int>(x, y));
 
         for (auto cell : cells) {
-          _tableView[cell.first * 8 + cell.second]->setStyleSheet(
+          tableView_[cell.first * 8 + cell.second]->setStyleSheet(
               "background-color: green");
 
           chessAPIService_->setHighlighted(cell.first, cell.second, true);
         }
 
-        green = true;
+        green_ = true;
 
         clickedCell_.first = x;
         clickedCell_.second = y;
@@ -187,18 +192,21 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
       }
     }
 
+    if (!chessAPIService_->isMyPiece(x, y))
+      return;
+
     auto cells = chessAPIService_->possibleSteps(x, y, false, true, false);
     if (!cells.empty())
       cells.append(QPair<int, int>(x, y));
 
     for (auto cell : cells) {
-      _tableView[cell.first * 8 + cell.second]->setStyleSheet(
+      tableView_[cell.first * 8 + cell.second]->setStyleSheet(
           "background-color: green");
 
       chessAPIService_->setHighlighted(cell.first, cell.second, true);
     }
 
-    green = true;
+    green_ = true;
 
     clickedCell_.first = x;
     clickedCell_.second = y;
@@ -208,13 +216,13 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
 void OnlineChessWidget::onPawnHasReachedEnemysBase(int x, int y) {
   bool isWhite =
       chessAPIService_->getField(x, y)._pieceColor == PieceColor::White;
-  switchDialog = new SwitchPawnDialog(isWhite, x, y, this);
-  connect(switchDialog, &SwitchPawnDialog::pieceChosen, this,
+  switchDialog_ = new SwitchPawnDialog(isWhite, x, y, this);
+  connect(switchDialog_, &SwitchPawnDialog::pieceChosen, this,
           [=](int x, int y, PieceTypes piece) {
             chessAPIService_->switchToQueen(x, y, piece);
           });
-  switchDialog->setAttribute(Qt::WA_DeleteOnClose);
-  switchDialog->exec();
+  switchDialog_->setAttribute(Qt::WA_DeleteOnClose);
+  switchDialog_->exec();
 }
 void OnlineChessWidget::onCheck() {
   //  QMessageBox::information(this, tr("Check"), QString("Check!"));
@@ -255,7 +263,7 @@ void OnlineChessWidget::updateStatusLabel() {
 void OnlineChessWidget::updateTableEnabled(bool enabled) {
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      _tableView[i * 8 + j]->setEnabled(enabled);
+      tableView_[i * 8 + j]->setEnabled(enabled);
     }
   }
 }

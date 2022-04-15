@@ -2,10 +2,11 @@
 #include <QThread>
 
 ChessServer::ChessServer(QObject *parent) : QObject(parent) {
-  server_ = new QTcpServer(this);
+  initServer();
   randomGenerator_ = new QRandomGenerator(1234);
-  databaseHandler_ = new DatabaseHandler();
+  databaseHandler_ = new DatabaseHandler(dbPath_);
 
+  server_ = new QTcpServer(this);
   connect(server_, &QTcpServer::newConnection, this,
           &ChessServer::onNewConnection);
 
@@ -33,6 +34,40 @@ ChessServer::~ChessServer() {
     delete databaseHandler_;
 }
 
+void ChessServer::initServer() {
+  QString absolutePath =
+      QDir(QCoreApplication::applicationDirPath()).filePath("server.ini");
+
+  if (QFile(absolutePath).exists()) {
+    QSettings serverSettings(absolutePath, QSettings::IniFormat);
+    serverSettings.beginGroup("GeneralSettings");
+    dbPath_ = serverSettings.value("path").toString();
+    auto port = serverSettings.value("port");
+    requestPort_ = port.toInt();
+    serverSettings.endGroup();
+
+    if (dbPath_ == "" || port.toString() == "") {
+      qWarning() << "The server.ini file is invalid. Example of a correct "
+                    "file:\n---------------------------------------\n\n["
+                    "GeneralSettings]\npath=MY_PATH/"
+                    "DATABASE_NAME.sqlite\nport=1337\n\n---"
+                    "------------------------------------\nPath for file: "
+                 << absolutePath;
+      exit(EXIT_FAILURE);
+    }
+
+  } else {
+    qWarning() << "The server.ini file does not exist, please create it here: "
+               << QCoreApplication::applicationDirPath();
+    qWarning() << "Example of a correct "
+                  "file:\n---------------------------------------\n\n["
+                  "GeneralSettings]\npath=MY_PATH/"
+                  "DATABASE_NAME.sqlite\nport=1337\n\n---"
+                  "------------------------------------";
+    exit(EXIT_FAILURE);
+  }
+}
+
 void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
   if (!gameSessions_.contains(sessionID))
     return;
@@ -40,16 +75,35 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
   auto session = gameSessions_[sessionID];
 
   // TODO calculate 2 players new elo
+  auto username1 = gameSessions_[sessionID].player1.username;
+  auto username2 = gameSessions_[sessionID].player2.username;
+
+  int elo1 = databaseHandler_->getElo(username1);
+  int elo2 = databaseHandler_->getElo(username2);
+
+  auto ratings = getNewEloRating(elo1, elo2, winnerPlayer);
+
+  databaseHandler_->setElo(username1, ratings.first);
+  databaseHandler_->setElo(username2, ratings.second);
+
   // todo send the two players game over
-  QJsonObject json = {{"Function", "gameOverHandled"},
-                      {"Parameters", QJsonObject{{"Player", winnerPlayer}}}};
-  QJsonDocument doc(json);
-  QByteArray data;
-  data.append(QString::fromLatin1(doc.toJson()));
-  session.player2.responseSocket->write(data);
-  session.player2.responseSocket->waitForBytesWritten(1000);
-  session.player1.responseSocket->write(data);
+  QJsonObject json1 = {{"Function", "gameOverHandled"},
+                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                  {"Elo", ratings.first}}}};
+  QJsonDocument doc1(json1);
+  QByteArray data1;
+  data1.append(QString::fromLatin1(doc1.toJson()));
+  session.player1.responseSocket->write(data1);
   session.player1.responseSocket->waitForBytesWritten(1000);
+
+  QJsonObject json2 = {{"Function", "gameOverHandled"},
+                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                  {"Elo", ratings.second}}}};
+  QJsonDocument doc2(json2);
+  QByteArray data2;
+  data2.append(QString::fromLatin1(doc2.toJson()));
+  session.player2.responseSocket->write(data2);
+  session.player2.responseSocket->waitForBytesWritten(1000);
 }
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
@@ -109,6 +163,9 @@ void ChessServer::onNewConnection() {
       return;
     } else if (func == "gameOver") {
       onGameOver(sessionID, parameters["Player"].toInt());
+      return;
+    } else if (func == "logOut") {
+      databaseHandler_->setOnline(parameters["Username"].toString(), false);
       return;
     }
 
@@ -282,12 +339,24 @@ void ChessServer::endGameSession(QString userSessionID) {
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
   bool exists = databaseHandler_->UserExists(username, password);
-  if (exists)
-    userSessions_[userSessionID].username = username;
+  bool online = true;
+  if (exists) {
+    online = databaseHandler_->getOnline(username);
+
+    if (!online) {
+      userSessions_[userSessionID].username = username;
+      databaseHandler_->setOnline(username, true);
+    }
+  }
+  bool success = exists && !online;
 
   QJsonObject json;
   json.insert("Function", "loginSuccess");
-  json.insert("Parameters", QJsonObject{{"Success", exists}, {"Message", ""}});
+  json.insert("Parameters",
+              QJsonObject{{"Success", success},
+                          {"Message", ""},
+                          {"Username", username},
+                          {"Elo", databaseHandler_->getElo(username)}});
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
@@ -298,16 +367,45 @@ void ChessServer::loginUser(QString userSessionID, QString username,
 void ChessServer::createUser(QString userSessionID, QString email,
                              QString username, QString password) {
   bool success = databaseHandler_->createUser(username, password, email);
-  if (success)
+  if (success) {
     userSessions_[userSessionID].username = username;
+    databaseHandler_->setOnline(username, true);
+  }
 
   // itt kell a dbvel megnezni h lehet e regisztralni
   QJsonObject json;
   json.insert("Function", "createSuccess");
-  json.insert("Parameters", QJsonObject{{"Success", success}, {"Message", ""}});
+  json.insert("Parameters",
+              QJsonObject{{"Success", success},
+                          {"Message", ""},
+                          {"Username", username},
+                          {"Elo", databaseHandler_->getElo(username)}});
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
   userSessions_[userSessionID].responseSocket->write(data);
   userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
+}
+
+float ChessServer::getProbability(int rating1, int rating2) {
+  return 1.0 * 1.0 / (1 + 1.0 * pow(10, 1.0 * (rating1 - rating2) / 400));
+}
+
+QPair<int, int> ChessServer::getNewEloRating(float player1, float player2,
+                                             int winnerPlayer) {
+  float P2 = getProbability(player1, player2);
+
+  float P1 = getProbability(player2, player1);
+
+  if (winnerPlayer == 0) {
+    player1 = player1 + constant_ * (0.5 - P1);
+    player2 = player2 + constant_ * (0.5 - P2);
+  } else if (winnerPlayer == 1) {
+    player1 = player1 + constant_ * (1 - P1);
+    player2 = player2 + constant_ * (0 - P2);
+  } else if (winnerPlayer == 2) {
+    player1 = player1 + constant_ * (0 - P1);
+    player2 = player2 + constant_ * (1 - P2);
+  }
+  return QPair<int, int>(player1, player2);
 }

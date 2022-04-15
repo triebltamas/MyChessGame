@@ -35,12 +35,12 @@ public slots:
   void onCreateSuccess(bool success, QString message);
   void onNetworkSettingsChanged(QString serverAddress, int requestPort,
                                 int responsePort);
-  void onGameEnded(QString message);
+  void onGameEnded(QString message, int newElo);
+  void onLogoutClicked();
 
 private:
   void exit();
   void homePage();
-  void connectToServer();
 
   Ui::ChessMainWindow *ui;
   ChessAPIService *chessAPIService_ = nullptr;
