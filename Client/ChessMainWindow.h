@@ -36,6 +36,7 @@ public slots:
   void onNetworkSettingsChanged(QString serverAddress, int requestPort,
                                 int responsePort);
   void onGameEnded(QString message, int newElo);
+  void onLogoutClicked();
 
 private:
   void exit();

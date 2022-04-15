@@ -10,7 +10,9 @@ public:
   bool createUser(QString username, QString password, QString email);
   bool UserExists(QString username, QString password);
   int getElo(QString username);
-  bool setElo(QString username, int elo);
+  void setElo(QString username, int elo);
+  bool getOnline(QString username);
+  void setOnline(QString username, bool online);
   QSqlDatabase db;
 };
 

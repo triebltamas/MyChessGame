@@ -24,6 +24,7 @@ public:
   void endGameSession();
   void setNetworkValues(QString serverAddress, int requestPort,
                         int responsePort);
+  void logOut();
 
   bool getInGame();
   int getElo();

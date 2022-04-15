@@ -37,6 +37,7 @@
     </property>
     <addaction name="separator"/>
     <addaction name="actionHomePage"/>
+    <addaction name="actionLogOut"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -49,6 +50,11 @@
   <action name="actionHomePage">
    <property name="text">
     <string>Home Page</string>
+   </property>
+  </action>
+  <action name="actionLogOut">
+   <property name="text">
+    <string>Log Out</string>
    </property>
   </action>
  </widget>

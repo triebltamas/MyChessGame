@@ -164,6 +164,9 @@ void ChessServer::onNewConnection() {
     } else if (func == "gameOver") {
       onGameOver(sessionID, parameters["Player"].toInt());
       return;
+    } else if (func == "logOut") {
+      databaseHandler_->setOnline(parameters["Username"].toString(), false);
+      return;
     }
 
     QTcpSocket *socket = nullptr;
@@ -336,13 +339,21 @@ void ChessServer::endGameSession(QString userSessionID) {
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
   bool exists = databaseHandler_->UserExists(username, password);
-  if (exists)
-    userSessions_[userSessionID].username = username;
+  bool online = true;
+  if (exists) {
+    online = databaseHandler_->getOnline(username);
+
+    if (!online) {
+      userSessions_[userSessionID].username = username;
+      databaseHandler_->setOnline(username, true);
+    }
+  }
+  bool success = exists && !online;
 
   QJsonObject json;
   json.insert("Function", "loginSuccess");
   json.insert("Parameters",
-              QJsonObject{{"Success", exists},
+              QJsonObject{{"Success", success},
                           {"Message", ""},
                           {"Username", username},
                           {"Elo", databaseHandler_->getElo(username)}});
@@ -356,8 +367,10 @@ void ChessServer::loginUser(QString userSessionID, QString username,
 void ChessServer::createUser(QString userSessionID, QString email,
                              QString username, QString password) {
   bool success = databaseHandler_->createUser(username, password, email);
-  if (success)
+  if (success) {
     userSessions_[userSessionID].username = username;
+    databaseHandler_->setOnline(username, true);
+  }
 
   // itt kell a dbvel megnezni h lehet e regisztralni
   QJsonObject json;

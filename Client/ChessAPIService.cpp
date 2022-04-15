@@ -205,6 +205,13 @@ void ChessAPIService::setNetworkValues(QString serverAddress, int requestPort,
   initSockets();
 }
 
+void ChessAPIService::logOut() {
+  QJsonObject request = {{"Function", "logOut"},
+                         {"Parameters", QJsonObject{{"Username", userName_}}}};
+
+  sendRequest(request);
+}
+
 void ChessAPIService::sendRequest(QJsonObject request) {
   if (!requestSocket_->isWritable()) {
     qWarning() << "Socket is not writeable!";
