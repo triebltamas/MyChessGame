@@ -152,6 +152,9 @@ void LocalChessWidget::onCellClicked(int x, int y) {
           }
         }
 
+        if (!model_->isMyPiece(x, y))
+          return;
+
         auto cells = model_->possibleSteps(x, y, false, true, false);
         if (!cells.empty())
           cells.append(QPair<int, int>(x, y));
@@ -176,6 +179,8 @@ void LocalChessWidget::onCellClicked(int x, int y) {
         updateCell(i, j, model_->getField(i, j), true);
       }
     }
+    if (!model_->isMyPiece(x, y))
+      return;
 
     auto cells = model_->possibleSteps(x, y, false, true, false);
     if (!cells.empty())

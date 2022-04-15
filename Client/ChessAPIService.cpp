@@ -205,6 +205,13 @@ void ChessAPIService::setNetworkValues(QString serverAddress, int requestPort,
   initSockets();
 }
 
+void ChessAPIService::logOut() {
+  QJsonObject request = {{"Function", "logOut"},
+                         {"Parameters", QJsonObject{{"Username", userName_}}}};
+
+  sendRequest(request);
+}
+
 void ChessAPIService::sendRequest(QJsonObject request) {
   if (!requestSocket_->isWritable()) {
     qWarning() << "Socket is not writeable!";
@@ -273,6 +280,9 @@ void ChessAPIService::switchToQueen(int x, int y, PieceTypes switchTo) {
 }
 
 int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPLayer(); }
+bool ChessAPIService::isMyPiece(int x, int y) {
+  return model_->isMyPiece(x, y);
+}
 bool ChessAPIService::getInGame() { return inGame_; }
 int ChessAPIService::getElo() { return elo_; }
 QString ChessAPIService::getUsername() { return userName_; }

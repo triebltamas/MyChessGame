@@ -1,8 +1,8 @@
 #include "DatabaseHandler.h"
 
-DatabaseHandler::DatabaseHandler() {
+DatabaseHandler::DatabaseHandler(const QString &path) {
   db = QSqlDatabase::addDatabase("QSQLITE");
-  db.setDatabaseName("/home/tamas/Documents/crap/db.sqlite");
+  db.setDatabaseName(path);
   if (!db.open()) {
     qDebug() << "COULD NOT OPEN DATABASE";
     return;
@@ -13,6 +13,7 @@ DatabaseHandler::DatabaseHandler() {
                         "password	TEXT NOT NULL,"
                         "email	TEXT NOT NULL UNIQUE,"
                         "elo INTEGER NOT NULL DEFAULT 1000,"
+                        "online BOOLEAN NOT NULL DEFAULT FALSE,"
                         "PRIMARY KEY('username'))";
   QSqlQuery query;
   if (query.exec(queryString))
@@ -20,7 +21,9 @@ DatabaseHandler::DatabaseHandler() {
   else
     qDebug() << "Database loaded";
 }
+
 DatabaseHandler::~DatabaseHandler() { db.close(); }
+
 bool DatabaseHandler::createUser(QString username, QString password,
                                  QString email) {
 
@@ -42,12 +45,14 @@ bool DatabaseHandler::createUser(QString username, QString password,
                 "username,"
                 "password,"
                 "email,"
-                "elo)"
-                "VALUES (?,?,?,?);");
+                "elo,"
+                "online)"
+                "VALUES (?,?,?,?,?);");
   query.addBindValue(username);
   query.addBindValue(password);
   query.addBindValue(email);
   query.addBindValue(1000);
+  query.addBindValue(false);
 
   if (query.exec()) {
     qDebug() << "Successful registration with username '" + username + "'";
@@ -85,10 +90,30 @@ int DatabaseHandler::getElo(QString username) {
   return -1;
 }
 
-bool DatabaseHandler::setElo(QString username, int elo) {
+void DatabaseHandler::setElo(QString username, int elo) {
   QSqlQuery q;
   q.prepare("UPDATE User Set elo = ? WHERE username = ?");
   q.addBindValue(elo);
   q.addBindValue(username);
-  return q.exec();
+  q.exec();
+}
+
+bool DatabaseHandler::getOnline(QString username) {
+  QSqlQuery q;
+  q.prepare("SELECT online FROM User WHERE username = ?");
+  q.addBindValue(username);
+  q.exec();
+  while (q.next()) {
+    auto result = q.value(0).toBool();
+    return result;
+  }
+  return false;
+}
+
+void DatabaseHandler::setOnline(QString username, bool online) {
+  QSqlQuery q;
+  q.prepare("UPDATE User Set online = ? WHERE username = ?");
+  q.addBindValue(online);
+  q.addBindValue(username);
+  q.exec();
 }

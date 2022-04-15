@@ -2,10 +2,11 @@
 #include <QThread>
 
 ChessServer::ChessServer(QObject *parent) : QObject(parent) {
-  server_ = new QTcpServer(this);
+  initServer();
   randomGenerator_ = new QRandomGenerator(1234);
-  databaseHandler_ = new DatabaseHandler();
+  databaseHandler_ = new DatabaseHandler(dbPath_);
 
+  server_ = new QTcpServer(this);
   connect(server_, &QTcpServer::newConnection, this,
           &ChessServer::onNewConnection);
 
@@ -31,6 +32,40 @@ ChessServer::~ChessServer() {
 
   if (databaseHandler_ != nullptr)
     delete databaseHandler_;
+}
+
+void ChessServer::initServer() {
+  QString absolutePath =
+      QDir(QCoreApplication::applicationDirPath()).filePath("server.ini");
+
+  if (QFile(absolutePath).exists()) {
+    QSettings serverSettings(absolutePath, QSettings::IniFormat);
+    serverSettings.beginGroup("GeneralSettings");
+    dbPath_ = serverSettings.value("path").toString();
+    auto port = serverSettings.value("port");
+    requestPort_ = port.toInt();
+    serverSettings.endGroup();
+
+    if (dbPath_ == "" || port.toString() == "") {
+      qWarning() << "The server.ini file is invalid. Example of a correct "
+                    "file:\n---------------------------------------\n\n["
+                    "GeneralSettings]\npath=MY_PATH/"
+                    "DATABASE_NAME.sqlite\nport=1337\n\n---"
+                    "------------------------------------\nPath for file: "
+                 << absolutePath;
+      exit(EXIT_FAILURE);
+    }
+
+  } else {
+    qWarning() << "The server.ini file does not exist, please create it here: "
+               << QCoreApplication::applicationDirPath();
+    qWarning() << "Example of a correct "
+                  "file:\n---------------------------------------\n\n["
+                  "GeneralSettings]\npath=MY_PATH/"
+                  "DATABASE_NAME.sqlite\nport=1337\n\n---"
+                  "------------------------------------";
+    exit(EXIT_FAILURE);
+  }
 }
 
 void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
@@ -128,6 +163,9 @@ void ChessServer::onNewConnection() {
       return;
     } else if (func == "gameOver") {
       onGameOver(sessionID, parameters["Player"].toInt());
+      return;
+    } else if (func == "logOut") {
+      databaseHandler_->setOnline(parameters["Username"].toString(), false);
       return;
     }
 
@@ -301,13 +339,21 @@ void ChessServer::endGameSession(QString userSessionID) {
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
   bool exists = databaseHandler_->UserExists(username, password);
-  if (exists)
-    userSessions_[userSessionID].username = username;
+  bool online = true;
+  if (exists) {
+    online = databaseHandler_->getOnline(username);
+
+    if (!online) {
+      userSessions_[userSessionID].username = username;
+      databaseHandler_->setOnline(username, true);
+    }
+  }
+  bool success = exists && !online;
 
   QJsonObject json;
   json.insert("Function", "loginSuccess");
   json.insert("Parameters",
-              QJsonObject{{"Success", exists},
+              QJsonObject{{"Success", success},
                           {"Message", ""},
                           {"Username", username},
                           {"Elo", databaseHandler_->getElo(username)}});
@@ -321,8 +367,10 @@ void ChessServer::loginUser(QString userSessionID, QString username,
 void ChessServer::createUser(QString userSessionID, QString email,
                              QString username, QString password) {
   bool success = databaseHandler_->createUser(username, password, email);
-  if (success)
+  if (success) {
     userSessions_[userSessionID].username = username;
+    databaseHandler_->setOnline(username, true);
+  }
 
   // itt kell a dbvel megnezni h lehet e regisztralni
   QJsonObject json;

@@ -11,6 +11,8 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   connect(ui->actionExit, &QAction::triggered, this, &ChessMainWindow::exit);
   connect(ui->actionHomePage, &QAction::triggered, this,
           &ChessMainWindow::homePage);
+  connect(ui->actionLogOut, &QAction::triggered, this,
+          &ChessMainWindow::onLogoutClicked);
   connect(chessAPIService_, &ChessAPIService::loginSuccess, this,
           &ChessMainWindow::onLoginSuccess);
   connect(chessAPIService_, &ChessAPIService::createSuccess, this,
@@ -42,8 +44,46 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
 ChessMainWindow::~ChessMainWindow() {
   if (chessAPIService_->getInGame())
     chessAPIService_->endGameSession();
+  chessAPIService_->logOut();
   chessAPIService_->closeSockets();
   delete ui;
+}
+
+void ChessMainWindow::onLogoutClicked() {
+  if (loginWidget_ != nullptr)
+    return;
+
+  if (chessAPIService_->getInGame())
+    chessAPIService_->endGameSession();
+  chessAPIService_->logOut();
+
+  ui->centralwidget->layout()->removeWidget(loginWidget_);
+  ui->centralwidget->layout()->removeWidget(onlineWidget_);
+  ui->centralwidget->layout()->removeWidget(localWidget_);
+  ui->centralwidget->layout()->removeWidget(homePageWidget_);
+  if (onlineWidget_ != nullptr) {
+    delete onlineWidget_;
+    onlineWidget_ = nullptr;
+  } else if (localWidget_ != nullptr) {
+    delete localWidget_;
+    localWidget_ = nullptr;
+  } else if (homePageWidget_ != nullptr) {
+    delete homePageWidget_;
+    homePageWidget_ = nullptr;
+  }
+
+  loginWidget_ = new LoginWidget();
+  ui->centralwidget->layout()->addWidget(loginWidget_);
+  connect(loginWidget_, &LoginWidget::loginClicked, this,
+          &ChessMainWindow::onLoginClicked);
+
+  connect(loginWidget_, &LoginWidget::signUpClicked, this,
+          &ChessMainWindow::onSignUpClicked);
+
+  connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
+          &ChessMainWindow::onNetworkSettingsChanged);
+
+  ui->menubar->setVisible(false);
 }
 
 void ChessMainWindow::onLoginClicked(QString username, QString password) {

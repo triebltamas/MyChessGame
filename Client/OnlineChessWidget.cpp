@@ -164,6 +164,9 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
           }
         }
 
+        if (!chessAPIService_->isMyPiece(x, y))
+          return;
+
         auto cells = chessAPIService_->possibleSteps(x, y, false, true, false);
         if (!cells.empty())
           cells.append(QPair<int, int>(x, y));
@@ -188,6 +191,9 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
         updateCell(i, j, chessAPIService_->getField(i, j), true);
       }
     }
+
+    if (!chessAPIService_->isMyPiece(x, y))
+      return;
 
     auto cells = chessAPIService_->possibleSteps(x, y, false, true, false);
     if (!cells.empty())

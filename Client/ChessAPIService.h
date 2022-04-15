@@ -15,6 +15,7 @@ class ChessAPIService : public QObject {
 public:
   ChessAPIService();
   ~ChessAPIService();
+  // ---- API FUNCTIONS ----------------------------------------------
   void initSockets();
   void closeSockets();
   void loginToServer(QString username, QString password);
@@ -23,7 +24,13 @@ public:
   void endGameSession();
   void setNetworkValues(QString serverAddress, int requestPort,
                         int responsePort);
+  void logOut();
 
+  bool getInGame();
+  int getElo();
+  QString getUsername();
+
+  // ---- MODEL FUNCTIONS --------------------------------------------
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
                                        bool attack = false,
@@ -35,9 +42,7 @@ public:
   void setHighlighted(int x, int y, bool highlight);
   void switchToQueen(int x, int y, PieceTypes switchTo);
   int getCurrentPlayer();
-  bool getInGame();
-  int getElo();
-  QString getUsername();
+  bool isMyPiece(int x, int y);
 signals:
   void gameOver(int player, int newElo);
   void check();
