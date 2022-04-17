@@ -1,8 +1,6 @@
 <RCC>
     <qresource prefix="/Application">
-        <file alias="WhiteField">WhiteField.png</file>
         <file alias="ClientIcon">GameIcon.ico</file>
-        <file alias="BlackField">BlackField.png</file>
         <file alias="RookWhite">rookWhite.png</file>
         <file alias="RookBlack">rookBlack.png</file>
         <file alias="QueenWhite">queenWhite.png</file>
