@@ -22,7 +22,7 @@ public:
   ChessField getField(int x, int y);
   void setHighlighted(int x, int y, bool highlight);
   void switchToQueen(int x, int y, PieceTypes switchTo);
-  int getCurrentPLayer();
+  int getCurrentPlayer();
   bool isMyPiece(int x, int y);
 
   QJsonObject serializeField(int x, int y);

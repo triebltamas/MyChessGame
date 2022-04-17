@@ -12,7 +12,7 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   connect(model_, &ChessModel::check, this, &ChessAPIService::check);
   connect(model_, &ChessModel::pawnHasReachedEnemysBase, this,
           [this](int x, int y) {
-            if (model_->getCurrentPLayer() != gameSessionID_.second)
+            if (model_->getCurrentPlayer() != gameSessionID_.second)
               return;
 
             pieceSwitched_ = true;
@@ -20,7 +20,7 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
           });
 
   connect(model_, &ChessModel::gameOver, this, [this](int Player) {
-    if (model_->getCurrentPLayer() == gameSessionID_.second)
+    if (model_->getCurrentPlayer() == gameSessionID_.second)
       return;
 
     QJsonObject request = {{"Function", "gameOver"},
@@ -279,7 +279,7 @@ void ChessAPIService::switchToQueen(int x, int y, PieceTypes switchTo) {
   pieceSwitchedType_ = switchTo;
 }
 
-int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPLayer(); }
+int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPlayer(); }
 bool ChessAPIService::isMyPiece(int x, int y) {
   return model_->isMyPiece(x, y);
 }

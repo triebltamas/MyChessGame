@@ -902,7 +902,7 @@ void ChessModel::deSerializeField(QJsonObject fieldJson, int x, int y) {
   chessTable_[x][y].isCastlingField = fieldJson["IsCastlingField"].toBool();
 }
 
-int ChessModel::getCurrentPLayer() { return currentPlayer_; }
+int ChessModel::getCurrentPlayer() { return currentPlayer_; }
 
 bool ChessModel::isMyPiece(int x, int y) {
   return currentPlayer_ == static_cast<int>(chessTable_[x][y]._pieceColor);
