@@ -5,12 +5,12 @@ ChessServer::ChessServer(QObject *parent) : QObject(parent) {
   initServer();
   randomGenerator_ = new QRandomGenerator(1234);
   databaseHandler_ = new DatabaseHandler(dbPath_);
+  databaseHandler_->setAllUserOffline();
 
   server_ = new QTcpServer(this);
   connect(server_, &QTcpServer::newConnection, this,
           &ChessServer::onNewConnection);
 
-  // port_ = 1337
   if (!server_->listen(QHostAddress::Any, requestPort_)) {
     qDebug() << "Server could not start";
   } else {
@@ -19,9 +19,6 @@ ChessServer::ChessServer(QObject *parent) : QObject(parent) {
 }
 
 ChessServer::~ChessServer() {
-  //  for (auto session : gameSessions_) {
-  //    onDisconnected(session.sessionID);
-  //  }
   if (server_->isListening()) {
     qDebug() << "Closing server";
     server_->close();
@@ -74,7 +71,6 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
 
   auto session = gameSessions_[sessionID];
 
-  // TODO calculate 2 players new elo
   auto username1 = gameSessions_[sessionID].player1.username;
   auto username2 = gameSessions_[sessionID].player2.username;
 
@@ -86,7 +82,6 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
   databaseHandler_->setElo(username1, ratings.first);
   databaseHandler_->setElo(username2, ratings.second);
 
-  // todo send the two players game over
   QJsonObject json1 = {{"Function", "gameOverHandled"},
                        {"Parameters", QJsonObject{{"Player", winnerPlayer},
                                                   {"Elo", ratings.first}}}};
@@ -306,6 +301,8 @@ void ChessServer::endGameSession(QString userSessionID) {
       if (!session.sessionStarted)
         break;
 
+      // player 2 wins
+      onGameOver(gameSessionID, 2);
       QJsonObject json;
       json.insert("Function", "userDisconnected");
 
@@ -320,6 +317,9 @@ void ChessServer::endGameSession(QString userSessionID) {
     } else if (session.player2.sessionID == userSessionID) {
       if (!session.sessionStarted)
         break;
+
+      // player 1 wins
+      onGameOver(gameSessionID, 2);
       QJsonObject json;
       json.insert("Function", "userDisconnected");
 

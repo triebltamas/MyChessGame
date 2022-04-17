@@ -1,4 +1,5 @@
 #include "LocalChessWidget.h"
+#include "HoverEventFilter.h"
 #include "ui_LocalChessWidget.h"
 #include <QDebug>
 #include <QMessageBox>
@@ -33,9 +34,9 @@ void LocalChessWidget::generateTable() {
       tableView_.insert(i * 8 + j, new QPushButton());
       tableView_[i * 8 + j]->setMinimumSize(QSize(100, 100));
       tableView_[i * 8 + j]->setSizeIncrement(QSize(1, 1));
-      tableView_[i * 8 + j]->setIconSize(QSize(50, 50));
-      tableView_[i * 8 + j]->setStyleSheet("text-align: center;");
-      //      _tableView[i * 8 + j]->setFlat(true);
+      tableView_[i * 8 + j]->setIconSize(QSize(100, 100));
+      tableView_[i * 8 + j]->installEventFilter(new HoverEventFilter);
+      tableView_[i * 8 + j]->setFocusPolicy(Qt::NoFocus);
 
       ui->gridLayout->addWidget(tableView_[i * 8 + j], i, j);
       updateCell(i, j, model_->getField(i, j), true);
@@ -44,6 +45,8 @@ void LocalChessWidget::generateTable() {
               [this, i, j]() { onCellClicked(i, j); });
     }
   }
+  ui->centralWidget->setStyleSheet(
+      "QWidget {background-color: rgb(255, 206, 112);}");
 }
 
 void LocalChessWidget::updateCell(int x, int y, ChessField field,
@@ -51,10 +54,12 @@ void LocalChessWidget::updateCell(int x, int y, ChessField field,
   if (initField) {
     switch (field._fieldColor) {
     case FieldColor::Black:
-      tableView_[x * 8 + y]->setStyleSheet("background-color: brown;");
+      tableView_[x * 8 + y]->setStyleSheet(
+          "QPushButton { background-color: rgb(150, 82, 33); border: 0px;} ");
       break;
     case FieldColor::White:
-      tableView_[x * 8 + y]->setStyleSheet("background-color: white;");
+      tableView_[x * 8 + y]->setStyleSheet(
+          "QPushButton { background-color: rgb(255, 214, 173); border: 0px;} ");
 
       break;
     default:
@@ -160,8 +165,17 @@ void LocalChessWidget::onCellClicked(int x, int y) {
           cells.append(QPair<int, int>(x, y));
 
         for (auto cell : cells) {
-          tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-              "background-color: green");
+          if (model_->getField(cell.first, cell.second)._fieldColor ==
+              FieldColor::White) {
+            tableView_[cell.first * 8 + cell.second]->setStyleSheet(
+                "QPushButton { background-color: rgb(0, 184, 44); border: "
+                "0px;} ");
+          } else {
+
+            tableView_[cell.first * 8 + cell.second]->setStyleSheet(
+                "QPushButton { background-color: rgb(0, 140, 33); border: "
+                "0px;}");
+          }
 
           model_->setHighlighted(cell.first, cell.second, true);
         }
@@ -187,9 +201,16 @@ void LocalChessWidget::onCellClicked(int x, int y) {
       cells.append(QPair<int, int>(x, y));
 
     for (auto cell : cells) {
-      tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-          "background-color: green");
 
+      if (model_->getField(cell.first, cell.second)._fieldColor ==
+          FieldColor::White) {
+        tableView_[cell.first * 8 + cell.second]->setStyleSheet(
+            "QPushButton { background-color: rgb(0, 184, 44); border: 0px;} ");
+      } else {
+
+        tableView_[cell.first * 8 + cell.second]->setStyleSheet(
+            "QPushButton { background-color: rgb(0, 140, 33); border: 0px;}");
+      }
       model_->setHighlighted(cell.first, cell.second, true);
     }
 

@@ -13,11 +13,31 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">QLabel {
+	color: rgb(224, 197, 150);
+}
+
+QLineEdit {
+	background-color: rgb(224, 197, 150);
+	color:rgb(26, 22, 16);
+}
+
+QSpinBox {
+	background-color: rgb(224, 197, 150);
+	color:rgb(26, 22, 16);
+}
+
+QPushButton {
+	background-color: rgb(224, 197, 150);
+	color:rgb(26, 22, 16);
+}</string>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="signUpPage">
       <layout class="QHBoxLayout" name="horizontalLayout">

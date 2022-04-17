@@ -13,7 +13,7 @@ public:
   void setElo(QString username, int elo);
   bool getOnline(QString username);
   void setOnline(QString username, bool online);
-  void setAllUserOnline(bool online);
+  void setAllUserOffline();
   QSqlDatabase db;
 };
 

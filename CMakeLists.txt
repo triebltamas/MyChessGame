@@ -48,6 +48,7 @@ file(GLOB SOURCES
     Client/LoginWidget.cpp
     Client/LoginWidget.ui
     Client/ChessModel.cpp
+    Client/HoverEventFilter.h
     Server/ChessServer.cpp
     Server/DatabaseHandler.cpp
     Resources/resources.qrc

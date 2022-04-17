@@ -117,3 +117,9 @@ void DatabaseHandler::setOnline(QString username, bool online) {
   q.addBindValue(username);
   q.exec();
 }
+
+void DatabaseHandler::setAllUserOffline() {
+  QSqlQuery q;
+  q.prepare("UPDATE User Set online = 0");
+  q.exec();
+}
