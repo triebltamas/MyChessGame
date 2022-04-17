@@ -47,6 +47,10 @@ void LocalChessWidget::generateTable() {
   }
   ui->centralWidget->setStyleSheet(
       "QWidget {background-color: rgb(255, 206, 112);}");
+  ui->currentPlayerIconHolder->setIconSize(QSize(50, 50));
+  ui->currentPlayerIconHolder->setIcon(QIcon(":/Application/KnightWhite"));
+  ui->currentPlayerIconHolder->installEventFilter(new HoverEventFilter);
+  ui->currentPlayerIconHolder->setFocusPolicy(Qt::NoFocus);
 }
 
 void LocalChessWidget::updateCell(int x, int y, ChessField field,
@@ -149,6 +153,14 @@ void LocalChessWidget::onCellClicked(int x, int y) {
           }
         }
         green_ = false;
+
+        if (model_->getCurrentPlayer() == 1)
+          ui->currentPlayerIconHolder->setIcon(
+              QIcon(":/Application/KnightWhite"));
+        else
+          ui->currentPlayerIconHolder->setIcon(
+              QIcon(":/Application/KnightBlack"));
+
       } else {
         for (int i = 0; i < 8; i++) {
           for (int j = 0; j < 8; j++) {
