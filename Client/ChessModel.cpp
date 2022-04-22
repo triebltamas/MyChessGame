@@ -183,14 +183,19 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
     }
   }
 
-  for (int i = 0; i < N_; i++)
-    for (int j = 0; j < N_; j++)
+  for (int i = 0; i < N_; i++) {
+    for (int j = 0; j < N_; j++) {
       chessTable_[i][j].isCastlingField = false;
-
+      chessTable_[i][j].isLastStep = false;
+    }
+  }
   chessTable_[to_x][to_y]._pieceColor = chessTable_[from_x][from_y]._pieceColor;
   chessTable_[to_x][to_y]._pieceType = from_pt;
   chessTable_[from_x][from_y]._pieceColor = PieceColor::VoidColor;
   chessTable_[from_x][from_y]._pieceType = PieceTypes::VoidType;
+
+  chessTable_[from_x][from_y].isLastStep = true;
+  chessTable_[to_x][to_y].isLastStep = true;
 
   if (checkGameOver()) {
     emit gameOver(currentPlayer_);

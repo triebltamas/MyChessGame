@@ -33,6 +33,7 @@ private:
   void exit();
   void generateTable();
   void updateCell(int x, int y, ChessField field, bool initField = false);
+  void paintCell(int x, int y, QString rgbWhite, QString rgbBlack);
   void updateStatusLabel();
   void updateTableEnabled(bool enable);
 

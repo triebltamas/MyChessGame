@@ -33,6 +33,7 @@ void LocalChessWidget::generateTable() {
     for (int j = 0; j < 8; j++) {
       tableView_.insert(i * 8 + j, new QPushButton());
       tableView_[i * 8 + j]->setMinimumSize(QSize(100, 100));
+      //      tableView_[i * 8 + j]->QSize(100, 100));
       tableView_[i * 8 + j]->setSizeIncrement(QSize(1, 1));
       tableView_[i * 8 + j]->setIconSize(QSize(100, 100));
       tableView_[i * 8 + j]->installEventFilter(new HoverEventFilter);
@@ -55,21 +56,10 @@ void LocalChessWidget::generateTable() {
 
 void LocalChessWidget::updateCell(int x, int y, ChessField field,
                                   bool initField) {
-  if (initField) {
-    switch (field._fieldColor) {
-    case FieldColor::Black:
-      tableView_[x * 8 + y]->setStyleSheet(
-          "QPushButton { background-color: rgb(150, 82, 33); border: 0px;} ");
-      break;
-    case FieldColor::White:
-      tableView_[x * 8 + y]->setStyleSheet(
-          "QPushButton { background-color: rgb(255, 214, 173); border: 0px;} ");
-
-      break;
-    default:
-      break;
-    }
-  }
+  if (field.isLastStep)
+    paintCell(x, y, "rgb(246, 246, 105)", "rgb(242, 242, 53)");
+  else if (initField)
+    paintCell(x, y, "rgb(255, 214, 173)", "rgb(150, 82, 33)");
 
   switch (field._pieceType) {
   case PieceTypes::King:
@@ -117,6 +107,17 @@ void LocalChessWidget::updateCell(int x, int y, ChessField field,
   }
 }
 
+void LocalChessWidget::paintCell(int x, int y, QString rgbWhite,
+                                 QString rgbBlack) {
+  if (model_->getField(x, y)._fieldColor == FieldColor::White) {
+    tableView_[x * 8 + y]->setStyleSheet(QString(
+        "QPushButton { background-color: " + rgbWhite + "; border: 0px;}"));
+  } else {
+    tableView_[x * 8 + y]->setStyleSheet(QString(
+        "QPushButton { background-color: " + rgbBlack + "; border: 0px;}"));
+  }
+}
+
 void LocalChessWidget::onGameOver(int Player) {
   if (Player == 0) {
     QMessageBox::information(this, tr("Game over"), QString("Draw"));
@@ -143,7 +144,8 @@ void LocalChessWidget::onCellClicked(int x, int y) {
 
       green_ = false;
     } else {
-      if (model_->getField(x, y).highlighted) {
+      ChessField field = model_->getField(x, y);
+      if (field.highlighted) {
         model_->stepPiece(clickedCell_.first, clickedCell_.second, x, y);
 
         for (int i = 0; i < 8; i++) {
@@ -177,18 +179,8 @@ void LocalChessWidget::onCellClicked(int x, int y) {
           cells.append(QPair<int, int>(x, y));
 
         for (auto cell : cells) {
-          if (model_->getField(cell.first, cell.second)._fieldColor ==
-              FieldColor::White) {
-            tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-                "QPushButton { background-color: rgb(0, 184, 44); border: "
-                "0px;} ");
-          } else {
-
-            tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-                "QPushButton { background-color: rgb(0, 140, 33); border: "
-                "0px;}");
-          }
-
+          paintCell(cell.first, cell.second, "rgb(0, 184, 44)",
+                    "rgb(0, 140, 33)");
           model_->setHighlighted(cell.first, cell.second, true);
         }
 
@@ -213,16 +205,7 @@ void LocalChessWidget::onCellClicked(int x, int y) {
       cells.append(QPair<int, int>(x, y));
 
     for (auto cell : cells) {
-
-      if (model_->getField(cell.first, cell.second)._fieldColor ==
-          FieldColor::White) {
-        tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-            "QPushButton { background-color: rgb(0, 184, 44); border: 0px;} ");
-      } else {
-
-        tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-            "QPushButton { background-color: rgb(0, 140, 33); border: 0px;}");
-      }
+      paintCell(cell.first, cell.second, "rgb(0, 184, 44)", "rgb(0, 140, 33)");
       model_->setHighlighted(cell.first, cell.second, true);
     }
 
@@ -243,7 +226,4 @@ void LocalChessWidget::onPawnHasReachedEnemysBase(int x, int y) {
   switchDialog_->setAttribute(Qt::WA_DeleteOnClose);
   switchDialog_->exec();
 }
-void LocalChessWidget::onCheck() {
-  //  QMessageBox::information(this, tr("Check"), QString("Check!"));
-  qDebug() << "CHECK!!\n";
-}
+void LocalChessWidget::onCheck() { qDebug() << "CHECK!!\n"; }

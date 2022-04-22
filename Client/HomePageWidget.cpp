@@ -8,6 +8,9 @@ HomePageWidget::HomePageWidget() : ui(new Ui::HomePageWidget) {
 
   connect(ui->onlineGameButton, &QPushButton::clicked, this,
           &HomePageWidget::onlineGameButtonClicked);
+
+  ui->localGameButton->setFocusPolicy(Qt::NoFocus);
+  ui->onlineGameButton->setFocusPolicy(Qt::NoFocus);
 }
 
 HomePageWidget::~HomePageWidget() { delete ui; }

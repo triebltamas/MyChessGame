@@ -88,8 +88,9 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
   QJsonDocument doc1(json1);
   QByteArray data1;
   data1.append(QString::fromLatin1(doc1.toJson()));
-  session.player1.responseSocket->write(data1);
-  session.player1.responseSocket->waitForBytesWritten(1000);
+  writeToClient(session.player1.responseSocket, data1);
+  //  session.player1.responseSocket->write(data1);
+  //  session.player1.responseSocket->waitForBytesWritten(1000);
 
   QJsonObject json2 = {{"Function", "gameOverHandled"},
                        {"Parameters", QJsonObject{{"Player", winnerPlayer},
@@ -97,8 +98,9 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
   QJsonDocument doc2(json2);
   QByteArray data2;
   data2.append(QString::fromLatin1(doc2.toJson()));
-  session.player2.responseSocket->write(data2);
-  session.player2.responseSocket->waitForBytesWritten(1000);
+  writeToClient(session.player2.responseSocket, data2);
+  //  session.player2.responseSocket->write(data2);
+  //  session.player2.responseSocket->waitForBytesWritten(1000);
 }
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
@@ -209,8 +211,9 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
         {"Parameters", QJsonObject{{"UserSessionID", newSessionID}}}});
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
-    responseSocket->write(data);
-    responseSocket->waitForBytesWritten(1000);
+    writeToClient(responseSocket, data);
+    //    responseSocket->write(data);
+    //    responseSocket->waitForBytesWritten(1000);
 
     connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
       if (userSessions_[newSessionID].inGame)
@@ -253,8 +256,9 @@ void ChessServer::onStartQueueing(QString userSessionID) {
       QJsonDocument doc1(json1);
       QByteArray data1;
       data1.append(QString::fromLatin1(doc1.toJson()));
-      session.player1.responseSocket->write(data1);
-      session.player1.responseSocket->waitForBytesWritten(1000);
+      writeToClient(session.player1.responseSocket, data1);
+      //      session.player1.responseSocket->write(data1);
+      //      session.player1.responseSocket->waitForBytesWritten(1000);
 
       QJsonObject json2;
       json2.insert("Function", "startGame");
@@ -265,8 +269,9 @@ void ChessServer::onStartQueueing(QString userSessionID) {
       QJsonDocument doc2(json2);
       QByteArray data2;
       data2.append(QString::fromLatin1(doc2.toJson()));
-      session.player2.responseSocket->write(data2);
-      session.player2.responseSocket->waitForBytesWritten(1000);
+      writeToClient(session.player2.responseSocket, data2);
+      //      session.player2.responseSocket->write(data2);
+      //      session.player2.responseSocket->waitForBytesWritten(1000);
 
       gameSessions_[session.sessionID] = session;
       break;
@@ -309,8 +314,9 @@ void ChessServer::endGameSession(QString userSessionID) {
       QJsonDocument doc(json);
       QByteArray data;
       data.append(QString::fromLatin1(doc.toJson()));
-      session.player2.responseSocket->write(data);
-      session.player2.responseSocket->waitForBytesWritten(1000);
+      writeToClient(session.player2.responseSocket, data);
+      //      session.player2.responseSocket->write(data);
+      //      session.player2.responseSocket->waitForBytesWritten(1000);
 
       break;
 
@@ -326,8 +332,9 @@ void ChessServer::endGameSession(QString userSessionID) {
       QJsonDocument doc(json);
       QByteArray data;
       data.append(QString::fromLatin1(doc.toJson()));
-      session.player1.responseSocket->write(data);
-      session.player1.responseSocket->waitForBytesWritten(1000);
+      writeToClient(session.player1.responseSocket, data);
+      //      session.player1.responseSocket->write(data);
+      //      session.player1.responseSocket->waitForBytesWritten(1000);
 
       gameSessionID = session.sessionID;
       break;
@@ -335,7 +342,13 @@ void ChessServer::endGameSession(QString userSessionID) {
   }
   gameSessions_.remove(gameSessionID);
 }
+void ChessServer::writeToClient(QTcpSocket *socket, QByteArray data) {
+  if (socket == nullptr)
+    return;
 
+  socket->write(data);
+  socket->waitForBytesWritten(1000);
+}
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
   bool exists = databaseHandler_->UserExists(username, password);
@@ -360,8 +373,9 @@ void ChessServer::loginUser(QString userSessionID, QString username,
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
-  userSessions_[userSessionID].responseSocket->write(data);
-  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
+  writeToClient(userSessions_[userSessionID].responseSocket, data);
+  //  userSessions_[userSessionID].responseSocket->write(data);
+  //  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
 }
 
 void ChessServer::createUser(QString userSessionID, QString email,
@@ -383,8 +397,9 @@ void ChessServer::createUser(QString userSessionID, QString email,
   QJsonDocument doc(json);
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
-  userSessions_[userSessionID].responseSocket->write(data);
-  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
+  writeToClient(userSessions_[userSessionID].responseSocket, data);
+  //  userSessions_[userSessionID].responseSocket->write(data);
+  //  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
 }
 
 float ChessServer::getProbability(int rating1, int rating2) {

@@ -1,22 +1,14 @@
 #ifndef HOVEREVENTFILTER_H
 #define HOVEREVENTFILTER_H
-#include <QObject>
+#include <QDebug>
 #include <QEvent>
-class HoverEventFilter : public QObject
-{
-    Q_OBJECT
+#include <QObject>
+class HoverEventFilter : public QObject {
+  Q_OBJECT
 public:
-    HoverEventFilter(){}
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override
-    {
-        Q_UNUSED(obj)
-        if (event->type() == QEvent::HoverEnter)
-        {
-            return true;
-        }
+  HoverEventFilter() {}
 
-        return false;
-    }
+protected:
+  bool eventFilter(QObject *obj, QEvent *event) override;
 };
 #endif // HOVEREVENTFILTER_H

@@ -56,20 +56,10 @@ void OnlineChessWidget::generateTable() {
 
 void OnlineChessWidget::updateCell(int x, int y, ChessField field,
                                    bool initField) {
-  if (initField) {
-    switch (field._fieldColor) {
-    case FieldColor::Black:
-      tableView_[x * 8 + y]->setStyleSheet(
-          "QPushButton { background-color: rgb(150, 82, 33); border: 0px;} ");
-      break;
-    case FieldColor::White:
-      tableView_[x * 8 + y]->setStyleSheet(
-          "QPushButton { background-color: rgb(255, 214, 173); border: 0px;} ");
-      break;
-    default:
-      break;
-    }
-  }
+  if (field.isLastStep)
+    paintCell(x, y, "rgb(246, 246, 105)", "rgb(242, 242, 53)");
+  else
+    paintCell(x, y, "rgb(255, 214, 173)", "rgb(150, 82, 33)");
 
   switch (field._pieceType) {
   case PieceTypes::King:
@@ -114,6 +104,17 @@ void OnlineChessWidget::updateCell(int x, int y, ChessField field,
     break;
   default:
     break;
+  }
+}
+
+void OnlineChessWidget::paintCell(int x, int y, QString rgbWhite,
+                                  QString rgbBlack) {
+  if (chessAPIService_->getField(x, y)._fieldColor == FieldColor::White) {
+    tableView_[x * 8 + y]->setStyleSheet(QString(
+        "QPushButton { background-color: " + rgbWhite + "; border: 0px;}"));
+  } else {
+    tableView_[x * 8 + y]->setStyleSheet(QString(
+        "QPushButton { background-color: " + rgbBlack + "; border: 0px;}"));
   }
 }
 
@@ -174,18 +175,8 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
           cells.append(QPair<int, int>(x, y));
 
         for (auto cell : cells) {
-          if (chessAPIService_->getField(cell.first, cell.second)._fieldColor ==
-              FieldColor::White) {
-            tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-                "QPushButton { background-color: rgb(0, 184, 44); border: "
-                "0px;} ");
-          } else {
-
-            tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-                "QPushButton { background-color: rgb(0, 140, 33); border: "
-                "0px;}");
-          }
-
+          paintCell(cell.first, cell.second, "rgb(0, 184, 44)",
+                    "rgb(0, 140, 33)");
           chessAPIService_->setHighlighted(cell.first, cell.second, true);
         }
 
@@ -211,18 +202,7 @@ void OnlineChessWidget::onCellClicked(int x, int y) {
       cells.append(QPair<int, int>(x, y));
 
     for (auto cell : cells) {
-      if (chessAPIService_->getField(cell.first, cell.second)._fieldColor ==
-          FieldColor::White) {
-        tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-            "QPushButton { background-color: rgb(0, 184, 44); border: "
-            "0px;} ");
-      } else {
-
-        tableView_[cell.first * 8 + cell.second]->setStyleSheet(
-            "QPushButton { background-color: rgb(0, 140, 33); border: "
-            "0px;}");
-      }
-
+      paintCell(cell.first, cell.second, "rgb(0, 184, 44)", "rgb(0, 140, 33)");
       chessAPIService_->setHighlighted(cell.first, cell.second, true);
     }
 
@@ -244,10 +224,7 @@ void OnlineChessWidget::onPawnHasReachedEnemysBase(int x, int y) {
   switchDialog_->setAttribute(Qt::WA_DeleteOnClose);
   switchDialog_->exec();
 }
-void OnlineChessWidget::onCheck() {
-  //  QMessageBox::information(this, tr("Check"), QString("Check!"));
-  qDebug() << "CHECK!!\n";
-}
+void OnlineChessWidget::onCheck() { qDebug() << "CHECK!!\n"; }
 
 void OnlineChessWidget::onStartGame(int fixedPlayerNumber) {
   fixedPlayerNumber_ = fixedPlayerNumber;

@@ -13,6 +13,7 @@ typedef struct ChessField {
   bool enPassant = false;
   bool hasMoved = false;
   bool isCastlingField = false;
+  bool isLastStep = false;
 } ChessField;
 
 #endif // CHESSFIELD_H

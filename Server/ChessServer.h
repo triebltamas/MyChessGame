@@ -32,6 +32,7 @@ private:
   void onStartQueueing(QString sessionID);
 
   void endGameSession(QString userSessionID);
+  void writeToClient(QTcpSocket *socket, QByteArray data);
 
   // ---- DB FUNCTIONS ----------------------------------------------------
   void loginUser(QString userSessionID, QString username, QString password);

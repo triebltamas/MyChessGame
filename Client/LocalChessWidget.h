@@ -30,6 +30,7 @@ private:
   void newGame();
   void generateTable();
   void updateCell(int x, int y, ChessField field, bool initField = false);
+  void paintCell(int x, int y, QString rgbWhite, QString rgbBlack);
 
   Ui::LocalChessWidget *ui;
   SwitchPawnDialog *switchDialog_ = nullptr;
