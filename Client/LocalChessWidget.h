@@ -2,10 +2,9 @@
 #define LOCALCHESSWIDGET_H
 
 #include "ChessModel.h"
-#include "SwitchPawnDialog.h"
-#include <QLabel>
-#include <QPushButton>
+#include "ChessTableWidget.h"
 #include <QWidget>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -21,22 +20,12 @@ public:
   ~LocalChessWidget();
 
 public slots:
-  void onGameOver(int Player);
-  void onCheck();
-  void onPawnHasReachedEnemysBase(int x, int y);
-  void onCellClicked(int x, int y);
+  void onGameOver(int Player, int /*newElo*/);
+  void onCurrentPlayerChanged(int player);
 
 private:
-  void newGame();
-  void generateTable();
-  void updateCell(int x, int y, ChessField field, bool initField = false);
-  void paintCell(int x, int y, QString rgbWhite, QString rgbBlack);
-
   Ui::LocalChessWidget *ui;
-  SwitchPawnDialog *switchDialog_ = nullptr;
-  QMap<int, QPushButton *> tableView_;
-  ChessModel *model_;
-  QPair<int, int> clickedCell_;
-  bool green_ = false;
+  ChessTableWidget *chessTable;
+  std::shared_ptr<ChessModel> model_;
 };
 #endif // LOCALCHESSWIDGET_H

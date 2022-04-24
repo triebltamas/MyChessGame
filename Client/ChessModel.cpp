@@ -1,7 +1,27 @@
 #include "ChessModel.h"
 #include <QDebug>
 
-ChessModel::ChessModel() : N_(8), currentPlayer_(1) {
+ChessModel::ChessModel() : N_(8), currentPlayer_(1) {}
+
+void ChessModel::newGame() {
+  if (chessTable_ != nullptr) {
+    for (int i = 0; i < N_; ++i) {
+      if (chessTable_[i] != nullptr)
+        delete chessTable_[i];
+    }
+
+    delete chessTable_;
+  }
+
+  if (newTable_ != nullptr) {
+    for (int i = 0; i < N_; ++i) {
+      if (newTable_[i] != nullptr)
+        delete newTable_[i];
+    }
+
+    delete newTable_;
+  }
+
   chessTable_ = new ChessField *[8];
   for (int i = 0; i < N_; i++)
     chessTable_[i] = new ChessField[8];
@@ -9,9 +29,7 @@ ChessModel::ChessModel() : N_(8), currentPlayer_(1) {
   newTable_ = new ChessField *[8];
   for (int i = 0; i < N_; i++)
     newTable_[i] = new ChessField[8];
-}
 
-void ChessModel::newGame() {
   currentPlayer_ = 1;
   if (chessTable_ == nullptr) {
     qWarning() << "CHESSTABLE IS NULLPOINTER!";
@@ -198,7 +216,7 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   chessTable_[to_x][to_y].isLastStep = true;
 
   if (checkGameOver()) {
-    emit gameOver(currentPlayer_);
+    emit gameOver(currentPlayer_, -1);
     return;
   }
 

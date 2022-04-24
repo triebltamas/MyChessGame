@@ -2,6 +2,7 @@
 #define CHESSAPISERVICE_H
 #include "ChessField.h"
 #include "ChessModel.h"
+#include "IChessModel.h"
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -10,7 +11,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 
-class ChessAPIService : public QObject {
+class ChessAPIService : public IChessModel {
   Q_OBJECT
 public:
   ChessAPIService();
@@ -34,24 +35,20 @@ public:
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
                                        bool attack = false,
-                                       bool newTable = false);
+                                       bool newTable = false) override;
 
-  void stepPiece(int from_x, int from_y, int to_x, int to_y);
-  void newGame();
-  ChessField getField(int x, int y);
-  void setHighlighted(int x, int y, bool highlight);
-  void switchToQueen(int x, int y, PieceTypes switchTo);
-  int getCurrentPlayer();
-  bool isMyPiece(int x, int y);
+  void stepPiece(int from_x, int from_y, int to_x, int to_y) override;
+  void newGame() override;
+  ChessField getField(int x, int y) override;
+  void setHighlighted(int x, int y, bool highlight) override;
+  void switchToQueen(int x, int y, PieceTypes switchTo) override;
+  int getCurrentPlayer() override;
+  bool isMyPiece(int x, int y) override;
 signals:
-  void gameOver(int player, int newElo);
-  void check();
-  void pawnHasReachedEnemysBase(int x, int y);
   void startGame(int fixedPlayerNumber);
   void connectedToServer(bool success);
   void loginSuccess(bool success, QString message);
   void createSuccess(bool success, QString message);
-  void refreshTable();
   void gameEnded(QString message, int newElo);
 
 private:

@@ -5,19 +5,19 @@
 #include <iostream>
 
 ChessMainWindow::ChessMainWindow(QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::ChessMainWindow),
-      chessAPIService_(new ChessAPIService) {
+    : QMainWindow(parent), ui(new Ui::ChessMainWindow) {
+  chessAPIService_ = std::shared_ptr<ChessAPIService>(new ChessAPIService);
   ui->setupUi(this);
   connect(ui->actionExit, &QAction::triggered, this, &ChessMainWindow::exit);
   connect(ui->actionHomePage, &QAction::triggered, this,
           &ChessMainWindow::homePage);
   connect(ui->actionLogOut, &QAction::triggered, this,
           &ChessMainWindow::onLogoutClicked);
-  connect(chessAPIService_, &ChessAPIService::loginSuccess, this,
+  connect(chessAPIService_.get(), &ChessAPIService::loginSuccess, this,
           &ChessMainWindow::onLoginSuccess);
-  connect(chessAPIService_, &ChessAPIService::createSuccess, this,
+  connect(chessAPIService_.get(), &ChessAPIService::createSuccess, this,
           &ChessMainWindow::onCreateSuccess);
-  connect(chessAPIService_, &ChessAPIService::gameEnded, this,
+  connect(chessAPIService_.get(), &ChessAPIService::gameEnded, this,
           &ChessMainWindow::onGameEnded);
 
   ui->menubar->setVisible(false);
@@ -33,7 +33,7 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
           &ChessMainWindow::onNetworkSettingsChanged);
 
-  connect(chessAPIService_, &ChessAPIService::connectedToServer, this,
+  connect(chessAPIService_.get(), &ChessAPIService::connectedToServer, this,
           &ChessMainWindow::onConnectedToServer);
 
   ui->centralwidget->layout()->addWidget(loginWidget_);

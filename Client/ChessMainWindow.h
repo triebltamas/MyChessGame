@@ -11,6 +11,7 @@
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -43,7 +44,7 @@ private:
   void homePage();
 
   Ui::ChessMainWindow *ui;
-  ChessAPIService *chessAPIService_ = nullptr;
+  std::shared_ptr<ChessAPIService> chessAPIService_ = nullptr;
   OnlineChessWidget *onlineWidget_ = nullptr;
   LocalChessWidget *localWidget_ = nullptr;
   HomePageWidget *homePageWidget_ = nullptr;

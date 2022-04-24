@@ -1,39 +1,31 @@
 #ifndef CHESSMODEL_H
 #define CHESSMODEL_H
 #include "ChessField.h"
+#include "IChessModel.h"
 #include <QJsonObject>
 #include <QList>
-#include <QObject>
 #include <QPair>
 
-class ChessModel : public QObject {
-  Q_OBJECT
+class ChessModel : public IChessModel {
 public:
   ChessModel();
-  ChessModel(int fixedPlayerNumber);
+  //  ChessModel(int fixedPlayerNumber);
 
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
                                        bool attack = false,
-                                       bool newTable = false);
+                                       bool newTable = false) override;
 
-  void newGame();
-  void stepPiece(int from_x, int from_y, int to_x, int to_y);
-  ChessField getField(int x, int y);
-  void setHighlighted(int x, int y, bool highlight);
-  void switchToQueen(int x, int y, PieceTypes switchTo);
-  int getCurrentPlayer();
-  bool isMyPiece(int x, int y);
+  void newGame() override;
+  void stepPiece(int from_x, int from_y, int to_x, int to_y) override;
+  ChessField getField(int x, int y) override;
+  void setHighlighted(int x, int y, bool highlight) override;
+  void switchToQueen(int x, int y, PieceTypes switchTo) override;
+  int getCurrentPlayer() override;
+  bool isMyPiece(int x, int y) override;
 
   QJsonObject serializeField(int x, int y);
   void deSerializeField(QJsonObject fieldJson, int x, int y);
-
-signals:
-  void gameOver(int player);
-  void stepped(bool pieceKnockedDown);
-  void check();
-  void pawnHasReachedEnemysBase(int x, int y);
-  void refreshTable();
 
 private:
   bool checkGameOver();
@@ -69,10 +61,10 @@ private:
 
   int N_;
   int currentPlayer_; // 1 or 2 or 0 if draw
-  int fixedPlayerNumber_;
+                      //  int fixedPlayerNumber_;
   bool isChecked = false;
-  ChessField **chessTable_;
-  ChessField **newTable_;
+  ChessField **chessTable_ = nullptr;
+  ChessField **newTable_ = nullptr;
 };
 
 #endif // CHESSMODEL_H
