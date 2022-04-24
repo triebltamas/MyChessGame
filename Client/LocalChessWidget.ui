@@ -128,33 +128,7 @@
     </layout>
    </item>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
-     <item>
-      <widget class="QWidget" name="centralWidget" native="true">
-       <layout class="QVBoxLayout" name="centralWidgetLayout">
-        <property name="leftMargin">
-         <number>9</number>
-        </property>
-        <property name="topMargin">
-         <number>9</number>
-        </property>
-        <property name="rightMargin">
-         <number>9</number>
-        </property>
-        <property name="bottomMargin">
-         <number>9</number>
-        </property>
-        <item>
-         <layout class="QGridLayout" name="gridLayout">
-          <property name="spacing">
-           <number>0</number>
-          </property>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
+    <layout class="QVBoxLayout" name="verticalLayout" stretch=""/>
    </item>
   </layout>
  </widget>

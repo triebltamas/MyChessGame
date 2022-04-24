@@ -41,6 +41,8 @@ file(GLOB SOURCES
     Client/OnlineChessWidget.cpp
     Client/OnlineChessWidget.ui
     Client/ChessAPIService.cpp
+    Client/ChessTableWidget.cpp
+    Client/ChessTableWidget.ui
     Client/SwitchPawnDialog.cpp
     Client/SwitchPawnDialog.ui
     Client/HomePageWidget.cpp
@@ -48,6 +50,7 @@ file(GLOB SOURCES
     Client/LoginWidget.cpp
     Client/LoginWidget.ui
     Client/ChessModel.cpp
+    Client/IChessModel.h
     Client/HoverEventFilter.cpp
     Server/ChessServer.cpp
     Server/DatabaseHandler.cpp

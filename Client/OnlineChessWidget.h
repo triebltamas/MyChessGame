@@ -2,10 +2,11 @@
 #define ONLINECHESSWIDGET_H
 
 #include "ChessAPIService.h"
-#include "SwitchPawnDialog.h"
+#include "ChessTableWidget.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,34 +18,20 @@ class OnlineChessWidget : public QWidget {
   Q_OBJECT
 
 public:
-  OnlineChessWidget(ChessAPIService *chessAPIService);
+  OnlineChessWidget(std::shared_ptr<ChessAPIService> chessAPIService);
   ~OnlineChessWidget();
 
 public slots:
   void onGameOver(int Player, int newElo);
-  void onCheck();
-  void onRefreshTable();
   void onStartGame(int fixedPlayerNumber);
-  void onPawnHasReachedEnemysBase(int x, int y);
-  void onCellClicked(int x, int y);
 
 private:
-  void newGame();
-  void exit();
-  void generateTable();
-  void updateCell(int x, int y, ChessField field, bool initField = false);
-  void paintCell(int x, int y, QString rgbWhite, QString rgbBlack);
-  void updateStatusLabel();
+  void updateStatusLabel(int player);
   void updateTableEnabled(bool enable);
 
+  ChessTableWidget *chessTable_;
   Ui::OnlineChessWidget *ui;
-  SwitchPawnDialog *switchDialog_ = nullptr;
-  QMap<int, QPushButton *> tableView_;
-  ChessAPIService *chessAPIService_;
-  QPair<int, int> clickedCell_;
-  bool green_ = false;
+  std::shared_ptr<ChessAPIService> chessAPIService_;
   int fixedPlayerNumber_ = -1;
-  PieceColor fixedOwnPieceColor_ = PieceColor::VoidColor;
-  PieceColor fixedEnemyPieceColor_ = PieceColor::VoidColor;
 };
 #endif // ONLINECHESSWIDGET_H

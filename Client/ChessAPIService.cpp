@@ -4,11 +4,6 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   initSockets();
 
   // CONNECTIONS
-
-  //  connect(model_, &ChessModel::check, this, [this]() {
-  //    QJsonObject request = {{"Function", "check"}};
-  //    sendRequest(request);
-  //  });
   connect(model_, &ChessModel::check, this, &ChessAPIService::check);
   connect(model_, &ChessModel::pawnHasReachedEnemysBase, this,
           [this](int x, int y) {
