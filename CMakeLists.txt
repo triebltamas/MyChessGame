@@ -29,29 +29,33 @@ set(CLIENT_DIR "${CMAKE_SOURCE_DIR}/Client")
 set(SERVER_DIR "${CMAKE_SOURCE_DIR}/Server")
 set(RESOURCES_DIR "${CMAKE_SOURCE_DIR}/Resources")
 
+#include_directories(${CLIENT_DIR}/backend)
+#include_directories(${CLIENT_DIR}/frontend)
+#include_directories(${CLIENT_DIR}/common)
 include_directories(${CLIENT_DIR})
 include_directories(${SERVER_DIR})
 include_directories(${RESOURCES_DIR})
 
 file(GLOB SOURCES
-    Client/ChessMainWindow.cpp
-    Client/ChessMainWindow.ui
-    Client/LocalChessWidget.cpp
-    Client/LocalChessWidget.ui
-    Client/OnlineChessWidget.cpp
-    Client/OnlineChessWidget.ui
-    Client/ChessAPIService.cpp
-    Client/ChessTableWidget.cpp
-    Client/ChessTableWidget.ui
-    Client/SwitchPawnDialog.cpp
-    Client/SwitchPawnDialog.ui
-    Client/HomePageWidget.cpp
-    Client/HomePageWidget.ui
-    Client/LoginWidget.cpp
-    Client/LoginWidget.ui
-    Client/ChessModel.cpp
-    Client/IChessModel.h
-    Client/HoverEventFilter.cpp
+    Client/frontend/ChessMainWindow.cpp
+    Client/frontend/ChessMainWindow.ui
+    Client/frontend/LocalChessWidget.cpp
+    Client/frontend/LocalChessWidget.ui
+    Client/frontend/OnlineChessWidget.cpp
+    Client/frontend/OnlineChessWidget.ui
+    Client/frontend/ChessTableWidget.cpp
+    Client/frontend/ChessTableWidget.ui
+    Client/frontend/SwitchPawnDialog.cpp
+    Client/frontend/SwitchPawnDialog.ui
+    Client/frontend/HomePageWidget.cpp
+    Client/frontend/HomePageWidget.ui
+    Client/frontend/LoginWidget.cpp
+    Client/frontend/LoginWidget.ui
+    Client/frontend/utilities/HoverEventFilter.cpp
+    Client/common/ChessAPIService.cpp
+    Client/common/ChessField.h
+    Client/backend/ChessModel.cpp
+    Client/backend/IChessModel.h
     Server/ChessServer.cpp
     Server/DatabaseHandler.cpp
     Resources/resources.qrc
@@ -61,7 +65,7 @@ set(ignoreMe "${QT_QMAKE_EXECUTABLE}")
 
 #=================== SETUP EXECTUABLE ====================#
 # Add the forms directory to the AUTOUIC search paths
-set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_AUTOUIC_SEARCH_PATHS} ${CLIENT_DIR})
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_AUTOUIC_SEARCH_PATHS} ${CLIENT_DIR}/frontend)
 
 # Add the executable
 if (WIN32)

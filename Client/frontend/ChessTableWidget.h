@@ -1,8 +1,8 @@
 #ifndef CHESSTABLEWIDGET_H
 #define CHESSTABLEWIDGET_H
 
-#include "IChessModel.h"
 #include "SwitchPawnDialog.h"
+#include "backend/IChessModel.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>

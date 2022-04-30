@@ -1,7 +1,7 @@
 #include "LocalChessWidget.h"
-#include "ChessModel.h"
-#include "HoverEventFilter.h"
+#include "backend/ChessModel.h"
 #include "ui_LocalChessWidget.h"
+#include "utilities/HoverEventFilter.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <iostream>

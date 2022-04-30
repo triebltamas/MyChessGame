@@ -1,6 +1,6 @@
 #ifndef ICHESSMODEL_H
 #define ICHESSMODEL_H
-#include "ChessField.h"
+#include "common/ChessField.h"
 #include <QJsonObject>
 #include <QList>
 #include <QObject>

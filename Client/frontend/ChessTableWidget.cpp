@@ -1,6 +1,6 @@
 #include "ChessTableWidget.h"
-#include "HoverEventFilter.h"
 #include "ui_ChessTableWidget.h"
+#include "utilities/HoverEventFilter.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <iostream>

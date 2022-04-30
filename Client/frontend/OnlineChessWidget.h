@@ -1,8 +1,8 @@
 #ifndef ONLINECHESSWIDGET_H
 #define ONLINECHESSWIDGET_H
 
-#include "ChessAPIService.h"
 #include "ChessTableWidget.h"
+#include "common/ChessAPIService.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>

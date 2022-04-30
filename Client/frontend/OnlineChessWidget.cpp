@@ -1,6 +1,6 @@
 #include "OnlineChessWidget.h"
-#include "HoverEventFilter.h"
 #include "ui_OnlineChessWidget.h"
+#include "utilities/HoverEventFilter.h"
 #include <QDebug>
 #include <QMessageBox>
 #include <iostream>

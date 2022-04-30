@@ -1,7 +1,7 @@
 #ifndef SwitchPawnDialog_H
 #define SwitchPawnDialog_H
 
-#include "ChessField.h"
+#include "common/ChessField.h"
 #include <QDialog>
 #include <QObject>
 #include <QPushButton>

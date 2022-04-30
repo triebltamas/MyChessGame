@@ -51,12 +51,16 @@ LoginWidget::LoginWidget(QWidget *parent)
 LoginWidget::~LoginWidget() { delete ui; }
 
 void LoginWidget::onSignInClicked() {
-  // todo db check
   emit loginClicked(ui->usernameEdit->text(), ui->passwordEdit->text());
 }
 
 void LoginWidget::onNewSignUp() {
-  // todo db create user
+  if (ui->passwordEdit_2->text() == "" || ui->usernameEdit_2->text() == "" ||
+      !isEmailValid(ui->emailEdit->text())) {
+    inCorrectSignUp();
+    return;
+  }
+
   emit signUpClicked(ui->emailEdit->text(), ui->usernameEdit_2->text(),
                      ui->passwordEdit_2->text());
 }
@@ -68,7 +72,6 @@ void LoginWidget::onNetworkSettingsChanged() {
 
   ui->signInButton_3->setEnabled(false);
   ui->networkWaitLabel->setVisible(true);
-  // todo wait if able to connect
 }
 
 void LoginWidget::setConnected(bool connected) {
@@ -93,4 +96,11 @@ void LoginWidget::updateWarningLabels(bool visible) {
   ui->signInWarningLabel->setVisible(visible);
   ui->signUpWarningLabel->setVisible(visible);
   ui->networkWaitLabel->setVisible(visible);
+}
+
+bool LoginWidget::isEmailValid(QString email) {
+  if (email == "" || !email.contains('@'))
+    return false;
+
+  return true;
 }

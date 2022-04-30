@@ -1,13 +1,13 @@
 #ifndef CHESSMAINWINDOW_H
 #define CHESSMAINWINDOW_H
 
-#include "ChessAPIService.h"
-#include "ChessField.h"
 #include "HomePageWidget.h"
 #include "LocalChessWidget.h"
 #include "LoginWidget.h"
 #include "OnlineChessWidget.h"
 #include "SwitchPawnDialog.h"
+#include "common/ChessAPIService.h"
+#include "common/ChessField.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>

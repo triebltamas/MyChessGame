@@ -1,8 +1,8 @@
 #ifndef CHESSAPISERVICE_H
 #define CHESSAPISERVICE_H
 #include "ChessField.h"
-#include "ChessModel.h"
-#include "IChessModel.h"
+#include "backend/ChessModel.h"
+#include "backend/IChessModel.h"
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>

@@ -1,8 +1,6 @@
 #ifndef CHESSSERVER_H
 #define CHESSSERVER_H
 
-#include "ChessField.h"
-#include "ChessModel.h"
 #include "DatabaseHandler.h"
 #include "GameSession.h"
 #include "UserSession.h"

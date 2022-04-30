@@ -22,7 +22,6 @@ signals:
   void signUpClicked(QString email, QString username, QString password);
   void networkSettingsChanged(QString serverAddress, int requestPort,
                               int responsePort);
-
 private slots:
   void onSignInClicked();
   void onNewSignUp();
@@ -30,6 +29,7 @@ private slots:
 
 private:
   void updateWarningLabels(bool visible);
+  bool isEmailValid(QString email);
   Ui::LoginWidget *ui;
   bool isConnected_ = false;
 };

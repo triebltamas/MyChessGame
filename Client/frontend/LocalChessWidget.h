@@ -1,8 +1,8 @@
 #ifndef LOCALCHESSWIDGET_H
 #define LOCALCHESSWIDGET_H
 
-#include "ChessModel.h"
 #include "ChessTableWidget.h"
+#include "backend/ChessModel.h"
 #include <QWidget>
 #include <memory>
 
