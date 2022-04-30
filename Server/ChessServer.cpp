@@ -65,7 +65,8 @@ void ChessServer::initServer() {
   }
 }
 
-void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
+void ChessServer::onGameOver(QString sessionID, int winnerPlayer,
+                             bool opponentDisconnected) {
   if (!gameSessions_.contains(sessionID))
     return;
 
@@ -84,23 +85,24 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer) {
 
   QJsonObject json1 = {{"Function", "gameOverHandled"},
                        {"Parameters", QJsonObject{{"Player", winnerPlayer},
-                                                  {"Elo", ratings.first}}}};
+                                                  {"Elo", ratings.first},
+                                                  {"OpponentDisconnected",
+                                                   opponentDisconnected}}}};
   QJsonDocument doc1(json1);
   QByteArray data1;
   data1.append(QString::fromLatin1(doc1.toJson()));
-  writeToClient(session.player1.responseSocket, data1);
-  //  session.player1.responseSocket->write(data1);
-  //  session.player1.responseSocket->waitForBytesWritten(1000);
 
   QJsonObject json2 = {{"Function", "gameOverHandled"},
                        {"Parameters", QJsonObject{{"Player", winnerPlayer},
-                                                  {"Elo", ratings.second}}}};
+                                                  {"Elo", ratings.second},
+                                                  {"OpponentDisconnected",
+                                                   opponentDisconnected}}}};
   QJsonDocument doc2(json2);
   QByteArray data2;
   data2.append(QString::fromLatin1(doc2.toJson()));
+
+  writeToClient(session.player1.responseSocket, data1);
   writeToClient(session.player2.responseSocket, data2);
-  //  session.player2.responseSocket->write(data2);
-  //  session.player2.responseSocket->waitForBytesWritten(1000);
 }
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
@@ -212,8 +214,6 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
     writeToClient(responseSocket, data);
-    //    responseSocket->write(data);
-    //    responseSocket->waitForBytesWritten(1000);
 
     connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
       if (userSessions_[newSessionID].inGame)
@@ -236,8 +236,6 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
 }
 
 void ChessServer::onStartQueueing(QString userSessionID) {
-  auto requestSocket = userSessions_[userSessionID].requestSocket;
-  auto responseSocket = userSessions_[userSessionID].responseSocket;
   bool hasConnected = false;
   for (auto session : gameSessions_) {
     if (!session.sessionStarted) {
@@ -257,8 +255,6 @@ void ChessServer::onStartQueueing(QString userSessionID) {
       QByteArray data1;
       data1.append(QString::fromLatin1(doc1.toJson()));
       writeToClient(session.player1.responseSocket, data1);
-      //      session.player1.responseSocket->write(data1);
-      //      session.player1.responseSocket->waitForBytesWritten(1000);
 
       QJsonObject json2;
       json2.insert("Function", "startGame");
@@ -270,8 +266,6 @@ void ChessServer::onStartQueueing(QString userSessionID) {
       QByteArray data2;
       data2.append(QString::fromLatin1(doc2.toJson()));
       writeToClient(session.player2.responseSocket, data2);
-      //      session.player2.responseSocket->write(data2);
-      //      session.player2.responseSocket->waitForBytesWritten(1000);
 
       gameSessions_[session.sessionID] = session;
       break;
@@ -307,36 +301,18 @@ void ChessServer::endGameSession(QString userSessionID) {
         break;
 
       // player 2 wins
-      onGameOver(gameSessionID, 2);
-      QJsonObject json;
-      json.insert("Function", "userDisconnected");
-
-      QJsonDocument doc(json);
-      QByteArray data;
-      data.append(QString::fromLatin1(doc.toJson()));
-      writeToClient(session.player2.responseSocket, data);
-      //      session.player2.responseSocket->write(data);
-      //      session.player2.responseSocket->waitForBytesWritten(1000);
+      onGameOver(gameSessionID, 2, true);
 
       break;
 
     } else if (session.player2.sessionID == userSessionID) {
+      gameSessionID = session.sessionID;
       if (!session.sessionStarted)
         break;
 
       // player 1 wins
-      onGameOver(gameSessionID, 2);
-      QJsonObject json;
-      json.insert("Function", "userDisconnected");
+      onGameOver(gameSessionID, 1, true);
 
-      QJsonDocument doc(json);
-      QByteArray data;
-      data.append(QString::fromLatin1(doc.toJson()));
-      writeToClient(session.player1.responseSocket, data);
-      //      session.player1.responseSocket->write(data);
-      //      session.player1.responseSocket->waitForBytesWritten(1000);
-
-      gameSessionID = session.sessionID;
       break;
     }
   }
@@ -347,7 +323,7 @@ void ChessServer::writeToClient(QTcpSocket *socket, QByteArray data) {
     return;
 
   socket->write(data);
-  socket->waitForBytesWritten(1000);
+  //  socket->waitForBytesWritten(1000);
 }
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
@@ -374,8 +350,6 @@ void ChessServer::loginUser(QString userSessionID, QString username,
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
   writeToClient(userSessions_[userSessionID].responseSocket, data);
-  //  userSessions_[userSessionID].responseSocket->write(data);
-  //  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
 }
 
 void ChessServer::createUser(QString userSessionID, QString email,
@@ -398,8 +372,6 @@ void ChessServer::createUser(QString userSessionID, QString email,
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
   writeToClient(userSessions_[userSessionID].responseSocket, data);
-  //  userSessions_[userSessionID].responseSocket->write(data);
-  //  userSessions_[userSessionID].responseSocket->waitForBytesWritten(1000);
 }
 
 float ChessServer::getProbability(int rating1, int rating2) {

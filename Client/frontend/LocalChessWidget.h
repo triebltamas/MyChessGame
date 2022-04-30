@@ -20,7 +20,7 @@ public:
   ~LocalChessWidget();
 
 public slots:
-  void onGameOver(int Player, int /*newElo*/);
+  void onGameOver(int Player, int /*newElo*/, bool /*disconnected*/);
   void onCurrentPlayerChanged(int player);
 
 private:

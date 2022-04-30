@@ -25,7 +25,8 @@ LocalChessWidget::LocalChessWidget()
 
 LocalChessWidget::~LocalChessWidget() { delete ui; }
 
-void LocalChessWidget::onGameOver(int Player, int /*newElo*/) {
+void LocalChessWidget::onGameOver(int Player, int /*newElo*/,
+                                  bool /*disconnected*/) {
   if (Player == 0) {
     QMessageBox::information(this, tr("Game over"), QString("Draw"));
   } else {

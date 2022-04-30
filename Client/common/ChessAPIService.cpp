@@ -85,7 +85,7 @@ void ChessAPIService::initSockets() {
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
     requestSocket_->write(data);
-    requestSocket_->waitForBytesWritten(1000);
+    //    requestSocket_->waitForBytesWritten(1000);
 
   } else {
     qDebug() << "Failed to connect to host on IP: " << serverAddress_
@@ -114,8 +114,6 @@ void ChessAPIService::initSockets() {
       if (func == "connected") {
         userSessionID_ = parameters["UserSessionID"].toString();
         emit connectedToServer(true);
-      } else if (func == "userDisconnected") {
-        emit gameEnded("Opponent disconnected", -1);
       } else if (func == "loginSuccess") {
         userName_ = parameters["Username"].toString();
         elo_ = parameters["Elo"].toInt();
@@ -144,10 +142,12 @@ void ChessAPIService::initSockets() {
         }
         emit refreshTable();
       } else if (func == "gameOverHandled") {
+        elo_ = parameters["Elo"].toInt();
         int winner = parameters["Player"].toInt();
-        emit gameOver(winner, parameters["Elo"].toInt());
+        emit gameOver(winner, parameters["Elo"].toInt(),
+                      parameters["OpponentDisconnected"].toBool());
         inGame_ = false;
-        emit gameEnded("", parameters["Elo"].toInt());
+        emit gameEnded(parameters["Elo"].toInt());
       }
     });
   });
@@ -222,7 +222,7 @@ void ChessAPIService::sendRequest(QJsonObject request) {
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
   requestSocket_->write(data);
-  requestSocket_->waitForBytesWritten(10000);
+  //  requestSocket_->waitForBytesWritten(10000);
 }
 
 QList<QPair<int, int>>

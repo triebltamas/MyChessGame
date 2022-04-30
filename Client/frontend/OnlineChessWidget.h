@@ -22,7 +22,7 @@ public:
   ~OnlineChessWidget();
 
 public slots:
-  void onGameOver(int Player, int newElo);
+  void onGameOver(int Player, int newElo, bool disconnected);
   void onStartGame(int fixedPlayerNumber);
 
 private:

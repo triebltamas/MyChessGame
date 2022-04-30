@@ -22,8 +22,12 @@ OnlineChessWidget::OnlineChessWidget(
 
 OnlineChessWidget::~OnlineChessWidget() { delete ui; }
 
-void OnlineChessWidget::onGameOver(int Player, int newElo) {
-  if (Player == 0) {
+void OnlineChessWidget::onGameOver(int Player, int newElo, bool disconnected) {
+  if (disconnected) {
+    QMessageBox::information(
+        this, tr("Game over"),
+        QString("Opponent surrendered!\nNew elo: %1").arg(newElo));
+  } else if (Player == 0) {
     QMessageBox::information(this, tr("Game over"),
                              QString("Draw!\nNew elo: %1").arg(newElo));
   } else {

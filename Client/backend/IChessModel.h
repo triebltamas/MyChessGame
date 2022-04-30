@@ -22,7 +22,7 @@ public:
   virtual bool isMyPiece(int x, int y) = 0;
 
 signals:
-  void gameOver(int player, int newElo);
+  void gameOver(int player, int newElo, bool disconnect = false);
   void check();
   void pawnHasReachedEnemysBase(int x, int y);
   void refreshTable();

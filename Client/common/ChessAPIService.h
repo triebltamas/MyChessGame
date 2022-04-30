@@ -49,7 +49,7 @@ signals:
   void connectedToServer(bool success);
   void loginSuccess(bool success, QString message);
   void createSuccess(bool success, QString message);
-  void gameEnded(QString message, int newElo);
+  void gameEnded(int newElo);
 
 private:
   void sendRequest(QJsonObject request);

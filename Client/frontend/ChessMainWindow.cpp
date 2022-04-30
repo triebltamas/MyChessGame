@@ -175,11 +175,15 @@ void ChessMainWindow::homePage() {
   ui->menubar->setVisible(true);
 }
 void ChessMainWindow::exit() { this->close(); }
-void ChessMainWindow::onGameEnded(QString message, int newElo) {
-  // todo msg boxba kirakni a messaget
+void ChessMainWindow::onGameEnded(int newElo) {
+  if (onlineWidget_ == nullptr) {
+    QMessageBox::information(
+        this, tr("Game over"),
+        QString("You surrendered!\nNew elo: %1").arg(newElo));
+  }
+
   homePage();
-  if (message != "")
-    QMessageBox::information(this, tr("Game over"), message);
+
   if (newElo != -1 && homePageWidget_ != nullptr)
     homePageWidget_->setElo(newElo);
 }

@@ -18,7 +18,8 @@ public:
   ChessServer(QObject *parent = nullptr);
   ~ChessServer();
 public slots:
-  void onGameOver(QString sessionID, int winnerPlayer);
+  void onGameOver(QString sessionID, int winnerPlayer,
+                  bool opponentDisconnected = false);
   void onCheck(QString sessionID, int sessionPlayer);
   void onNewConnection();
 
