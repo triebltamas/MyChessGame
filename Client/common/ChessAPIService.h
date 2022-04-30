@@ -31,6 +31,9 @@ public:
   int getElo();
   QString getUsername();
 
+  int getOpponentsElo();
+  QString getOpponentsUsername();
+
   // ---- MODEL FUNCTIONS --------------------------------------------
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
@@ -61,6 +64,9 @@ private:
   QString userSessionID_ = "";
   QString userName_ = "";
   int elo_ = -1;
+  QString opponentsUsername_ = "";
+  int opponentsElo_ = -1;
+
   bool inGame_ = false;
   bool pieceSwitched_ = false;
   PieceTypes pieceSwitchedType_ = PieceTypes::VoidType;

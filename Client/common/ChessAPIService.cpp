@@ -85,7 +85,7 @@ void ChessAPIService::initSockets() {
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
     requestSocket_->write(data);
-    //    requestSocket_->waitForBytesWritten(1000);
+    requestSocket_->waitForBytesWritten(1000);
 
   } else {
     qDebug() << "Failed to connect to host on IP: " << serverAddress_
@@ -128,6 +128,8 @@ void ChessAPIService::initSockets() {
         gameSessionID_.first = parameters["GameSessionID"].toString();
         gameSessionID_.second = parameters["SessionPlayerNumber"].toInt();
         inGame_ = true;
+        opponentsElo_ = parameters["OpponentsElo"].toInt();
+        opponentsUsername_ = parameters["OpponentsName"].toString();
         emit startGame(gameSessionID_.second);
       } else if (func == "stepPiece") {
         model_->stepPiece(parameters["Fields"].toObject()["FromX"].toInt(),
@@ -222,7 +224,7 @@ void ChessAPIService::sendRequest(QJsonObject request) {
   QByteArray data;
   data.append(QString::fromLatin1(doc.toJson()));
   requestSocket_->write(data);
-  //  requestSocket_->waitForBytesWritten(10000);
+  requestSocket_->waitForBytesWritten(10000);
 }
 
 QList<QPair<int, int>>
@@ -278,6 +280,13 @@ int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPlayer(); }
 bool ChessAPIService::isMyPiece(int x, int y) {
   return model_->isMyPiece(x, y);
 }
+
 bool ChessAPIService::getInGame() { return inGame_; }
+
 int ChessAPIService::getElo() { return elo_; }
+
 QString ChessAPIService::getUsername() { return userName_; }
+
+int ChessAPIService::getOpponentsElo() { return opponentsElo_; }
+
+QString ChessAPIService::getOpponentsUsername() { return opponentsUsername_; }

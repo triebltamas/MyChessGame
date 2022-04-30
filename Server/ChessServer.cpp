@@ -13,6 +13,7 @@ ChessServer::ChessServer(QObject *parent) : QObject(parent) {
 
   if (!server_->listen(QHostAddress::Any, requestPort_)) {
     qDebug() << "Server could not start";
+    exit(EXIT_FAILURE);
   } else {
     qDebug() << "Server is listening on port " << requestPort_;
   }
@@ -247,9 +248,13 @@ void ChessServer::onStartQueueing(QString userSessionID) {
       // send start to both clients
       QJsonObject json1;
       json1.insert("Function", "startGame");
-      json1.insert("Parameters",
-                   QJsonObject{{"GameSessionID", session.sessionID},
-                               {"SessionPlayerNumber", 1}});
+      json1.insert(
+          "Parameters",
+          QJsonObject{{"GameSessionID", session.sessionID},
+                      {"SessionPlayerNumber", 1},
+                      {"OpponentsName", session.player2.username},
+                      {"OpponentsElo",
+                       databaseHandler_->getElo(session.player2.username)}});
 
       QJsonDocument doc1(json1);
       QByteArray data1;
@@ -258,9 +263,13 @@ void ChessServer::onStartQueueing(QString userSessionID) {
 
       QJsonObject json2;
       json2.insert("Function", "startGame");
-      json2.insert("Parameters",
-                   QJsonObject{{"GameSessionID", session.sessionID},
-                               {"SessionPlayerNumber", 2}});
+      json2.insert(
+          "Parameters",
+          QJsonObject{{"GameSessionID", session.sessionID},
+                      {"SessionPlayerNumber", 2},
+                      {"OpponentsName", session.player1.username},
+                      {"OpponentsElo",
+                       databaseHandler_->getElo(session.player1.username)}});
 
       QJsonDocument doc2(json2);
       QByteArray data2;
@@ -323,7 +332,7 @@ void ChessServer::writeToClient(QTcpSocket *socket, QByteArray data) {
     return;
 
   socket->write(data);
-  //  socket->waitForBytesWritten(1000);
+  socket->waitForBytesWritten(1000);
 }
 void ChessServer::loginUser(QString userSessionID, QString username,
                             QString password) {
