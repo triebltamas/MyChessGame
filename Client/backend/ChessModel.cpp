@@ -925,6 +925,70 @@ void ChessModel::deSerializeField(QJsonObject fieldJson, int x, int y) {
   chessTable_[x][y].isCastlingField = fieldJson["IsCastlingField"].toBool();
 }
 
+void ChessModel::setFieldsPiece(ChessField field, int x, int y) {
+  chessTable_[x][y]._pieceType = field._pieceType;
+  chessTable_[x][y]._pieceColor = field._pieceColor;
+}
+
+void ChessModel::importFEN(QString FEN) {
+  for (int i = 0; i < N_; i++) {
+    for (int j = 0; j < N_; j++) {
+      chessTable_[i][j]._pieceColor = PieceColor::VoidColor;
+      chessTable_[i][j]._pieceType = PieceTypes::VoidType;
+    }
+  }
+
+  // example fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w"
+  QStringList fenList = FEN.split(' ');
+  QString table = fenList[0];
+  currentPlayer_ = fenList[1] == "w" ? 1 : 2;
+
+  QStringList rows = table.split('/');
+  int x = 0;
+  for (QString row : rows) {
+    int skip = 0;
+    int y = 0;
+    QStringList fields = row.split("");
+    fields.removeAll(QString(""));
+    for (QString field : fields) {
+      while (skip > 0) {
+        skip--;
+        y++;
+      }
+
+      QList<QString> blackPieces{"p", "r", "n", "b", "q", "k"};
+      QList<QString> whitePieces{"P", "R", "N", "B", "Q", "K"};
+      if (blackPieces.contains(field)) {
+        chessTable_[x][y]._pieceColor = PieceColor::Black;
+      } else if (whitePieces.contains(field)) {
+        chessTable_[x][y]._pieceColor = PieceColor::White;
+      } else {
+        skip = field.toInt() - 1;
+      }
+
+      if (field == "p" || field == "P") {
+        chessTable_[x][y]._pieceType = PieceTypes::Pawn;
+      } else if (field == "r" || field == "R") {
+        chessTable_[x][y]._pieceType = PieceTypes::Rook;
+
+      } else if (field == "n" || field == "N") {
+        chessTable_[x][y]._pieceType = PieceTypes::Knight;
+
+      } else if (field == "b" || field == "B") {
+
+        chessTable_[x][y]._pieceType = PieceTypes::Bishup;
+      } else if (field == "q" || field == "Q") {
+        chessTable_[x][y]._pieceType = PieceTypes::Queen;
+
+      } else if (field == "k" || field == "K") {
+        chessTable_[x][y]._pieceType = PieceTypes::King;
+      }
+      y++;
+    }
+    x++;
+  }
+}
+
 int ChessModel::getCurrentPlayer() { return currentPlayer_; }
 
 bool ChessModel::isMyPiece(int x, int y) {

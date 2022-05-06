@@ -27,6 +27,10 @@ public:
   QJsonObject serializeField(int x, int y);
   void deSerializeField(QJsonObject fieldJson, int x, int y);
 
+  // For unit tests
+  void setFieldsPiece(ChessField fieldJson, int x, int y);
+  void importFEN(QString FEN);
+
 private:
   bool checkGameOver();
   bool stepCausesSelfCheck(int from_x, int from_y, int to_x, int to_y,
