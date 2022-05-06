@@ -128,6 +128,7 @@ void ChessAPIService::initSockets() {
         gameSessionID_.first = parameters["GameSessionID"].toString();
         gameSessionID_.second = parameters["SessionPlayerNumber"].toInt();
         inGame_ = true;
+        inQueue_ = false;
         opponentsElo_ = parameters["OpponentsElo"].toInt();
         opponentsUsername_ = parameters["OpponentsName"].toString();
         emit startGame(gameSessionID_.second);
@@ -177,6 +178,7 @@ void ChessAPIService::signUpToServer(QString email, QString username,
 }
 
 void ChessAPIService::startQueueing() {
+  inQueue_ = true;
   QJsonObject request = {
       {"Function", "startQueueing"},
       {"Parameters", QJsonObject{{"UserSessionID", userSessionID_}}}};
@@ -184,10 +186,12 @@ void ChessAPIService::startQueueing() {
   sendRequest(request);
 }
 
-void ChessAPIService::endGameSession() {
+void ChessAPIService::endGameSession(bool logout) {
   QJsonObject request = {
       {"Function", "endGameSession"},
-      {"Parameters", QJsonObject{{"UserSessionID", userSessionID_}}}};
+      {"Parameters", QJsonObject{{"UserSessionID", userSessionID_},
+                                 {"LogOut", logout},
+                                 {"Username", userName_}}}};
 
   sendRequest(request);
 }
@@ -282,6 +286,8 @@ bool ChessAPIService::isMyPiece(int x, int y) {
 }
 
 bool ChessAPIService::getInGame() { return inGame_; }
+
+bool ChessAPIService::getInQueue() { return inQueue_; }
 
 int ChessAPIService::getElo() { return elo_; }
 

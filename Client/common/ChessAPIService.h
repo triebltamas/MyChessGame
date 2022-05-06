@@ -22,12 +22,14 @@ public:
   void loginToServer(QString username, QString password);
   void signUpToServer(QString email, QString username, QString password);
   void startQueueing();
-  void endGameSession();
+  void stopQueueing();
+  void endGameSession(bool logout);
   void setNetworkValues(QString serverAddress, int requestPort,
                         int responsePort);
   void logOut();
 
   bool getInGame();
+  bool getInQueue();
   int getElo();
   QString getUsername();
 
@@ -68,6 +70,7 @@ private:
   int opponentsElo_ = -1;
 
   bool inGame_ = false;
+  bool inQueue_ = false;
   bool pieceSwitched_ = false;
   PieceTypes pieceSwitchedType_ = PieceTypes::VoidType;
 

@@ -159,7 +159,11 @@ void ChessServer::onNewConnection() {
       onStartQueueing(parameters["UserSessionID"].toString());
       return;
     } else if (func == "endGameSession") {
+      if (parameters["LogOut"].toBool())
+        databaseHandler_->setOnline(parameters["Username"].toString(), false);
+
       endGameSession(parameters["UserSessionID"].toString());
+
       return;
     } else if (func == "gameOver") {
       onGameOver(sessionID, parameters["Player"].toInt());

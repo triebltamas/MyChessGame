@@ -42,9 +42,11 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
 }
 
 ChessMainWindow::~ChessMainWindow() {
-  if (chessAPIService_->getInGame())
-    chessAPIService_->endGameSession();
-  chessAPIService_->logOut();
+  if (chessAPIService_->getInGame() || chessAPIService_->getInQueue())
+    chessAPIService_->endGameSession(true);
+  else
+    chessAPIService_->logOut();
+
   chessAPIService_->closeSockets();
   delete ui;
 }
@@ -53,9 +55,10 @@ void ChessMainWindow::onLogoutClicked() {
   if (loginWidget_ != nullptr)
     return;
 
-  if (chessAPIService_->getInGame())
-    chessAPIService_->endGameSession();
-  chessAPIService_->logOut();
+  if (chessAPIService_->getInGame() || chessAPIService_->getInQueue())
+    chessAPIService_->endGameSession(true);
+  else
+    chessAPIService_->logOut();
 
   ui->centralwidget->layout()->removeWidget(loginWidget_);
   ui->centralwidget->layout()->removeWidget(onlineWidget_);
@@ -144,8 +147,8 @@ void ChessMainWindow::homePage() {
     return;
 
   // todo msgBoxositani
-  if (chessAPIService_->getInGame())
-    chessAPIService_->endGameSession();
+  if (chessAPIService_->getInGame() || chessAPIService_->getInQueue())
+    chessAPIService_->endGameSession(false);
 
   ui->centralwidget->layout()->removeWidget(loginWidget_);
   ui->centralwidget->layout()->removeWidget(onlineWidget_);
