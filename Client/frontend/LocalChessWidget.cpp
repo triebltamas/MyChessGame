@@ -19,7 +19,7 @@ LocalChessWidget::LocalChessWidget()
   ui->verticalLayout->addWidget(chessTable);
 
   connect(model_.get(), &ChessModel::gameOver, this,
-          &LocalChessWidget::onGameOver);
+          &LocalChessWidget::onGameOver, Qt::QueuedConnection);
   chessTable->newGame();
 }
 
