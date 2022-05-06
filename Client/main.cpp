@@ -1,4 +1,4 @@
-#include "ChessMainWindow.h"
+#include "frontend/ChessMainWindow.h"
 
 #include <QApplication>
 

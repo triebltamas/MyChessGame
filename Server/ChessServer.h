@@ -1,8 +1,6 @@
 #ifndef CHESSSERVER_H
 #define CHESSSERVER_H
 
-#include "ChessField.h"
-#include "ChessModel.h"
 #include "DatabaseHandler.h"
 #include "GameSession.h"
 #include "UserSession.h"
@@ -20,7 +18,8 @@ public:
   ChessServer(QObject *parent = nullptr);
   ~ChessServer();
 public slots:
-  void onGameOver(QString sessionID, int winnerPlayer);
+  void onGameOver(QString sessionID, int winnerPlayer,
+                  bool opponentDisconnected = false);
   void onCheck(QString sessionID, int sessionPlayer);
   void onNewConnection();
 
@@ -32,6 +31,7 @@ private:
   void onStartQueueing(QString sessionID);
 
   void endGameSession(QString userSessionID);
+  void writeToClient(QTcpSocket *socket, QByteArray data);
 
   // ---- DB FUNCTIONS ----------------------------------------------------
   void loginUser(QString userSessionID, QString username, QString password);
