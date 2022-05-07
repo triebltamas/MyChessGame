@@ -22,6 +22,7 @@ private slots:
   void castlingTest();
   void checkTest();
   void gameOverTest();
+  void possibleStepsBug1();
 };
 
 #endif // CHESSMODELTEST_H
