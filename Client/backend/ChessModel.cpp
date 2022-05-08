@@ -936,31 +936,31 @@ bool ChessModel::importFEN(QString FEN) {
   // example fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w"
   QStringList fenList = FEN.split(' ');
   if (fenList.length() != 2)
-      return false;
+    return false;
 
   if (fenList[1] != "w" && fenList[1] != "b")
-      return false;
+    return false;
 
   QString table = fenList[0];
 
   QStringList rows = table.split('/');
   if (rows.length() != 8)
-      return false;
+    return false;
 
-  QList<QString> blackPieces {"p", "r", "n", "b", "q", "k"};
-  QList<QString> whitePieces {"P", "R", "N", "B", "Q", "K"};
-  QList<QString> numbers {"1", "2", "3", "4", "5", "6", "7", "8"};
+  QList<QString> blackPieces{"p", "r", "n", "b", "q", "k"};
+  QList<QString> whitePieces{"P", "R", "N", "B", "Q", "K"};
+  QList<QString> numbers{"1", "2", "3", "4", "5", "6", "7", "8"};
 
   for (QString row : rows) {
     QStringList fields = row.split("");
     fields.removeAll(QString(""));
     for (QString field : fields) {
-      if (!blackPieces.contains(field) && !whitePieces.contains(field) && !numbers.contains(field)) {
-          return false;
+      if (!blackPieces.contains(field) && !whitePieces.contains(field) &&
+          !numbers.contains(field)) {
+        return false;
       }
     }
   }
-
 
   for (int i = 0; i < N_; i++) {
     for (int j = 0; j < N_; j++) {

@@ -123,10 +123,10 @@ void ChessModelTest::cleanupTestCase() {
 }
 
 void ChessModelTest::possibleStepsBug1() {
-      QString fen = "8/4Q1kp/5R2/6p1/5r2/7P/6PK/5q2 b";
-      model->importFEN(fen);
-      auto blackRookSteps = model->possibleSteps(4, 5, false, true, false);
-      QCOMPARE(blackRookSteps.length(), 0);
+  QString fen = "8/4Q1kp/5R2/6p1/5r2/7P/6PK/5q2 b";
+  model->importFEN(fen);
+  auto blackRookSteps = model->possibleSteps(4, 5, false, true, false);
+  QCOMPARE(blackRookSteps.length(), 0);
 }
 
 QTEST_MAIN(ChessModelTest)

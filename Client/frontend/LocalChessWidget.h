@@ -29,4 +29,5 @@ private:
   ChessTableWidget *chessTable;
   std::shared_ptr<ChessModel> model_;
 };
+
 #endif // LOCALCHESSWIDGET_H

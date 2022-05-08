@@ -18,9 +18,8 @@ LocalChessWidget::LocalChessWidget()
   chessTable = new ChessTableWidget(model_, this);
   ui->verticalLayout->addWidget(chessTable);
   ui->fenFrame->setVisible(enableFENImport_);
-  connect(ui->importFenButton, &QPushButton::clicked, this, [this]() {
-      model_->importFEN(ui->fenEdit->text());
-  });
+  connect(ui->importFenButton, &QPushButton::clicked, this,
+          [this]() { model_->importFEN(ui->fenEdit->text()); });
 
   connect(model_.get(), &ChessModel::gameOver, this,
           &LocalChessWidget::onGameOver, Qt::QueuedConnection);

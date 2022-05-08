@@ -22,10 +22,14 @@ SwitchPawnDialog::SwitchPawnDialog(bool white, int x, int y, QWidget *parent)
   bishupButton->setMinimumSize(QSize(100, 100));
   bishupButton->setIconSize(QSize(100, 100));
   bishupButton->setSizeIncrement(QSize(1, 1));
-  queenButton->setStyleSheet(QString("QPushButton { background-color: rgb(255, 214, 173);}"));
-  rookButton->setStyleSheet(QString("QPushButton { background-color: rgb(150, 82, 33);}"));
-  knightButton->setStyleSheet(QString("QPushButton { background-color: rgb(255, 214, 173);}"));
-  bishupButton->setStyleSheet(QString("QPushButton { background-color: rgb(150, 82, 33);}"));
+  queenButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(255, 214, 173);}"));
+  rookButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(150, 82, 33);}"));
+  knightButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(255, 214, 173);}"));
+  bishupButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(150, 82, 33);}"));
 
   if (white) {
     queenButton->setIcon(QIcon(":/Application/QueenWhite"));
@@ -65,31 +69,39 @@ SwitchPawnDialog::SwitchPawnDialog(bool white, int x, int y, QWidget *parent)
 }
 
 void SwitchPawnDialog::selectionChanged() {
-    queenButton->setStyleSheet(QString("QPushButton { background-color: rgb(255, 214, 173);}"));
-    rookButton->setStyleSheet(QString("QPushButton { background-color: rgb(150, 82, 33);}"));
-    knightButton->setStyleSheet(QString("QPushButton { background-color: rgb(255, 214, 173);}"));
-    bishupButton->setStyleSheet(QString("QPushButton { background-color: rgb(150, 82, 33);}"));
+  queenButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(255, 214, 173);}"));
+  rookButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(150, 82, 33);}"));
+  knightButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(255, 214, 173);}"));
+  bishupButton->setStyleSheet(
+      QString("QPushButton { background-color: rgb(150, 82, 33);}"));
 
-    switch (selection_) {
-    case PieceTypes::Queen:
-      queenButton->setStyleSheet("QPushButton { background-color: rgb(0, 184, 44);}");
+  switch (selection_) {
+  case PieceTypes::Queen:
+    queenButton->setStyleSheet(
+        "QPushButton { background-color: rgb(0, 184, 44);}");
 
-      break;
-    case PieceTypes::Rook:
-      rookButton->setStyleSheet("QPushButton { background-color: rgb(0, 140, 33);}");
+    break;
+  case PieceTypes::Rook:
+    rookButton->setStyleSheet(
+        "QPushButton { background-color: rgb(0, 140, 33);}");
 
-      break;
-    case PieceTypes::Knight:
-      knightButton->setStyleSheet("QPushButton { background-color: rgb(0, 184, 44);}");
+    break;
+  case PieceTypes::Knight:
+    knightButton->setStyleSheet(
+        "QPushButton { background-color: rgb(0, 184, 44);}");
 
-      break;
-    case PieceTypes::Bishup:
-      bishupButton->setStyleSheet("QPushButton { background-color: rgb(0, 140, 33);}");
+    break;
+  case PieceTypes::Bishup:
+    bishupButton->setStyleSheet(
+        "QPushButton { background-color: rgb(0, 140, 33);}");
 
-      break;
-    default:
-      break;
-    }
+    break;
+  default:
+    break;
+  }
 }
 
 SwitchPawnDialog::~SwitchPawnDialog() { emit pieceChosen(x_, y_, selection_); }
