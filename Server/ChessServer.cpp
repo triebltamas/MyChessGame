@@ -67,7 +67,8 @@ void ChessServer::initServer() {
 }
 
 void ChessServer::onGameOver(QString sessionID, int winnerPlayer,
-                             bool opponentDisconnected) {
+                             bool opponentDisconnected,
+                             bool opponentLoggedOut) {
   if (!gameSessions_.contains(sessionID))
     return;
 
@@ -84,26 +85,30 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer,
   databaseHandler_->setElo(username1, ratings.first);
   databaseHandler_->setElo(username2, ratings.second);
 
-  QJsonObject json1 = {{"Function", "gameOverHandled"},
-                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
-                                                  {"Elo", ratings.first},
-                                                  {"OpponentDisconnected",
-                                                   opponentDisconnected}}}};
-  QJsonDocument doc1(json1);
-  QByteArray data1;
-  data1.append(QString::fromLatin1(doc1.toJson()));
+  if (winnerPlayer == 1 || !opponentLoggedOut) {
+    QJsonObject json1 = {{"Function", "gameOverHandled"},
+                         {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                    {"Elo", ratings.first},
+                                                    {"OpponentDisconnected",
+                                                     opponentDisconnected}}}};
+    QJsonDocument doc1(json1);
+    QByteArray data1;
+    data1.append(QString::fromLatin1(doc1.toJson()));
+    writeToClient(session.player1.responseSocket, data1);
+  }
 
-  QJsonObject json2 = {{"Function", "gameOverHandled"},
-                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
-                                                  {"Elo", ratings.second},
-                                                  {"OpponentDisconnected",
-                                                   opponentDisconnected}}}};
-  QJsonDocument doc2(json2);
-  QByteArray data2;
-  data2.append(QString::fromLatin1(doc2.toJson()));
+  if (winnerPlayer == 2 || !opponentLoggedOut) {
+    QJsonObject json2 = {{"Function", "gameOverHandled"},
+                         {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                    {"Elo", ratings.second},
+                                                    {"OpponentDisconnected",
+                                                     opponentDisconnected}}}};
+    QJsonDocument doc2(json2);
+    QByteArray data2;
+    data2.append(QString::fromLatin1(doc2.toJson()));
 
-  writeToClient(session.player1.responseSocket, data1);
-  writeToClient(session.player2.responseSocket, data2);
+    writeToClient(session.player2.responseSocket, data2);
+  }
 }
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
@@ -162,7 +167,8 @@ void ChessServer::onNewConnection() {
       if (parameters["LogOut"].toBool())
         databaseHandler_->setOnline(parameters["Username"].toString(), false);
 
-      endGameSession(parameters["UserSessionID"].toString());
+      endGameSession(parameters["UserSessionID"].toString(),
+                     parameters["LogOut"].toBool());
 
       return;
     } else if (func == "gameOver") {
@@ -305,7 +311,7 @@ void ChessServer::onStartQueueing(QString userSessionID) {
   }
 }
 
-void ChessServer::endGameSession(QString userSessionID) {
+void ChessServer::endGameSession(QString userSessionID, bool loggedOut) {
   QString gameSessionID = "";
   for (auto session : gameSessions_) {
     if (session.player1.sessionID == userSessionID) {
@@ -314,7 +320,7 @@ void ChessServer::endGameSession(QString userSessionID) {
         break;
 
       // player 2 wins
-      onGameOver(gameSessionID, 2, true);
+      onGameOver(gameSessionID, 2, true, loggedOut);
 
       break;
 
@@ -324,7 +330,7 @@ void ChessServer::endGameSession(QString userSessionID) {
         break;
 
       // player 1 wins
-      onGameOver(gameSessionID, 1, true);
+      onGameOver(gameSessionID, 1, true, loggedOut);
 
       break;
     }
