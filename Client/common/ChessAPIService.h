@@ -10,6 +10,8 @@
 #include <QObject>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QTimer>
+#include <mutex>
 
 class ChessAPIService : public IChessModel {
   Q_OBJECT
@@ -55,6 +57,7 @@ signals:
   void loginSuccess(bool success, QString message);
   void createSuccess(bool success, QString message);
   void gameEnded(int newElo);
+  void serverTimedOut();
 
 private:
   void sendRequest(QJsonObject request);
@@ -78,9 +81,15 @@ private:
   QTcpSocket *requestSocket_ = nullptr;
   QTcpServer *responseServer_ = nullptr;
   QTcpSocket *responseSocket_ = nullptr;
+  QTcpServer *heartbeatServer_ = nullptr;
+  QTcpSocket *heartbeatSocket_ = nullptr;
   QString serverAddress_ = "127.0.0.1";
   int requestPort_ = 1337;
   int responsePort_ = 1338;
+  int heartbeatPort_ = 1339;
+  QTimer *heartbeatTimer_ = nullptr;
+  std::mutex heartbeatMutex_;
+  bool heartBeated_ = true;
 };
 
 #endif // CHESSAPISERVICE_H

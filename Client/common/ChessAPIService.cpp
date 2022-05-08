@@ -2,7 +2,6 @@
 
 ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   initSockets();
-
   // CONNECTIONS
   connect(model_, &ChessModel::check, this, &ChessAPIService::check);
   connect(model_, &ChessModel::pawnHasReachedEnemysBase, this,
@@ -34,6 +33,12 @@ ChessAPIService::~ChessAPIService() {
 }
 
 void ChessAPIService::closeSockets() {
+  if (heartbeatTimer_ != nullptr) {
+      heartbeatTimer_->stop();
+      delete heartbeatTimer_;
+      heartBeated_ = true;
+  }
+
   if (requestSocket_ != nullptr) {
     if (requestSocket_->isOpen()) {
       requestSocket_->close();
@@ -60,6 +65,7 @@ void ChessAPIService::closeSockets() {
 void ChessAPIService::initSockets() {
   requestSocket_ = new QTcpSocket(this);
   responseServer_ = new QTcpServer(this);
+  heartbeatServer_ = new QTcpServer(this);
   // STARTING CHESSAPISERVICE'S RESPONSE SERVER
   int counter = 0;
   while (counter < 10000) {
@@ -72,6 +78,18 @@ void ChessAPIService::initSockets() {
     responsePort_++;
     counter++;
   }
+    //STARTING HEARTBEAT SERVER
+  counter = 0;
+  while (counter < 10000) {
+    if (!heartbeatServer_->listen(QHostAddress::Any, heartbeatPort_)) {
+      qDebug() << "Heartbeat server could not start";
+    } else {
+      qDebug() << "Heartbeat server is listening on port " << heartbeatPort_;
+      break;
+    }
+    heartbeatPort_++;
+    counter++;
+  }
 
   // CONNECTING TO CHESSSERVER'S REQUEST SERVER
   requestSocket_->connectToHost(serverAddress_, requestPort_);
@@ -80,8 +98,8 @@ void ChessAPIService::initSockets() {
              << " and port: " << requestPort_;
 
     QJsonDocument doc(
-        QJsonObject{{"Function", "responsePort"},
-                    {"Parameters", QJsonObject{{"Port", responsePort_}}}});
+        QJsonObject{{"Function", "setPorts"},
+                    {"Parameters", QJsonObject{{"ResponsePort", responsePort_}, {"HeartbeatPort", heartbeatPort_}}}});
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
     requestSocket_->write(data);
@@ -151,6 +169,42 @@ void ChessAPIService::initSockets() {
                       parameters["OpponentDisconnected"].toBool());
         inGame_ = false;
         emit gameEnded(parameters["Elo"].toInt());
+      }
+    });
+  });
+
+
+  heartbeatTimer_ = new QTimer(this);
+  heartbeatTimer_->setInterval(10000);
+  connect(heartbeatTimer_, &QTimer::timeout, this, [this](){
+      std::lock_guard<std::mutex> lock(heartbeatMutex_);
+      if(!heartBeated_) {
+          qDebug() << "Server is not responding...";
+          emit serverTimedOut();
+          heartbeatTimer_->stop();
+      } else {
+          heartBeated_ = false;
+          qDebug() << "Heartbeat recieved";
+      }
+  });
+  heartbeatTimer_->start();
+  connect(heartbeatServer_, &QTcpServer::newConnection, this, [this]() {
+    heartbeatSocket_ = heartbeatServer_->nextPendingConnection();
+    qDebug() << "Successful connection to response server from ip:"
+             << heartbeatSocket_->peerAddress().toString()
+             << " and port: " << heartbeatPort_;
+
+    connect(heartbeatSocket_, &QTcpSocket::readyRead, this, [this]() {
+      auto data = heartbeatSocket_->readAll();
+      QString str = QString(data);
+      str = str.replace("\n", "");
+      QJsonDocument itemDoc = QJsonDocument::fromJson(str.toUtf8());
+      QJsonObject request = itemDoc.object();
+      QString func = request["Function"].toString();
+      if (func == QString("Heartbeat")) {
+          qDebug() << "Heartbeat from server";
+          std::lock_guard<std::mutex> lock(heartbeatMutex_);
+          heartBeated_ = true;
       }
     });
   });

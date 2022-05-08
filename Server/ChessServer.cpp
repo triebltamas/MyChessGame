@@ -110,8 +110,11 @@ void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 void ChessServer::onDisconnected(QString key) {
   if (!userSessions_.contains(key))
     return;
+
   auto requestSocket = userSessions_[key].requestSocket;
   auto responseSocket = userSessions_[key].responseSocket;
+  auto heartbeatSocket = userSessions_[key].heartbeatSocket;
+  auto heartbeatTimer = userSessions_[key].heartbeatTimer;
 
   if (requestSocket != nullptr && requestSocket->isOpen()) {
     requestSocket->close();
@@ -120,6 +123,14 @@ void ChessServer::onDisconnected(QString key) {
   if (responseSocket != nullptr && responseSocket->isOpen()) {
     responseSocket->close();
     responseSocket->deleteLater();
+  }
+  if (heartbeatSocket != nullptr && heartbeatSocket->isOpen()) {
+    heartbeatSocket->close();
+    heartbeatSocket->deleteLater();
+  }
+  if(heartbeatTimer != nullptr) {
+      heartbeatTimer->stop();
+      delete heartbeatTimer;
   }
 }
 
@@ -140,9 +151,9 @@ void ChessServer::onNewConnection() {
     QString func = request["Function"].toString();
     QJsonObject parameters = request["Parameters"].toObject();
 
-    if (func == "responsePort") {
+    if (func == "setPorts") {
       onResponseSockectAvailable(requestSocket->peerAddress(),
-                                 parameters["Port"].toInt(), requestSocket);
+                                 parameters["ResponsePort"].toInt(),parameters["HeartbeatPort"].toInt(), requestSocket);
       return;
     } else if (func == "login") {
       loginUser(parameters["UserSessionID"].toString(),
@@ -188,56 +199,77 @@ void ChessServer::onNewConnection() {
 
 void ChessServer::onResponseSockectAvailable(QHostAddress address,
                                              int responsePort,
+                                             int heartbeatPort,
                                              QTcpSocket *requestSocket) {
   QTcpSocket *responseSocket = new QTcpSocket(this);
   responseSocket->connectToHost(address, responsePort);
-  if (responseSocket->waitForConnected(3000)) {
-    qDebug() << "Successfully connected to host on IP: " << address.toString()
-             << " and port: " << responsePort;
-
-    QString newSessionID;
-
-    int counter = 0;
-    while (counter < 1000) {
-      newSessionID = QString::number(randomGenerator_->generate());
-      if (!userSessions_.contains(newSessionID))
-        break;
-
-      counter++;
-    }
-
-    UserSession session;
-    session.sessionID = newSessionID;
-    session.requestSocket = requestSocket;
-    session.responseSocket = responseSocket;
-
-    userSessions_[newSessionID] = session;
-
-    QJsonDocument doc(QJsonObject{
-        {"Function", "connected"},
-        {"Parameters", QJsonObject{{"UserSessionID", newSessionID}}}});
-    QByteArray data;
-    data.append(QString::fromLatin1(doc.toJson()));
-    writeToClient(responseSocket, data);
-
-    connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
-      if (userSessions_[newSessionID].inGame)
-        endGameSession(newSessionID);
-
-      onDisconnected(newSessionID);
-    });
-
-    connect(requestSocket, &QTcpSocket::disconnected, this, [=]() {
-      if (userSessions_[newSessionID].inGame)
-        endGameSession(newSessionID);
-
-      onDisconnected(newSessionID);
-    });
-
-  } else {
-    qDebug() << "Failed to connect to host on IP: " << address.toString()
-             << " and port: " << responsePort;
+  if (!responseSocket->waitForConnected(3000)) {
+      qDebug() << "Failed to connect to host on IP: " << address.toString()
+               << " and port: " << responsePort;
   }
+
+  QTcpSocket *heartbeatSocket = new QTcpSocket(this);
+  heartbeatSocket->connectToHost(address, heartbeatPort);
+  if (!heartbeatSocket->waitForConnected(3000)) {
+      qDebug() << "Failed to connect to host on IP: " << address.toString()
+               << " and port: " << heartbeatPort;
+  }
+
+  // every 5 sec a heartbeat signal is sent to the client
+  QTimer *timer = new QTimer(this);
+  timer->setInterval(5000);
+  connect(timer, &QTimer::timeout, this, [this, heartbeatSocket](){
+      QJsonDocument doc(QJsonObject{
+          {"Function", "Heartbeat"}});
+      QByteArray data;
+      data.append(QString::fromLatin1(doc.toJson()));
+      writeToClient(heartbeatSocket, data);
+  });
+  timer->start();
+
+  qDebug() << "Successfully connected to host on IP: " << address.toString()
+           << " and response port: " << responsePort << " and heartbeat port: " << heartbeatPort;
+
+  QString newSessionID;
+
+  int counter = 0;
+  while (counter < 1000) {
+    newSessionID = QString::number(randomGenerator_->generate());
+    if (!userSessions_.contains(newSessionID))
+      break;
+
+    counter++;
+  }
+
+  UserSession session;
+  session.sessionID = newSessionID;
+  session.requestSocket = requestSocket;
+  session.responseSocket = responseSocket;
+  session.heartbeatSocket = heartbeatSocket;
+  session.heartbeatTimer = timer;
+
+  userSessions_[newSessionID] = session;
+
+  QJsonDocument doc(QJsonObject{
+      {"Function", "connected"},
+      {"Parameters", QJsonObject{{"UserSessionID", newSessionID}}}});
+  QByteArray data;
+  data.append(QString::fromLatin1(doc.toJson()));
+  writeToClient(responseSocket, data);
+
+  connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
+    if (userSessions_[newSessionID].inGame)
+      endGameSession(newSessionID);
+
+    onDisconnected(newSessionID);
+  });
+
+  connect(requestSocket, &QTcpSocket::disconnected, this, [=]() {
+    if (userSessions_[newSessionID].inGame)
+      endGameSession(newSessionID);
+
+    onDisconnected(newSessionID);
+  });
 }
 
 void ChessServer::onStartQueueing(QString userSessionID) {

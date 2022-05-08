@@ -27,7 +27,7 @@ private:
   void initServer();
   void onDisconnected(QString key);
   void onResponseSockectAvailable(QHostAddress address, int responsePort,
-                                  QTcpSocket *requestSocket);
+                                  int heartbeatPort, QTcpSocket *requestSocket);
   void onStartQueueing(QString sessionID);
 
   void endGameSession(QString userSessionID);
