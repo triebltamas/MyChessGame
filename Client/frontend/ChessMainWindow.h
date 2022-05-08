@@ -28,6 +28,7 @@ public:
 
 public slots:
   void onConnectedToServer(bool success);
+  void onServerTimedOut();
   void onOnlineGameClicked();
   void onLocalGameClicked();
   void onLoginClicked(QString username, QString password);
