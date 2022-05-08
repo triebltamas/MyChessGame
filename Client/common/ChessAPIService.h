@@ -27,7 +27,7 @@ public:
   void stopQueueing();
   void endGameSession(bool logout);
   void setNetworkValues(QString serverAddress, int requestPort,
-                        int responsePort);
+                        int responsePort, int heartbeatPort);
   void logOut();
 
   bool getInGame();

@@ -21,7 +21,7 @@ signals:
   void loginClicked(QString username, QString password);
   void signUpClicked(QString email, QString username, QString password);
   void networkSettingsChanged(QString serverAddress, int requestPort,
-                              int responsePort);
+                              int responsePort, int heartbeatPort);
 private slots:
   void onSignInClicked();
   void onNewSignUp();

@@ -137,6 +137,7 @@ void ChessServer::onDisconnected(QString key) {
     heartbeatTimer->stop();
     heartbeatTimer->deleteLater();
   }
+  userSessions_.remove(key);
 }
 
 void ChessServer::onNewConnection() {

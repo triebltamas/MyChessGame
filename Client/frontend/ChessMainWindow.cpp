@@ -107,11 +107,13 @@ void ChessMainWindow::onSignUpClicked(QString email, QString username,
 }
 void ChessMainWindow::onNetworkSettingsChanged(QString serverAddress,
                                                int requestPort,
-                                               int responsePort) {
+                                               int responsePort,
+                                               int heartbeatPort) {
   if (loginWidget_ == nullptr)
     return;
 
-  chessAPIService_->setNetworkValues(serverAddress, requestPort, responsePort);
+  chessAPIService_->setNetworkValues(serverAddress, requestPort, responsePort,
+                                     heartbeatPort);
 }
 
 void ChessMainWindow::onConnectedToServer(bool connected) {

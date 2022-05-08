@@ -36,7 +36,7 @@ public slots:
   void onLoginSuccess(bool success, QString message);
   void onCreateSuccess(bool success, QString message);
   void onNetworkSettingsChanged(QString serverAddress, int requestPort,
-                                int responsePort);
+                                int responsePort, int heartbeatPort);
   void onGameEnded(int newElo);
   void onLogoutClicked();
 

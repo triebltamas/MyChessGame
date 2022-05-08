@@ -33,7 +33,7 @@ ChessAPIService::~ChessAPIService() {
 
 void ChessAPIService::closeSockets() {
 
-  auto closeLambda = [this](QTcpSocket *socket, QTcpServer *server) {
+  auto closeSocketLambda = [this](QTcpSocket *&socket) {
     if (socket != nullptr) {
       if (socket->isOpen()) {
         socket->close();
@@ -42,7 +42,8 @@ void ChessAPIService::closeSockets() {
       delete socket;
       socket = nullptr;
     }
-
+  };
+  auto closeServerLambda = [this](QTcpServer *&server) {
     if (server != nullptr) {
       if (server->isListening())
         server->close();
@@ -59,9 +60,12 @@ void ChessAPIService::closeSockets() {
     heartbeatTimer_ = nullptr;
   }
 
-  closeLambda(heartbeatSocket_, heartbeatServer_);
-  closeLambda(requestSocket_, nullptr);
-  closeLambda(responseSocket_, responseServer_);
+  closeSocketLambda(heartbeatSocket_);
+  closeSocketLambda(responseSocket_);
+  closeSocketLambda(requestSocket_);
+
+  closeServerLambda(heartbeatServer_);
+  closeServerLambda(responseServer_);
 }
 
 void ChessAPIService::initSockets() {
@@ -184,6 +188,8 @@ void ChessAPIService::initSockets() {
       qDebug() << "Server is not responding...";
       heartbeatTimer_->stop();
       closeSockets();
+      userSessionID_ = "";
+      userName_ = "";
       emit serverTimedOut();
     } else {
       heartBeated_ = false;
@@ -254,11 +260,11 @@ void ChessAPIService::endGameSession(bool logout) {
 }
 
 void ChessAPIService::setNetworkValues(QString serverAddress, int requestPort,
-                                       int responsePort) {
+                                       int responsePort, int heartbeatPort) {
   serverAddress_ = serverAddress;
   requestPort_ = requestPort;
   responsePort_ = responsePort;
-
+  heartbeatPort_ = heartbeatPort;
   closeSockets();
   initSockets();
 }
