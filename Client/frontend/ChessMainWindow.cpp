@@ -6,21 +6,12 @@
 
 ChessMainWindow::ChessMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ChessMainWindow) {
-  chessAPIService_ = std::shared_ptr<ChessAPIService>(new ChessAPIService);
   ui->setupUi(this);
   connect(ui->actionExit, &QAction::triggered, this, &ChessMainWindow::exit);
   connect(ui->actionHomePage, &QAction::triggered, this,
           &ChessMainWindow::homePage);
   connect(ui->actionLogOut, &QAction::triggered, this,
           &ChessMainWindow::onLogoutClicked);
-  connect(chessAPIService_.get(), &ChessAPIService::loginSuccess, this,
-          &ChessMainWindow::onLoginSuccess);
-  connect(chessAPIService_.get(), &ChessAPIService::createSuccess, this,
-          &ChessMainWindow::onCreateSuccess);
-  connect(chessAPIService_.get(), &ChessAPIService::gameEnded, this,
-          &ChessMainWindow::onGameEnded);
-  connect(chessAPIService_.get(), &ChessAPIService::serverTimedOut, this,
-          &ChessMainWindow::onServerTimedOut);
 
   ui->menubar->setVisible(false);
   // LOGIN WIDGET
@@ -35,12 +26,21 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
           &ChessMainWindow::onNetworkSettingsChanged);
 
-  connect(chessAPIService_.get(), &ChessAPIService::connectedToServer, this,
-          &ChessMainWindow::onConnectedToServer);
-
   ui->centralwidget->layout()->addWidget(loginWidget_);
 
-  // UI
+  // API
+
+  chessAPIService_ = std::shared_ptr<ChessAPIService>(new ChessAPIService);
+  connect(chessAPIService_.get(), &ChessAPIService::loginSuccess, this,
+          &ChessMainWindow::onLoginSuccess);
+  connect(chessAPIService_.get(), &ChessAPIService::createSuccess, this,
+          &ChessMainWindow::onCreateSuccess);
+  connect(chessAPIService_.get(), &ChessAPIService::gameEnded, this,
+          &ChessMainWindow::onGameEnded);
+
+  connect(chessAPIService_.get(), &ChessAPIService::connectedToServer, this,
+          &ChessMainWindow::onConnectedToServer, Qt::DirectConnection);
+  chessAPIService_->initSockets();
 }
 
 ChessMainWindow::~ChessMainWindow() {

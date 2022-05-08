@@ -1,7 +1,6 @@
 #include "ChessAPIService.h"
 
 ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
-  initSockets();
   // CONNECTIONS
   connect(model_, &ChessModel::check, this, &ChessAPIService::check);
   connect(model_, &ChessModel::pawnHasReachedEnemysBase, this,

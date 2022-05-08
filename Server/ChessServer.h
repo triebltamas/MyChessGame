@@ -19,7 +19,8 @@ public:
   ~ChessServer();
 public slots:
   void onGameOver(QString sessionID, int winnerPlayer,
-                  bool opponentDisconnected = false);
+                  bool opponentDisconnected = false,
+                  bool opponentLoggedOut = false);
   void onCheck(QString sessionID, int sessionPlayer);
   void onNewConnection();
 
@@ -30,7 +31,7 @@ private:
                                   int heartbeatPort, QTcpSocket *requestSocket);
   void onStartQueueing(QString sessionID);
 
-  void endGameSession(QString userSessionID);
+  void endGameSession(QString userSessionID, bool loggedOut = false);
   void writeToClient(QTcpSocket *socket, QByteArray data);
 
   // ---- DB FUNCTIONS ----------------------------------------------------
