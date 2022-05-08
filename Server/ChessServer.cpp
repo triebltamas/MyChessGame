@@ -133,9 +133,9 @@ void ChessServer::onDisconnected(QString key) {
     heartbeatSocket->close();
     heartbeatSocket->deleteLater();
   }
-  if(heartbeatTimer != nullptr) {
-      heartbeatTimer->stop();
-      delete heartbeatTimer;
+  if (heartbeatTimer != nullptr) {
+    heartbeatTimer->stop();
+    heartbeatTimer->deleteLater();
   }
 }
 
@@ -157,8 +157,9 @@ void ChessServer::onNewConnection() {
     QJsonObject parameters = request["Parameters"].toObject();
 
     if (func == "setPorts") {
-      onResponseSockectAvailable(requestSocket->peerAddress(),
-                                 parameters["ResponsePort"].toInt(),parameters["HeartbeatPort"].toInt(), requestSocket);
+      onResponseSockectAvailable(
+          requestSocket->peerAddress(), parameters["ResponsePort"].toInt(),
+          parameters["HeartbeatPort"].toInt(), requestSocket);
       return;
     } else if (func == "login") {
       loginUser(parameters["UserSessionID"].toString(),
@@ -210,31 +211,31 @@ void ChessServer::onResponseSockectAvailable(QHostAddress address,
   QTcpSocket *responseSocket = new QTcpSocket(this);
   responseSocket->connectToHost(address, responsePort);
   if (!responseSocket->waitForConnected(3000)) {
-      qDebug() << "Failed to connect to host on IP: " << address.toString()
-               << " and port: " << responsePort;
+    qDebug() << "Failed to connect to host on IP: " << address.toString()
+             << " and port: " << responsePort;
   }
 
   QTcpSocket *heartbeatSocket = new QTcpSocket(this);
   heartbeatSocket->connectToHost(address, heartbeatPort);
   if (!heartbeatSocket->waitForConnected(3000)) {
-      qDebug() << "Failed to connect to host on IP: " << address.toString()
-               << " and port: " << heartbeatPort;
+    qDebug() << "Failed to connect to host on IP: " << address.toString()
+             << " and port: " << heartbeatPort;
   }
 
   // every 5 sec a heartbeat signal is sent to the client
-  QTimer *timer = new QTimer(this);
+  QTimer *timer = new QTimer();
   timer->setInterval(5000);
-  connect(timer, &QTimer::timeout, this, [this, heartbeatSocket](){
-      QJsonDocument doc(QJsonObject{
-          {"Function", "Heartbeat"}});
-      QByteArray data;
-      data.append(QString::fromLatin1(doc.toJson()));
-      writeToClient(heartbeatSocket, data);
+  connect(timer, &QTimer::timeout, this, [this, heartbeatSocket]() {
+    QJsonDocument doc(QJsonObject{{"Function", "Heartbeat"}});
+    QByteArray data;
+    data.append(QString::fromLatin1(doc.toJson()));
+    writeToClient(heartbeatSocket, data);
   });
   timer->start();
 
   qDebug() << "Successfully connected to host on IP: " << address.toString()
-           << " and response port: " << responsePort << " and heartbeat port: " << heartbeatPort;
+           << " and response port: " << responsePort
+           << " and heartbeat port: " << heartbeatPort;
 
   QString newSessionID;
 
