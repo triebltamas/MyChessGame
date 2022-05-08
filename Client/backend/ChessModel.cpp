@@ -31,6 +31,7 @@ void ChessModel::newGame() {
     newTable_[i] = new ChessField[8];
 
   currentPlayer_ = 1;
+  emit currentPlayerChanged(currentPlayer_);
   if (chessTable_ == nullptr) {
     qWarning() << "CHESSTABLE IS NULLPOINTER!";
     return;
@@ -224,6 +225,7 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
     emit pawnHasReachedEnemysBase(to_x, to_y);
 
   currentPlayer_ = currentPlayer_ % 2 + 1;
+  emit currentPlayerChanged(currentPlayer_);
 }
 
 void ChessModel::switchToQueen(int x, int y, PieceTypes switchTo) {
@@ -575,16 +577,16 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
     if (isSamePieceColor(i, y, color, newTable, includeDefendedPieces))
       break;
 
-    if (!stepCausesSelfCheck(x, y, i, y, attack)) {
+    if (!stepCausesSelfCheck(x, y, i, y, attack))
       fields.append(QPair<int, int>(i, y));
-      if (!newTable && static_cast<int>(chessTable_[i][y]._pieceColor) ==
-                           static_cast<int>(color) % 2 + 1)
-        break;
 
-      else if (newTable && static_cast<int>(newTable_[i][y]._pieceColor) ==
-                               static_cast<int>(color) % 2 + 1)
-        break;
-    }
+    if (!newTable && static_cast<int>(chessTable_[i][y]._pieceColor) ==
+                         static_cast<int>(color) % 2 + 1)
+      break;
+
+    else if (newTable && static_cast<int>(newTable_[i][y]._pieceColor) ==
+                             static_cast<int>(color) % 2 + 1)
+      break;
 
     if (isSamePieceColor(i, y, color, newTable, false))
       break;
@@ -595,16 +597,16 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
     if (isSamePieceColor(i, y, color, newTable, includeDefendedPieces))
       break;
 
-    if (!stepCausesSelfCheck(x, y, i, y, attack)) {
+    if (!stepCausesSelfCheck(x, y, i, y, attack))
       fields.append(QPair<int, int>(i, y));
-      if (!newTable && static_cast<int>(chessTable_[i][y]._pieceColor) ==
-                           static_cast<int>(color) % 2 + 1)
-        break;
 
-      else if (newTable && static_cast<int>(newTable_[i][y]._pieceColor) ==
-                               static_cast<int>(color) % 2 + 1)
-        break;
-    }
+    if (!newTable && static_cast<int>(chessTable_[i][y]._pieceColor) ==
+                         static_cast<int>(color) % 2 + 1)
+      break;
+
+    else if (newTable && static_cast<int>(newTable_[i][y]._pieceColor) ==
+                             static_cast<int>(color) % 2 + 1)
+      break;
 
     if (isSamePieceColor(i, y, color, newTable, false))
       break;
@@ -615,16 +617,16 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
     if (isSamePieceColor(x, j, color, newTable, includeDefendedPieces))
       break;
 
-    if (!stepCausesSelfCheck(x, y, x, j, attack)) {
+    if (!stepCausesSelfCheck(x, y, x, j, attack))
       fields.append(QPair<int, int>(x, j));
-      if (!newTable && static_cast<int>(chessTable_[x][j]._pieceColor) ==
-                           static_cast<int>(color) % 2 + 1)
-        break;
 
-      else if (newTable && static_cast<int>(newTable_[x][j]._pieceColor) ==
-                               static_cast<int>(color) % 2 + 1)
-        break;
-    }
+    if (!newTable && static_cast<int>(chessTable_[x][j]._pieceColor) ==
+                         static_cast<int>(color) % 2 + 1)
+      break;
+
+    else if (newTable && static_cast<int>(newTable_[x][j]._pieceColor) ==
+                             static_cast<int>(color) % 2 + 1)
+      break;
 
     if (isSamePieceColor(x, j, color, newTable, false))
       break;
@@ -635,16 +637,16 @@ ChessModel::possibleStepsForRook(int x, int y, PieceColor color,
     if (isSamePieceColor(x, j, color, newTable, includeDefendedPieces))
       break;
 
-    if (!stepCausesSelfCheck(x, y, x, j, attack)) {
+    if (!stepCausesSelfCheck(x, y, x, j, attack))
       fields.append(QPair<int, int>(x, j));
-      if (!newTable && static_cast<int>(chessTable_[x][j]._pieceColor) ==
-                           static_cast<int>(color) % 2 + 1)
-        break;
 
-      else if (newTable && static_cast<int>(newTable_[x][j]._pieceColor) ==
-                               static_cast<int>(color) % 2 + 1)
-        break;
-    }
+    if (!newTable && static_cast<int>(chessTable_[x][j]._pieceColor) ==
+                         static_cast<int>(color) % 2 + 1)
+      break;
+
+    else if (newTable && static_cast<int>(newTable_[x][j]._pieceColor) ==
+                             static_cast<int>(color) % 2 + 1)
+      break;
 
     if (isSamePieceColor(x, j, color, newTable, false))
       break;
@@ -930,20 +932,48 @@ void ChessModel::setFieldsPiece(ChessField field, int x, int y) {
   chessTable_[x][y]._pieceColor = field._pieceColor;
 }
 
-void ChessModel::importFEN(QString FEN) {
+bool ChessModel::importFEN(QString FEN) {
+  // example fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w"
+  QStringList fenList = FEN.split(' ');
+  if (fenList.length() != 2)
+    return false;
+
+  if (fenList[1] != "w" && fenList[1] != "b")
+    return false;
+
+  QString table = fenList[0];
+
+  QStringList rows = table.split('/');
+  if (rows.length() != 8)
+    return false;
+
+  QList<QString> blackPieces{"p", "r", "n", "b", "q", "k"};
+  QList<QString> whitePieces{"P", "R", "N", "B", "Q", "K"};
+  QList<QString> numbers{"1", "2", "3", "4", "5", "6", "7", "8"};
+
+  for (QString row : rows) {
+    QStringList fields = row.split("");
+    fields.removeAll(QString(""));
+    for (QString field : fields) {
+      if (!blackPieces.contains(field) && !whitePieces.contains(field) &&
+          !numbers.contains(field)) {
+        return false;
+      }
+    }
+  }
+
   for (int i = 0; i < N_; i++) {
     for (int j = 0; j < N_; j++) {
       chessTable_[i][j]._pieceColor = PieceColor::VoidColor;
       chessTable_[i][j]._pieceType = PieceTypes::VoidType;
+      chessTable_[i][j].enPassant = false;
+      chessTable_[i][j].hasMoved = false;
+      chessTable_[i][j].highlighted = false;
+      chessTable_[i][j].isCastlingField = false;
+      chessTable_[i][j].isLastStep = false;
     }
   }
 
-  // example fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w"
-  QStringList fenList = FEN.split(' ');
-  QString table = fenList[0];
-  currentPlayer_ = fenList[1] == "w" ? 1 : 2;
-
-  QStringList rows = table.split('/');
   int x = 0;
   for (QString row : rows) {
     int skip = 0;
@@ -956,8 +986,6 @@ void ChessModel::importFEN(QString FEN) {
         y++;
       }
 
-      QList<QString> blackPieces{"p", "r", "n", "b", "q", "k"};
-      QList<QString> whitePieces{"P", "R", "N", "B", "Q", "K"};
       if (blackPieces.contains(field)) {
         chessTable_[x][y]._pieceColor = PieceColor::Black;
       } else if (whitePieces.contains(field)) {
@@ -987,6 +1015,12 @@ void ChessModel::importFEN(QString FEN) {
     }
     x++;
   }
+  emit refreshTable();
+
+  currentPlayer_ = fenList[1] == "w" ? 1 : 2;
+  emit currentPlayerChanged(currentPlayer_);
+
+  return true;
 }
 
 int ChessModel::getCurrentPlayer() { return currentPlayer_; }

@@ -67,7 +67,8 @@ void ChessServer::initServer() {
 }
 
 void ChessServer::onGameOver(QString sessionID, int winnerPlayer,
-                             bool opponentDisconnected) {
+                             bool opponentDisconnected,
+                             bool opponentLoggedOut) {
   if (!gameSessions_.contains(sessionID))
     return;
 
@@ -84,34 +85,41 @@ void ChessServer::onGameOver(QString sessionID, int winnerPlayer,
   databaseHandler_->setElo(username1, ratings.first);
   databaseHandler_->setElo(username2, ratings.second);
 
-  QJsonObject json1 = {{"Function", "gameOverHandled"},
-                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
-                                                  {"Elo", ratings.first},
-                                                  {"OpponentDisconnected",
-                                                   opponentDisconnected}}}};
-  QJsonDocument doc1(json1);
-  QByteArray data1;
-  data1.append(QString::fromLatin1(doc1.toJson()));
+  if (winnerPlayer == 1 || !opponentLoggedOut) {
+    QJsonObject json1 = {{"Function", "gameOverHandled"},
+                         {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                    {"Elo", ratings.first},
+                                                    {"OpponentDisconnected",
+                                                     opponentDisconnected}}}};
+    QJsonDocument doc1(json1);
+    QByteArray data1;
+    data1.append(QString::fromLatin1(doc1.toJson()));
+    writeToClient(session.player1.responseSocket, data1);
+  }
 
-  QJsonObject json2 = {{"Function", "gameOverHandled"},
-                       {"Parameters", QJsonObject{{"Player", winnerPlayer},
-                                                  {"Elo", ratings.second},
-                                                  {"OpponentDisconnected",
-                                                   opponentDisconnected}}}};
-  QJsonDocument doc2(json2);
-  QByteArray data2;
-  data2.append(QString::fromLatin1(doc2.toJson()));
+  if (winnerPlayer == 2 || !opponentLoggedOut) {
+    QJsonObject json2 = {{"Function", "gameOverHandled"},
+                         {"Parameters", QJsonObject{{"Player", winnerPlayer},
+                                                    {"Elo", ratings.second},
+                                                    {"OpponentDisconnected",
+                                                     opponentDisconnected}}}};
+    QJsonDocument doc2(json2);
+    QByteArray data2;
+    data2.append(QString::fromLatin1(doc2.toJson()));
 
-  writeToClient(session.player1.responseSocket, data1);
-  writeToClient(session.player2.responseSocket, data2);
+    writeToClient(session.player2.responseSocket, data2);
+  }
 }
 void ChessServer::onCheck(QString sessionID, int sessionPlayer) {}
 
 void ChessServer::onDisconnected(QString key) {
   if (!userSessions_.contains(key))
     return;
+
   auto requestSocket = userSessions_[key].requestSocket;
   auto responseSocket = userSessions_[key].responseSocket;
+  auto heartbeatSocket = userSessions_[key].heartbeatSocket;
+  auto heartbeatTimer = userSessions_[key].heartbeatTimer;
 
   if (requestSocket != nullptr && requestSocket->isOpen()) {
     requestSocket->close();
@@ -121,6 +129,15 @@ void ChessServer::onDisconnected(QString key) {
     responseSocket->close();
     responseSocket->deleteLater();
   }
+  if (heartbeatSocket != nullptr && heartbeatSocket->isOpen()) {
+    heartbeatSocket->close();
+    heartbeatSocket->deleteLater();
+  }
+  if (heartbeatTimer != nullptr) {
+    heartbeatTimer->stop();
+    heartbeatTimer->deleteLater();
+  }
+  userSessions_.remove(key);
 }
 
 void ChessServer::onNewConnection() {
@@ -140,9 +157,10 @@ void ChessServer::onNewConnection() {
     QString func = request["Function"].toString();
     QJsonObject parameters = request["Parameters"].toObject();
 
-    if (func == "responsePort") {
-      onResponseSockectAvailable(requestSocket->peerAddress(),
-                                 parameters["Port"].toInt(), requestSocket);
+    if (func == "setPorts") {
+      onResponseSockectAvailable(
+          requestSocket->peerAddress(), parameters["ResponsePort"].toInt(),
+          parameters["HeartbeatPort"].toInt(), requestSocket);
       return;
     } else if (func == "login") {
       loginUser(parameters["UserSessionID"].toString(),
@@ -162,7 +180,8 @@ void ChessServer::onNewConnection() {
       if (parameters["LogOut"].toBool())
         databaseHandler_->setOnline(parameters["Username"].toString(), false);
 
-      endGameSession(parameters["UserSessionID"].toString());
+      endGameSession(parameters["UserSessionID"].toString(),
+                     parameters["LogOut"].toBool());
 
       return;
     } else if (func == "gameOver") {
@@ -188,56 +207,77 @@ void ChessServer::onNewConnection() {
 
 void ChessServer::onResponseSockectAvailable(QHostAddress address,
                                              int responsePort,
+                                             int heartbeatPort,
                                              QTcpSocket *requestSocket) {
   QTcpSocket *responseSocket = new QTcpSocket(this);
   responseSocket->connectToHost(address, responsePort);
-  if (responseSocket->waitForConnected(3000)) {
-    qDebug() << "Successfully connected to host on IP: " << address.toString()
-             << " and port: " << responsePort;
-
-    QString newSessionID;
-
-    int counter = 0;
-    while (counter < 1000) {
-      newSessionID = QString::number(randomGenerator_->generate());
-      if (!userSessions_.contains(newSessionID))
-        break;
-
-      counter++;
-    }
-
-    UserSession session;
-    session.sessionID = newSessionID;
-    session.requestSocket = requestSocket;
-    session.responseSocket = responseSocket;
-
-    userSessions_[newSessionID] = session;
-
-    QJsonDocument doc(QJsonObject{
-        {"Function", "connected"},
-        {"Parameters", QJsonObject{{"UserSessionID", newSessionID}}}});
-    QByteArray data;
-    data.append(QString::fromLatin1(doc.toJson()));
-    writeToClient(responseSocket, data);
-
-    connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
-      if (userSessions_[newSessionID].inGame)
-        endGameSession(newSessionID);
-
-      onDisconnected(newSessionID);
-    });
-
-    connect(requestSocket, &QTcpSocket::disconnected, this, [=]() {
-      if (userSessions_[newSessionID].inGame)
-        endGameSession(newSessionID);
-
-      onDisconnected(newSessionID);
-    });
-
-  } else {
+  if (!responseSocket->waitForConnected(3000)) {
     qDebug() << "Failed to connect to host on IP: " << address.toString()
              << " and port: " << responsePort;
   }
+
+  QTcpSocket *heartbeatSocket = new QTcpSocket(this);
+  heartbeatSocket->connectToHost(address, heartbeatPort);
+  if (!heartbeatSocket->waitForConnected(3000)) {
+    qDebug() << "Failed to connect to host on IP: " << address.toString()
+             << " and port: " << heartbeatPort;
+  }
+
+  // every 5 sec a heartbeat signal is sent to the client
+  QTimer *timer = new QTimer();
+  timer->setInterval(5000);
+  connect(timer, &QTimer::timeout, this, [this, heartbeatSocket]() {
+    QJsonDocument doc(QJsonObject{{"Function", "Heartbeat"}});
+    QByteArray data;
+    data.append(QString::fromLatin1(doc.toJson()));
+    writeToClient(heartbeatSocket, data);
+  });
+  timer->start();
+
+  qDebug() << "Successfully connected to host on IP: " << address.toString()
+           << " and response port: " << responsePort
+           << " and heartbeat port: " << heartbeatPort;
+
+  QString newSessionID;
+
+  int counter = 0;
+  while (counter < 1000) {
+    newSessionID = QString::number(randomGenerator_->generate());
+    if (!userSessions_.contains(newSessionID))
+      break;
+
+    counter++;
+  }
+
+  UserSession session;
+  session.sessionID = newSessionID;
+  session.requestSocket = requestSocket;
+  session.responseSocket = responseSocket;
+  session.heartbeatSocket = heartbeatSocket;
+  session.heartbeatTimer = timer;
+
+  userSessions_[newSessionID] = session;
+
+  QJsonDocument doc(QJsonObject{
+      {"Function", "connected"},
+      {"Parameters", QJsonObject{{"UserSessionID", newSessionID}}}});
+  QByteArray data;
+  data.append(QString::fromLatin1(doc.toJson()));
+  writeToClient(responseSocket, data);
+
+  connect(responseSocket, &QTcpSocket::disconnected, this, [=]() {
+    if (userSessions_[newSessionID].inGame)
+      endGameSession(newSessionID);
+
+    onDisconnected(newSessionID);
+  });
+
+  connect(requestSocket, &QTcpSocket::disconnected, this, [=]() {
+    if (userSessions_[newSessionID].inGame)
+      endGameSession(newSessionID);
+
+    onDisconnected(newSessionID);
+  });
 }
 
 void ChessServer::onStartQueueing(QString userSessionID) {
@@ -305,7 +345,7 @@ void ChessServer::onStartQueueing(QString userSessionID) {
   }
 }
 
-void ChessServer::endGameSession(QString userSessionID) {
+void ChessServer::endGameSession(QString userSessionID, bool loggedOut) {
   QString gameSessionID = "";
   for (auto session : gameSessions_) {
     if (session.player1.sessionID == userSessionID) {
@@ -314,7 +354,7 @@ void ChessServer::endGameSession(QString userSessionID) {
         break;
 
       // player 2 wins
-      onGameOver(gameSessionID, 2, true);
+      onGameOver(gameSessionID, 2, true, loggedOut);
 
       break;
 
@@ -324,7 +364,7 @@ void ChessServer::endGameSession(QString userSessionID) {
         break;
 
       // player 1 wins
-      onGameOver(gameSessionID, 1, true);
+      onGameOver(gameSessionID, 1, true, loggedOut);
 
       break;
     }

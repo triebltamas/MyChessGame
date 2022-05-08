@@ -29,7 +29,7 @@ public:
 
   // For unit tests
   void setFieldsPiece(ChessField fieldJson, int x, int y);
-  void importFEN(QString FEN);
+  bool importFEN(QString FEN);
 
 private:
   bool checkGameOver();

@@ -6,19 +6,12 @@
 
 ChessMainWindow::ChessMainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::ChessMainWindow) {
-  chessAPIService_ = std::shared_ptr<ChessAPIService>(new ChessAPIService);
   ui->setupUi(this);
   connect(ui->actionExit, &QAction::triggered, this, &ChessMainWindow::exit);
   connect(ui->actionHomePage, &QAction::triggered, this,
           &ChessMainWindow::homePage);
   connect(ui->actionLogOut, &QAction::triggered, this,
           &ChessMainWindow::onLogoutClicked);
-  connect(chessAPIService_.get(), &ChessAPIService::loginSuccess, this,
-          &ChessMainWindow::onLoginSuccess);
-  connect(chessAPIService_.get(), &ChessAPIService::createSuccess, this,
-          &ChessMainWindow::onCreateSuccess);
-  connect(chessAPIService_.get(), &ChessAPIService::gameEnded, this,
-          &ChessMainWindow::onGameEnded);
 
   ui->menubar->setVisible(false);
   // LOGIN WIDGET
@@ -33,12 +26,22 @@ ChessMainWindow::ChessMainWindow(QWidget *parent)
   connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
           &ChessMainWindow::onNetworkSettingsChanged);
 
-  connect(chessAPIService_.get(), &ChessAPIService::connectedToServer, this,
-          &ChessMainWindow::onConnectedToServer);
-
   ui->centralwidget->layout()->addWidget(loginWidget_);
 
-  // UI
+  // API
+
+  chessAPIService_ = std::shared_ptr<ChessAPIService>(new ChessAPIService);
+  connect(chessAPIService_.get(), &ChessAPIService::loginSuccess, this,
+          &ChessMainWindow::onLoginSuccess);
+  connect(chessAPIService_.get(), &ChessAPIService::createSuccess, this,
+          &ChessMainWindow::onCreateSuccess);
+  connect(chessAPIService_.get(), &ChessAPIService::gameEnded, this,
+          &ChessMainWindow::onGameEnded);
+  connect(chessAPIService_.get(), &ChessAPIService::serverTimedOut, this,
+          &ChessMainWindow::onServerTimedOut);
+  connect(chessAPIService_.get(), &ChessAPIService::connectedToServer, this,
+          &ChessMainWindow::onConnectedToServer, Qt::DirectConnection);
+  chessAPIService_->initSockets();
 }
 
 ChessMainWindow::~ChessMainWindow() {
@@ -104,11 +107,13 @@ void ChessMainWindow::onSignUpClicked(QString email, QString username,
 }
 void ChessMainWindow::onNetworkSettingsChanged(QString serverAddress,
                                                int requestPort,
-                                               int responsePort) {
+                                               int responsePort,
+                                               int heartbeatPort) {
   if (loginWidget_ == nullptr)
     return;
 
-  chessAPIService_->setNetworkValues(serverAddress, requestPort, responsePort);
+  chessAPIService_->setNetworkValues(serverAddress, requestPort, responsePort,
+                                     heartbeatPort);
 }
 
 void ChessMainWindow::onConnectedToServer(bool connected) {
@@ -119,6 +124,41 @@ void ChessMainWindow::onConnectedToServer(bool connected) {
 
   // todo login screen
 }
+
+void ChessMainWindow::onServerTimedOut() {
+  ui->centralwidget->layout()->removeWidget(loginWidget_);
+  ui->centralwidget->layout()->removeWidget(onlineWidget_);
+  ui->centralwidget->layout()->removeWidget(localWidget_);
+  ui->centralwidget->layout()->removeWidget(homePageWidget_);
+  if (homePageWidget_ != nullptr) {
+    delete homePageWidget_;
+    homePageWidget_ = nullptr;
+  } else if (loginWidget_ != nullptr) {
+    delete loginWidget_;
+    loginWidget_ = nullptr;
+  } else if (onlineWidget_ != nullptr) {
+    delete onlineWidget_;
+    onlineWidget_ = nullptr;
+  } else if (localWidget_ != nullptr) {
+    delete localWidget_;
+    localWidget_ = nullptr;
+  }
+
+  loginWidget_ = new LoginWidget();
+  ui->centralwidget->layout()->addWidget(loginWidget_);
+  connect(loginWidget_, &LoginWidget::loginClicked, this,
+          &ChessMainWindow::onLoginClicked);
+
+  connect(loginWidget_, &LoginWidget::signUpClicked, this,
+          &ChessMainWindow::onSignUpClicked);
+
+  connect(loginWidget_, &LoginWidget::networkSettingsChanged, this,
+          &ChessMainWindow::onNetworkSettingsChanged);
+
+  ui->menubar->setVisible(false);
+  loginWidget_->setConnected(false);
+}
+
 void ChessMainWindow::onOnlineGameClicked() {
   // todo online
   onlineWidget_ = new OnlineChessWidget(chessAPIService_);

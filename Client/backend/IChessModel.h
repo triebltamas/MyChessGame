@@ -26,6 +26,7 @@ signals:
   void check();
   void pawnHasReachedEnemysBase(int x, int y);
   void refreshTable();
+  void currentPlayerChanged(int player);
 };
 
 #endif // ICHESSMODEL_H

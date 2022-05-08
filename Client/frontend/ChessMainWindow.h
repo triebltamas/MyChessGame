@@ -28,6 +28,7 @@ public:
 
 public slots:
   void onConnectedToServer(bool success);
+  void onServerTimedOut();
   void onOnlineGameClicked();
   void onLocalGameClicked();
   void onLoginClicked(QString username, QString password);
@@ -35,7 +36,7 @@ public slots:
   void onLoginSuccess(bool success, QString message);
   void onCreateSuccess(bool success, QString message);
   void onNetworkSettingsChanged(QString serverAddress, int requestPort,
-                                int responsePort);
+                                int responsePort, int heartbeatPort);
   void onGameEnded(int newElo);
   void onLogoutClicked();
 

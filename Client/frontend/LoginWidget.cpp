@@ -66,19 +66,21 @@ void LoginWidget::onNewSignUp() {
 }
 
 void LoginWidget::onNetworkSettingsChanged() {
-  emit networkSettingsChanged(ui->serverAddressEdit->text(),
-                              ui->requestPortSpinBox->value(),
-                              ui->responsePortSpinBox->value());
-
   ui->signInButton_3->setEnabled(false);
   ui->networkWaitLabel->setVisible(true);
+  ui->networkWarningLabel->setVisible(false);
+  this->repaint();
+  emit networkSettingsChanged(
+      ui->serverAddressEdit->text(), ui->requestPortSpinBox->value(),
+      ui->responsePortSpinBox->value(), ui->heartbeatPortSpinBox->value());
 }
 
 void LoginWidget::setConnected(bool connected) {
   isConnected_ = connected;
   ui->signInButton_3->setEnabled(connected);
-  ui->networkWaitLabel->setVisible(!connected);
+  ui->networkWaitLabel->setVisible(false);
   if (!connected) {
+    ui->networkWarningLabel->setVisible(true);
     ui->stackedWidget->setCurrentWidget(ui->networkPage);
   }
 }

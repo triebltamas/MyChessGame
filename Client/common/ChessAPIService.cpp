@@ -1,8 +1,7 @@
 #include "ChessAPIService.h"
+#include <QCryptographicHash>
 
 ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
-  initSockets();
-
   // CONNECTIONS
   connect(model_, &ChessModel::check, this, &ChessAPIService::check);
   connect(model_, &ChessModel::pawnHasReachedEnemysBase, this,
@@ -27,39 +26,53 @@ ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
 }
 
 ChessAPIService::~ChessAPIService() {
-  if (requestSocket_->isOpen()) {
+  if (requestSocket_ != nullptr && requestSocket_->isOpen()) {
     requestSocket_->close();
     qDebug() << "socket closed";
   }
 }
 
 void ChessAPIService::closeSockets() {
-  if (requestSocket_ != nullptr) {
-    if (requestSocket_->isOpen()) {
-      requestSocket_->close();
-      requestSocket_->disconnectFromHost();
+
+  auto closeSocketLambda = [this](QTcpSocket *&socket) {
+    if (socket != nullptr) {
+      if (socket->isOpen()) {
+        socket->close();
+      }
+
+      delete socket;
+      socket = nullptr;
     }
+  };
+  auto closeServerLambda = [this](QTcpServer *&server) {
+    if (server != nullptr) {
+      if (server->isListening())
+        server->close();
 
-    delete requestSocket_;
-  }
-  if (responseSocket_ != nullptr) {
-    if (responseSocket_->isOpen()) {
-      responseSocket_->close();
-      responseSocket_->disconnectFromHost();
+      delete server;
+      server = nullptr;
     }
+  };
 
-    delete responseSocket_;
+  if (heartbeatTimer_ != nullptr) {
+    heartbeatTimer_->stop();
+    delete heartbeatTimer_;
+    heartBeated_ = true;
+    heartbeatTimer_ = nullptr;
   }
-  if (responseServer_ != nullptr) {
-    if (responseServer_->isListening())
-      responseServer_->close();
 
-    delete responseServer_;
-  }
+  closeSocketLambda(heartbeatSocket_);
+  closeSocketLambda(responseSocket_);
+  closeSocketLambda(requestSocket_);
+
+  closeServerLambda(heartbeatServer_);
+  closeServerLambda(responseServer_);
 }
+
 void ChessAPIService::initSockets() {
   requestSocket_ = new QTcpSocket(this);
   responseServer_ = new QTcpServer(this);
+  heartbeatServer_ = new QTcpServer(this);
   // STARTING CHESSAPISERVICE'S RESPONSE SERVER
   int counter = 0;
   while (counter < 10000) {
@@ -72,6 +85,18 @@ void ChessAPIService::initSockets() {
     responsePort_++;
     counter++;
   }
+  // STARTING HEARTBEAT SERVER
+  counter = 0;
+  while (counter < 10000) {
+    if (!heartbeatServer_->listen(QHostAddress::Any, heartbeatPort_)) {
+      qDebug() << "Heartbeat server could not start";
+    } else {
+      qDebug() << "Heartbeat server is listening on port " << heartbeatPort_;
+      break;
+    }
+    heartbeatPort_++;
+    counter++;
+  }
 
   // CONNECTING TO CHESSSERVER'S REQUEST SERVER
   requestSocket_->connectToHost(serverAddress_, requestPort_);
@@ -79,9 +104,10 @@ void ChessAPIService::initSockets() {
     qDebug() << "Successfully connected to host on IP: " << serverAddress_
              << " and port: " << requestPort_;
 
-    QJsonDocument doc(
-        QJsonObject{{"Function", "responsePort"},
-                    {"Parameters", QJsonObject{{"Port", responsePort_}}}});
+    QJsonDocument doc(QJsonObject{
+        {"Function", "setPorts"},
+        {"Parameters", QJsonObject{{"ResponsePort", responsePort_},
+                                   {"HeartbeatPort", heartbeatPort_}}}});
     QByteArray data;
     data.append(QString::fromLatin1(doc.toJson()));
     requestSocket_->write(data);
@@ -154,25 +180,72 @@ void ChessAPIService::initSockets() {
       }
     });
   });
+
+  heartbeatTimer_ = new QTimer(this);
+  heartbeatTimer_->setInterval(10000);
+  connect(heartbeatTimer_, &QTimer::timeout, this, [this]() {
+    std::lock_guard<std::mutex> lock(heartbeatMutex_);
+    if (!heartBeated_) {
+      qDebug() << "Server is not responding...";
+      heartbeatTimer_->stop();
+      closeSockets();
+      userSessionID_ = "";
+      userName_ = "";
+      emit serverTimedOut();
+    } else {
+      heartBeated_ = false;
+      qDebug() << "Heartbeat recieved";
+    }
+  });
+  heartbeatTimer_->start();
+  connect(heartbeatServer_, &QTcpServer::newConnection, this, [this]() {
+    heartbeatSocket_ = heartbeatServer_->nextPendingConnection();
+    qDebug() << "Successful connection to response server from ip:"
+             << heartbeatSocket_->peerAddress().toString()
+             << " and port: " << heartbeatPort_;
+
+    connect(heartbeatSocket_, &QTcpSocket::readyRead, this, [this]() {
+      auto data = heartbeatSocket_->readAll();
+      QString str = QString(data);
+      str = str.replace("\n", "");
+      QJsonDocument itemDoc = QJsonDocument::fromJson(str.toUtf8());
+      QJsonObject request = itemDoc.object();
+      QString func = request["Function"].toString();
+      if (func == QString("Heartbeat")) {
+        qDebug() << "Heartbeat from server";
+        std::lock_guard<std::mutex> lock(heartbeatMutex_);
+        heartBeated_ = true;
+      }
+    });
+  });
 }
 
 void ChessAPIService::loginToServer(QString username, QString password) {
+  QCryptographicHash *hash = new QCryptographicHash(QCryptographicHash::Sha1);
+  hash->addData(password.toUtf8());
+  hash->addData(salt_.toUtf8());
+
   QJsonObject request = {
       {"Function", "login"},
-      {"Parameters", QJsonObject{{"UserSessionID", userSessionID_},
-                                 {"Username", username},
-                                 {"Password", password}}}};
+      {"Parameters",
+       QJsonObject{{"UserSessionID", userSessionID_},
+                   {"Username", username},
+                   {"Password", QString::fromUtf8(hash->result())}}}};
 
   sendRequest(request);
 }
 void ChessAPIService::signUpToServer(QString email, QString username,
                                      QString password) {
+  QCryptographicHash *hash = new QCryptographicHash(QCryptographicHash::Sha1);
+  hash->addData(password.toUtf8());
+  hash->addData(salt_.toUtf8());
   QJsonObject request = {
       {"Function", "signUp"},
-      {"Parameters", QJsonObject{{"UserSessionID", userSessionID_},
-                                 {"Email", email},
-                                 {"Username", username},
-                                 {"Password", password}}}};
+      {"Parameters",
+       QJsonObject{{"UserSessionID", userSessionID_},
+                   {"Email", email},
+                   {"Username", username},
+                   {"Password", QString::fromUtf8(hash->result())}}}};
 
   sendRequest(request);
 }
@@ -197,11 +270,11 @@ void ChessAPIService::endGameSession(bool logout) {
 }
 
 void ChessAPIService::setNetworkValues(QString serverAddress, int requestPort,
-                                       int responsePort) {
+                                       int responsePort, int heartbeatPort) {
   serverAddress_ = serverAddress;
   requestPort_ = requestPort;
   responsePort_ = responsePort;
-
+  heartbeatPort_ = heartbeatPort;
   closeSockets();
   initSockets();
 }
@@ -214,7 +287,7 @@ void ChessAPIService::logOut() {
 }
 
 void ChessAPIService::sendRequest(QJsonObject request) {
-  if (!requestSocket_->isWritable()) {
+  if (requestSocket_ != nullptr && !requestSocket_->isWritable()) {
     qWarning() << "Socket is not writeable!";
     return;
   }
@@ -281,6 +354,7 @@ void ChessAPIService::switchToQueen(int x, int y, PieceTypes switchTo) {
 }
 
 int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPlayer(); }
+
 bool ChessAPIService::isMyPiece(int x, int y) {
   return model_->isMyPiece(x, y);
 }

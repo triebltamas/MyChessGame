@@ -13,5 +13,6 @@
         <file alias="KingBlack">kingBlack.png</file>
         <file alias="BishupWhite">bishupWhite.png</file>
         <file alias="BishupBlack">bishupBlack.png</file>
+        <file alias="ServerIcon">server.png</file>
     </qresource>
 </RCC>

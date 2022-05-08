@@ -24,8 +24,10 @@ public slots:
   void onCurrentPlayerChanged(int player);
 
 private:
+  bool enableFENImport_ = true;
   Ui::LocalChessWidget *ui;
   ChessTableWidget *chessTable;
   std::shared_ptr<ChessModel> model_;
 };
+
 #endif // LOCALCHESSWIDGET_H
