@@ -63,6 +63,8 @@ private:
   void sendRequest(QJsonObject request);
   void handleGameOver(int winner);
 
+  QString salt_ = "287gf81RG^&@%FV8F*)81";
+
   // QPair<SessionID, p1/p2>
   QPair<QString, int> gameSessionID_;
 

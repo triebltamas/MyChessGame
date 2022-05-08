@@ -1,4 +1,5 @@
 #include "ChessAPIService.h"
+#include <QCryptographicHash>
 
 ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
   // CONNECTIONS
@@ -220,22 +221,31 @@ void ChessAPIService::initSockets() {
 }
 
 void ChessAPIService::loginToServer(QString username, QString password) {
+  QCryptographicHash *hash = new QCryptographicHash(QCryptographicHash::Sha1);
+  hash->addData(password.toUtf8());
+  hash->addData(salt_.toUtf8());
+
   QJsonObject request = {
       {"Function", "login"},
-      {"Parameters", QJsonObject{{"UserSessionID", userSessionID_},
-                                 {"Username", username},
-                                 {"Password", password}}}};
+      {"Parameters",
+       QJsonObject{{"UserSessionID", userSessionID_},
+                   {"Username", username},
+                   {"Password", QString::fromUtf8(hash->result())}}}};
 
   sendRequest(request);
 }
 void ChessAPIService::signUpToServer(QString email, QString username,
                                      QString password) {
+  QCryptographicHash *hash = new QCryptographicHash(QCryptographicHash::Sha1);
+  hash->addData(password.toUtf8());
+  hash->addData(salt_.toUtf8());
   QJsonObject request = {
       {"Function", "signUp"},
-      {"Parameters", QJsonObject{{"UserSessionID", userSessionID_},
-                                 {"Email", email},
-                                 {"Username", username},
-                                 {"Password", password}}}};
+      {"Parameters",
+       QJsonObject{{"UserSessionID", userSessionID_},
+                   {"Email", email},
+                   {"Username", username},
+                   {"Password", QString::fromUtf8(hash->result())}}}};
 
   sendRequest(request);
 }
@@ -344,6 +354,7 @@ void ChessAPIService::switchToQueen(int x, int y, PieceTypes switchTo) {
 }
 
 int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPlayer(); }
+
 bool ChessAPIService::isMyPiece(int x, int y) {
   return model_->isMyPiece(x, y);
 }
