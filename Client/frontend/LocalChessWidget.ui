@@ -113,18 +113,59 @@
      </item>
      <item>
       <widget class="QFrame" name="fenFrame">
-       <layout class="QHBoxLayout" name="fenLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_3">
+        <property name="spacing">
+         <number>0</number>
+        </property>
         <property name="rightMargin">
          <number>1</number>
         </property>
         <item>
-         <widget class="QLineEdit" name="fenEdit"/>
+         <widget class="QLabel" name="fenLabel">
+          <property name="text">
+           <string>Import FEN game table</string>
+          </property>
+         </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="importFenButton">
-          <property name="text">
-           <string>import</string>
-          </property>
+         <widget class="QFrame" name="importFrame">
+          <layout class="QHBoxLayout" name="fenLayout">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>0</number>
+           </property>
+           <property name="topMargin">
+            <number>1</number>
+           </property>
+           <property name="rightMargin">
+            <number>0</number>
+           </property>
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QLineEdit" name="fenEdit">
+             <property name="minimumSize">
+              <size>
+               <width>400</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="placeholderText">
+              <string>rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="importFenButton">
+             <property name="text">
+              <string>import</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>

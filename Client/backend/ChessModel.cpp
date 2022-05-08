@@ -933,13 +933,6 @@ void ChessModel::setFieldsPiece(ChessField field, int x, int y) {
 }
 
 bool ChessModel::importFEN(QString FEN) {
-  for (int i = 0; i < N_; i++) {
-    for (int j = 0; j < N_; j++) {
-      chessTable_[i][j]._pieceColor = PieceColor::VoidColor;
-      chessTable_[i][j]._pieceType = PieceTypes::VoidType;
-    }
-  }
-
   // example fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w"
   QStringList fenList = FEN.split(' ');
   if (fenList.length() != 2)
@@ -969,8 +962,18 @@ bool ChessModel::importFEN(QString FEN) {
   }
 
 
-  currentPlayer_ = fenList[1] == "w" ? 1 : 2;
-  emit currentPlayerChanged(currentPlayer_);
+  for (int i = 0; i < N_; i++) {
+    for (int j = 0; j < N_; j++) {
+      chessTable_[i][j]._pieceColor = PieceColor::VoidColor;
+      chessTable_[i][j]._pieceType = PieceTypes::VoidType;
+      chessTable_[i][j].enPassant = false;
+      chessTable_[i][j].hasMoved = false;
+      chessTable_[i][j].highlighted = false;
+      chessTable_[i][j].isCastlingField = false;
+      chessTable_[i][j].isLastStep = false;
+    }
+  }
+
   int x = 0;
   for (QString row : rows) {
     int skip = 0;
@@ -1012,8 +1015,11 @@ bool ChessModel::importFEN(QString FEN) {
     }
     x++;
   }
-
   emit refreshTable();
+
+  currentPlayer_ = fenList[1] == "w" ? 1 : 2;
+  emit currentPlayerChanged(currentPlayer_);
+
   return true;
 }
 

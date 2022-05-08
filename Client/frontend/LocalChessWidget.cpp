@@ -20,7 +20,6 @@ LocalChessWidget::LocalChessWidget()
   ui->fenFrame->setVisible(enableFENImport_);
   connect(ui->importFenButton, &QPushButton::clicked, this, [this]() {
       model_->importFEN(ui->fenEdit->text());
-      onCurrentPlayerChanged(model_->getCurrentPlayer());
   });
 
   connect(model_.get(), &ChessModel::gameOver, this,
