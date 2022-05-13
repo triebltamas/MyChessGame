@@ -9,7 +9,6 @@
 class ChessModel : public IChessModel {
 public:
   ChessModel();
-  //  ChessModel(int fixedPlayerNumber);
 
   QList<QPair<int, int>> possibleSteps(int x, int y,
                                        bool includeDefendedPieces = false,
@@ -24,12 +23,11 @@ public:
   int getCurrentPlayer() override;
   bool isMyPiece(int x, int y) override;
 
+  // For unit tests
+  bool importFEN(QString FEN) override;
+
   QJsonObject serializeField(int x, int y);
   void deSerializeField(QJsonObject fieldJson, int x, int y);
-
-  // For unit tests
-  void setFieldsPiece(ChessField fieldJson, int x, int y);
-  bool importFEN(QString FEN);
 
 private:
   bool checkGameOver();

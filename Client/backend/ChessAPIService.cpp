@@ -1,29 +1,7 @@
 #include "ChessAPIService.h"
 #include <QCryptographicHash>
 
-ChessAPIService::ChessAPIService() : model_(new ChessModel()) {
-  // CONNECTIONS
-  connect(model_, &ChessModel::check, this, &ChessAPIService::check);
-  connect(model_, &ChessModel::pawnHasReachedEnemysBase, this,
-          [this](int x, int y) {
-            if (model_->getCurrentPlayer() != gameSessionID_.second)
-              return;
-
-            pieceSwitched_ = true;
-            emit pawnHasReachedEnemysBase(x, y);
-          });
-
-  connect(model_, &ChessModel::gameOver, this, [this](int Player) {
-    if (model_->getCurrentPlayer() == gameSessionID_.second)
-      return;
-
-    QJsonObject request = {{"Function", "gameOver"},
-                           {"Parameters", QJsonObject{{"Player", Player}}}};
-    sendRequest(request);
-  });
-  connect(model_, &ChessModel::refreshTable, this,
-          &ChessAPIService::refreshTable);
-}
+ChessAPIService::ChessAPIService() {}
 
 ChessAPIService::~ChessAPIService() {
   if (requestSocket_ != nullptr && requestSocket_->isOpen()) {
@@ -159,17 +137,16 @@ void ChessAPIService::initSockets() {
         opponentsUsername_ = parameters["OpponentsName"].toString();
         emit startGame(gameSessionID_.second);
       } else if (func == "stepPiece") {
-        model_->stepPiece(parameters["Fields"].toObject()["FromX"].toInt(),
-                          parameters["Fields"].toObject()["FromY"].toInt(),
-                          parameters["Fields"].toObject()["ToX"].toInt(),
-                          parameters["Fields"].toObject()["ToY"].toInt());
+        emit opponentStepped(parameters["Fields"].toObject()["FromX"].toInt(),
+                             parameters["Fields"].toObject()["FromY"].toInt(),
+                             parameters["Fields"].toObject()["ToX"].toInt(),
+                             parameters["Fields"].toObject()["ToY"].toInt());
         if (request.contains("SwitchToQueen")) {
           auto switchField = request["SwitchToQueen"].toObject();
-          model_->switchToQueen(
+          emit opponentSwitched(
               switchField["X"].toInt(), switchField["Y"].toInt(),
               static_cast<PieceTypes>(switchField["PieceType"].toInt()));
         }
-        emit refreshTable();
       } else if (func == "gameOverHandled") {
         elo_ = parameters["Elo"].toInt();
         int winner = parameters["Player"].toInt();
@@ -304,15 +281,7 @@ void ChessAPIService::sendRequest(QJsonObject request) {
   requestSocket_->waitForBytesWritten(10000);
 }
 
-QList<QPair<int, int>>
-ChessAPIService::possibleSteps(int x, int y, bool includeDefendedPieces,
-                               bool attack, bool newTable) {
-  return model_->possibleSteps(x, y, includeDefendedPieces, attack, newTable);
-}
-
 void ChessAPIService::stepPiece(int from_x, int from_y, int to_x, int to_y) {
-  model_->stepPiece(from_x, from_y, to_x, to_y);
-
   QJsonObject fieldsJson;
 
   fieldsJson.insert(QString("FromX"), from_x);
@@ -323,7 +292,6 @@ void ChessAPIService::stepPiece(int from_x, int from_y, int to_x, int to_y) {
                          {"Parameters", QJsonObject{{"Fields", fieldsJson}}}};
 
   if (pieceSwitched_) {
-    model_->switchToQueen(to_x, to_y, pieceSwitchedType_);
     QJsonObject field;
 
     field.insert(QString("X"), to_x);
@@ -332,31 +300,14 @@ void ChessAPIService::stepPiece(int from_x, int from_y, int to_x, int to_y) {
     request.insert("SwitchToQueen", field);
     pieceSwitched_ = false;
     pieceSwitchedType_ = PieceTypes::VoidType;
-    refreshTable();
   }
 
   sendRequest(request);
 }
 
-void ChessAPIService::newGame() { model_->newGame(); }
-
-ChessField ChessAPIService::getField(int x, int y) {
-  return model_->getField(x, y);
-}
-
-void ChessAPIService::setHighlighted(int x, int y, bool highlight) {
-  model_->setHighlighted(x, y, highlight);
-}
-
-void ChessAPIService::switchToQueen(int x, int y, PieceTypes switchTo) {
-
+void ChessAPIService::onPieceSwitched(PieceTypes switchTo) {
+  pieceSwitched_ = true;
   pieceSwitchedType_ = switchTo;
-}
-
-int ChessAPIService::getCurrentPlayer() { return model_->getCurrentPlayer(); }
-
-bool ChessAPIService::isMyPiece(int x, int y) {
-  return model_->isMyPiece(x, y);
 }
 
 bool ChessAPIService::getInGame() { return inGame_; }
@@ -370,3 +321,7 @@ QString ChessAPIService::getUsername() { return userName_; }
 int ChessAPIService::getOpponentsElo() { return opponentsElo_; }
 
 QString ChessAPIService::getOpponentsUsername() { return opponentsUsername_; }
+
+QPair<QString, int> ChessAPIService::getGameSessionID() {
+  return gameSessionID_;
+}

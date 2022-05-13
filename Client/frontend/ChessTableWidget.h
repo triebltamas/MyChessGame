@@ -18,7 +18,7 @@ class ChessTableWidget : public QWidget {
   Q_OBJECT
 
 public:
-  ChessTableWidget(std::shared_ptr<IChessModel> model, QWidget *parent);
+  ChessTableWidget(IChessModel *model, QWidget *parent);
   ~ChessTableWidget();
   void newGame();
   void updateTableEnabled(bool enabled);
@@ -40,7 +40,7 @@ private:
   Ui::ChessTableWidget *ui;
   SwitchPawnDialog *switchDialog_ = nullptr;
   QMap<int, QPushButton *> tableView_;
-  std::shared_ptr<IChessModel> model_;
+  IChessModel *model_;
   QPair<int, int> clickedCell_;
   bool green_ = false;
 };

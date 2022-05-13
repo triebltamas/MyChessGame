@@ -6,7 +6,7 @@
 #include "LoginWidget.h"
 #include "OnlineChessWidget.h"
 #include "SwitchPawnDialog.h"
-#include "common/ChessAPIService.h"
+#include "backend/ChessAPIService.h"
 #include "common/ChessField.h"
 #include <QLabel>
 #include <QMainWindow>

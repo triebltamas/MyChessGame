@@ -1,4 +1,5 @@
 #include "ChessMainWindow.h"
+#include "backend/ChessModel.h"
 #include "ui_ChessMainWindow.h"
 #include <QDebug>
 #include <QMessageBox>
@@ -161,7 +162,7 @@ void ChessMainWindow::onServerTimedOut() {
 
 void ChessMainWindow::onOnlineGameClicked() {
   // todo online
-  onlineWidget_ = new OnlineChessWidget(chessAPIService_);
+  onlineWidget_ = new OnlineChessWidget(chessAPIService_, new ChessModel);
   ui->centralwidget->layout()->removeWidget(homePageWidget_);
   ui->centralwidget->layout()->addWidget(onlineWidget_);
 
@@ -172,7 +173,7 @@ void ChessMainWindow::onOnlineGameClicked() {
 }
 void ChessMainWindow::onLocalGameClicked() {
   // todo local
-  localWidget_ = new LocalChessWidget();
+  localWidget_ = new LocalChessWidget(new ChessModel);
   ui->centralwidget->layout()->removeWidget(homePageWidget_);
   ui->centralwidget->layout()->addWidget(localWidget_);
 
