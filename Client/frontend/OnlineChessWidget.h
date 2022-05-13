@@ -2,7 +2,8 @@
 #define ONLINECHESSWIDGET_H
 
 #include "ChessTableWidget.h"
-#include "common/ChessAPIService.h"
+#include "backend/ChessAPIService.h"
+#include "backend/IChessModel.h"
 #include <QLabel>
 #include <QMainWindow>
 #include <QPushButton>
@@ -18,7 +19,8 @@ class OnlineChessWidget : public QWidget {
   Q_OBJECT
 
 public:
-  OnlineChessWidget(std::shared_ptr<ChessAPIService> chessAPIService);
+  OnlineChessWidget(std::shared_ptr<ChessAPIService> chessAPIService,
+                    IChessModel *model);
   ~OnlineChessWidget();
 
 public slots:
@@ -32,6 +34,7 @@ private:
   ChessTableWidget *chessTable_;
   Ui::OnlineChessWidget *ui;
   std::shared_ptr<ChessAPIService> chessAPIService_;
+  IChessModel *model_;
   int fixedPlayerNumber_ = -1;
 };
 #endif // ONLINECHESSWIDGET_H

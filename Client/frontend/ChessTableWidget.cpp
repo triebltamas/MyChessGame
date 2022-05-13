@@ -5,14 +5,13 @@
 #include <QMessageBox>
 #include <iostream>
 
-ChessTableWidget::ChessTableWidget(std::shared_ptr<IChessModel> model,
-                                   QWidget *parent)
+ChessTableWidget::ChessTableWidget(IChessModel *model, QWidget *parent)
     : QWidget(parent), model_(model), ui(new Ui::ChessTableWidget) {
   ui->setupUi(this);
-  connect(model_.get(), &IChessModel::pawnHasReachedEnemysBase, this,
+  connect(model_, &IChessModel::pawnHasReachedEnemysBase, this,
           &ChessTableWidget::onPawnHasReachedEnemysBase);
-  connect(model_.get(), &IChessModel::check, this, &ChessTableWidget::onCheck);
-  connect(model_.get(), &IChessModel::refreshTable, this,
+  connect(model_, &IChessModel::check, this, &ChessTableWidget::onCheck);
+  connect(model_, &IChessModel::refreshTable, this,
           &ChessTableWidget::onRefreshTable);
 }
 

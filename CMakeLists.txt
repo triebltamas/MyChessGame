@@ -54,7 +54,7 @@ file(GLOB SOURCES
     Client/frontend/LoginWidget.cpp
     Client/frontend/LoginWidget.ui
     Client/frontend/utilities/HoverEventFilter.cpp
-    Client/common/ChessAPIService.cpp
+    Client/backend/ChessAPIService.cpp
     Client/common/ChessField.h
     Client/backend/ChessModel.cpp
     Client/backend/IChessModel.h
