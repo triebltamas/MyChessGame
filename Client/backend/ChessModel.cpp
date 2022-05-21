@@ -402,18 +402,22 @@ bool ChessModel::checkGameOver() {
   else {
     QList<QPair<int, int>> nextPlayersFields;
     int nextPlayer = currentPlayer_ % 2 + 1;
+    currentPlayer_ = currentPlayer_ % 2 + 1;
 
     for (int i = 0; i < N_; i++) {
       for (int j = 0; j < N_; j++) {
         if (nextPlayer != static_cast<int>(chessTable_[i][j]._pieceColor))
           continue;
 
-        auto possibleFields = possibleSteps(i, j);
+        auto possibleFields = possibleSteps(i, j, false, true, false);
 
         for (auto field : possibleFields)
           nextPlayersFields.append(field);
       }
     }
+
+    currentPlayer_ = currentPlayer_ % 2 + 1;
+
     if (nextPlayersFields.isEmpty()) {
       // its a draw, so i'll indicate it with currentPlayer_ = 0
       currentPlayer_ = 0;
