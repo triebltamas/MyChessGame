@@ -13,6 +13,7 @@ LocalChessWidget::LocalChessWidget(IChessModel *model)
   ui->currentPlayerIconHolder->setIconSize(QSize(25, 25));
   ui->currentPlayerIconHolder->setIcon(QIcon(":/Application/KnightWhite"));
   ui->currentPlayerIconHolder->installEventFilter(new HoverEventFilter);
+  ui->importFenButton->setFocusPolicy(Qt::NoFocus);
   ui->currentPlayerIconHolder->setFocusPolicy(Qt::NoFocus);
   chessTable = new ChessTableWidget(model_, this);
   ui->verticalLayout->addWidget(chessTable);
