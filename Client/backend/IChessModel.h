@@ -20,6 +20,7 @@ public:
   virtual void switchToQueen(int x, int y, PieceTypes switchTo) = 0;
   virtual int getCurrentPlayer() = 0;
   virtual bool isMyPiece(int x, int y) = 0;
+  virtual bool importFEN(QString fen) = 0;
 
 signals:
   void gameOver(int player, int newElo, bool disconnect = false);
@@ -27,6 +28,8 @@ signals:
   void pawnHasReachedEnemysBase(int x, int y);
   void refreshTable();
   void currentPlayerChanged(int player);
+  void PieceStepped(int from_x, int from_y, int to_x, int to_y);
+  void PieceSwitched(PieceTypes switchto);
 };
 
 #endif // ICHESSMODEL_H

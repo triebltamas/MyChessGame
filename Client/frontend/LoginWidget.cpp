@@ -10,6 +10,13 @@ LoginWidget::LoginWidget(QWidget *parent)
   ui->passwordEdit_2->setEchoMode(QLineEdit::EchoMode::Password);
   ui->stackedWidget->setCurrentWidget(ui->signInPage);
   updateWarningLabels(false);
+  ui->configureButton->setFocusPolicy(Qt::NoFocus);
+  ui->signInButton->setFocusPolicy(Qt::NoFocus);
+  ui->signUpButton->setFocusPolicy(Qt::NoFocus);
+  ui->signInButton_2->setFocusPolicy(Qt::NoFocus);
+  ui->signInButton_3->setFocusPolicy(Qt::NoFocus);
+  ui->signUpButton_2->setFocusPolicy(Qt::NoFocus);
+  ui->networkButton->setFocusPolicy(Qt::NoFocus);
 
   // CONNECTIONS
   // Sign in page

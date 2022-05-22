@@ -217,6 +217,8 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   chessTable_[to_x][to_y].isLastStep = true;
 
   if (checkGameOver()) {
+    emit PieceStepped(from_x, from_y, to_x, to_y);
+    emit refreshTable();
     emit gameOver(currentPlayer_, -1);
     return;
   }
@@ -224,8 +226,10 @@ void ChessModel::stepPiece(int from_x, int from_y, int to_x, int to_y) {
   if (from_pt == PieceTypes::Pawn && (to_x == 0 || to_x == N_ - 1))
     emit pawnHasReachedEnemysBase(to_x, to_y);
 
+  emit PieceStepped(from_x, from_y, to_x, to_y);
   currentPlayer_ = currentPlayer_ % 2 + 1;
   emit currentPlayerChanged(currentPlayer_);
+  emit refreshTable();
 }
 
 void ChessModel::switchToQueen(int x, int y, PieceTypes switchTo) {
@@ -233,6 +237,7 @@ void ChessModel::switchToQueen(int x, int y, PieceTypes switchTo) {
     return;
 
   chessTable_[x][y]._pieceType = switchTo;
+  emit PieceSwitched(switchTo);
 }
 
 bool ChessModel::checkGameOver() {
@@ -397,18 +402,22 @@ bool ChessModel::checkGameOver() {
   else {
     QList<QPair<int, int>> nextPlayersFields;
     int nextPlayer = currentPlayer_ % 2 + 1;
+    currentPlayer_ = currentPlayer_ % 2 + 1;
 
     for (int i = 0; i < N_; i++) {
       for (int j = 0; j < N_; j++) {
         if (nextPlayer != static_cast<int>(chessTable_[i][j]._pieceColor))
           continue;
 
-        auto possibleFields = possibleSteps(i, j);
+        auto possibleFields = possibleSteps(i, j, false, true, false);
 
         for (auto field : possibleFields)
           nextPlayersFields.append(field);
       }
     }
+
+    currentPlayer_ = currentPlayer_ % 2 + 1;
+
     if (nextPlayersFields.isEmpty()) {
       // its a draw, so i'll indicate it with currentPlayer_ = 0
       currentPlayer_ = 0;
@@ -925,11 +934,6 @@ void ChessModel::deSerializeField(QJsonObject fieldJson, int x, int y) {
   chessTable_[x][y].hasMoved = fieldJson["HasMoved"].toBool();
   chessTable_[x][y].highlighted = fieldJson["Highlighted"].toBool();
   chessTable_[x][y].isCastlingField = fieldJson["IsCastlingField"].toBool();
-}
-
-void ChessModel::setFieldsPiece(ChessField field, int x, int y) {
-  chessTable_[x][y]._pieceType = field._pieceType;
-  chessTable_[x][y]._pieceColor = field._pieceColor;
 }
 
 bool ChessModel::importFEN(QString FEN) {
