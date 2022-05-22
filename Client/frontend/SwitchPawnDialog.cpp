@@ -42,6 +42,12 @@ SwitchPawnDialog::SwitchPawnDialog(bool white, int x, int y, QWidget *parent)
     knightButton->setIcon(QIcon(":/Application/KnightBlack"));
     bishupButton->setIcon(QIcon(":/Application/BishupBlack"));
   }
+
+  queenButton->setFocusPolicy(Qt::NoFocus);
+  rookButton->setFocusPolicy(Qt::NoFocus);
+  knightButton->setFocusPolicy(Qt::NoFocus);
+  bishupButton->setFocusPolicy(Qt::NoFocus);
+
   ui->piecesLayout->addWidget(queenButton);
   ui->piecesLayout->addWidget(rookButton);
   ui->piecesLayout->addWidget(knightButton);
