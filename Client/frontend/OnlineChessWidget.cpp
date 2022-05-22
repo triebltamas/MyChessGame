@@ -6,12 +6,59 @@
 #include <iostream>
 
 OnlineChessWidget::OnlineChessWidget(
-    std::shared_ptr<ChessAPIService> chessAPIService)
-    : ui(new Ui::OnlineChessWidget), chessAPIService_(chessAPIService) {
+    std::shared_ptr<ChessAPIService> chessAPIService, IChessModel *model)
+    : ui(new Ui::OnlineChessWidget), chessAPIService_(chessAPIService),
+      model_(model) {
   ui->setupUi(this);
   ui->chatFrame->setVisible(false);
-  chessTable_ = new ChessTableWidget(chessAPIService_, this);
+  connect(
+      model_, &IChessModel::PieceStepped, this,
+      [this](int from_x, int from_y, int to_x, int to_y) {
+        if (model_->getCurrentPlayer() !=
+            chessAPIService_->getGameSessionID().second)
+          return;
+
+        chessAPIService_->stepPiece(from_x, from_y, to_x, to_y);
+      },
+      Qt::DirectConnection);
+
+  connect(
+      model_, &IChessModel::PieceSwitched, this,
+      [this](PieceTypes piece) {
+        if (model_->getCurrentPlayer() !=
+            chessAPIService_->getGameSessionID().second)
+          return;
+
+        chessAPIService_->onPieceSwitched(piece);
+      },
+      Qt::DirectConnection);
+
+  connect(model_, &IChessModel::gameOver, this, [this](int Player) {
+    if (model_->getCurrentPlayer() ==
+        chessAPIService_->getGameSessionID().second)
+      return;
+
+    QJsonObject request = {{"Function", "gameOver"},
+                           {"Parameters", QJsonObject{{"Player", Player}}}};
+    chessAPIService_->sendRequest(request);
+  });
+
+  chessTable_ = new ChessTableWidget(model_, this);
+
   ui->verticalLayout->addWidget(chessTable_);
+  connect(chessAPIService_.get(), &ChessAPIService::opponentStepped, this,
+          [this](int from_x, int from_y, int to_x, int to_y) {
+            model_->stepPiece(from_x, from_y, to_x, to_y);
+          });
+
+  connect(chessAPIService_.get(), &ChessAPIService::opponentSwitched, this,
+          [this](int x, int y, PieceTypes piece) {
+            if (model_->getCurrentPlayer() !=
+                chessAPIService_->getGameSessionID().second)
+              return;
+
+            model_->switchToQueen(x, y, piece);
+          });
   connect(chessAPIService_.get(), &ChessAPIService::startGame, this,
           &OnlineChessWidget::onStartGame);
   connect(chessAPIService_.get(), &ChessAPIService::gameOver, this,

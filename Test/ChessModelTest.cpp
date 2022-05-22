@@ -129,5 +129,12 @@ void ChessModelTest::possibleStepsBug1() {
   QCOMPARE(blackRookSteps.length(), 0);
 }
 
+void ChessModelTest::checkForDrawBug1() {
+  QString fen = "2Q2bnr/4p1pq/5pkr/7p/2P4P/8/PP1PPPP1/RNB1KBNR w";
+  model->importFEN(fen);
+  model->stepPiece(0, 2, 2, 4);
+  QVERIFY(isMate);
+  QCOMPARE(model->getCurrentPlayer(), 0);
+}
 QTEST_MAIN(ChessModelTest)
 #include "ChessModelTest.moc"

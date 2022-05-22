@@ -6,14 +6,14 @@
 #include <QMessageBox>
 #include <iostream>
 
-LocalChessWidget::LocalChessWidget()
-    : ui(new Ui::LocalChessWidget),
-      model_(std::shared_ptr<ChessModel>(new ChessModel)) {
+LocalChessWidget::LocalChessWidget(IChessModel *model)
+    : ui(new Ui::LocalChessWidget), model_(model) {
   ui->setupUi(this);
   // initUI
   ui->currentPlayerIconHolder->setIconSize(QSize(25, 25));
   ui->currentPlayerIconHolder->setIcon(QIcon(":/Application/KnightWhite"));
   ui->currentPlayerIconHolder->installEventFilter(new HoverEventFilter);
+  ui->importFenButton->setFocusPolicy(Qt::NoFocus);
   ui->currentPlayerIconHolder->setFocusPolicy(Qt::NoFocus);
   chessTable = new ChessTableWidget(model_, this);
   ui->verticalLayout->addWidget(chessTable);
@@ -21,9 +21,9 @@ LocalChessWidget::LocalChessWidget()
   connect(ui->importFenButton, &QPushButton::clicked, this,
           [this]() { model_->importFEN(ui->fenEdit->text()); });
 
-  connect(model_.get(), &ChessModel::gameOver, this,
-          &LocalChessWidget::onGameOver, Qt::QueuedConnection);
-  connect(model_.get(), &ChessModel::currentPlayerChanged, this,
+  connect(model_, &IChessModel::gameOver, this, &LocalChessWidget::onGameOver,
+          Qt::QueuedConnection);
+  connect(model_, &IChessModel::currentPlayerChanged, this,
           &LocalChessWidget::onCurrentPlayerChanged, Qt::DirectConnection);
   chessTable->newGame();
 }
