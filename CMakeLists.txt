@@ -90,3 +90,7 @@ target_include_directories(Network_Chess_Test PUBLIC ${TEST_DIR})
 target_link_libraries(Network_Chess_Client Qt5::Widgets Qt5::Network Qt5::Sql)
 target_link_libraries(Network_Chess_Server Qt5::Widgets Qt5::Network Qt5::Sql)
 target_link_libraries(Network_Chess_Test Qt5::Widgets Qt5::Network Qt5::Sql Qt5::Test)
+
+#===================== INSTALLING =======================#
+install(TARGETS Network_Chess_Client DESTINATION bin COMPONENT binaries)
+install(TARGETS Network_Chess_Server DESTINATION bin COMPONENT binaries)
